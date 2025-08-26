@@ -3,7 +3,7 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://Yin123-ybh.github.io/</loc>
-    <lastmod>2025-08-25T14:22:31+08:00</lastmod>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-cn"
@@ -20,8 +20,29 @@
                 href="https://Yin123-ybh.github.io/"
                 />
   </url><url>
+    <loc>https://Yin123-ybh.github.io/categories/</loc>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
+    <xhtml:link
+                rel="alternate"
+                hreflang="zh-cn"
+                href="https://Yin123-ybh.github.io/zh-cn/categories/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="ar"
+                href="https://Yin123-ybh.github.io/ar/categories/"
+                />
+    <xhtml:link
+                rel="alternate"
+                hreflang="en"
+                href="https://Yin123-ybh.github.io/categories/"
+                />
+  </url><url>
+    <loc>https://Yin123-ybh.github.io/tags/cookie/</loc>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>https://Yin123-ybh.github.io/post/</loc>
-    <lastmod>2025-08-25T14:22:31+08:00</lastmod>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-cn"
@@ -38,23 +59,35 @@
                 href="https://Yin123-ybh.github.io/post/"
                 />
   </url><url>
-    <loc>https://Yin123-ybh.github.io/categories/</loc>
-    <lastmod>2020-09-09T00:00:00+00:00</lastmod>
+    <loc>https://Yin123-ybh.github.io/tags/session/</loc>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://Yin123-ybh.github.io/p/session-%E4%B8%8E-cookie/</loc>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://Yin123-ybh.github.io/tags/</loc>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="zh-cn"
-                href="https://Yin123-ybh.github.io/zh-cn/categories/"
+                href="https://Yin123-ybh.github.io/zh-cn/tags/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="ar"
-                href="https://Yin123-ybh.github.io/ar/categories/"
+                href="https://Yin123-ybh.github.io/ar/tags/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://Yin123-ybh.github.io/categories/"
+                href="https://Yin123-ybh.github.io/tags/"
                 />
+  </url><url>
+    <loc>https://Yin123-ybh.github.io/tags/web/</loc>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://Yin123-ybh.github.io/categories/web%E5%BC%80%E5%8F%91/</loc>
+    <lastmod>2025-08-26T00:00:00+00:00</lastmod>
   </url><url>
     <loc>https://Yin123-ybh.github.io/p/test-chinese/</loc>
     <lastmod>2020-09-09T00:00:00+00:00</lastmod>
@@ -125,24 +158,6 @@
   </url><url>
     <loc>https://Yin123-ybh.github.io/categories/syntax/</loc>
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>https://Yin123-ybh.github.io/tags/</loc>
-    <lastmod>2019-03-11T00:00:00+00:00</lastmod>
-    <xhtml:link
-                rel="alternate"
-                hreflang="zh-cn"
-                href="https://Yin123-ybh.github.io/zh-cn/tags/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="ar"
-                href="https://Yin123-ybh.github.io/ar/tags/"
-                />
-    <xhtml:link
-                rel="alternate"
-                hreflang="en"
-                href="https://Yin123-ybh.github.io/tags/"
-                />
   </url><url>
     <loc>https://Yin123-ybh.github.io/categories/themes/</loc>
     <lastmod>2019-03-11T00:00:00+00:00</lastmod>
