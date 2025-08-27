@@ -8,11 +8,11 @@
         <language>en</language>
         <copyright>Cecilia-塞西莉娅</copyright>
         <lastBuildDate>Tue, 26 Aug 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://Yin123-ybh.github.io/post/index.xml" rel="self" type="application/rss+xml" /><item>
-        <title>Session 与 Cookie</title>
-        <link>https://Yin123-ybh.github.io/p/session-%E4%B8%8E-cookie/</link>
+        <title>基于 Session 的短信登录完整解析</title>
+        <link>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</link>
         <pubDate>Tue, 26 Aug 2025 00:00:00 +0000</pubDate>
         
-        <guid>https://Yin123-ybh.github.io/p/session-%E4%B8%8E-cookie/</guid>
+        <guid>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</guid>
         <description>&lt;h1 id=&#34;基于-session-的短信登录完整解析&#34;&gt;基于 Session 的短信登录完整解析
 &lt;/h1&gt;&lt;p&gt;在现代 Web 应用中，&lt;strong&gt;短信验证码登录&lt;/strong&gt; 是一种非常常见的无密码认证方式。它的好处是简单、安全，用户只需要输入手机号和验证码即可登录，而不用记复杂的密码。&lt;/p&gt;
 &lt;p&gt;很多初学者在实现时会有疑惑：&lt;strong&gt;验证码存哪？怎么比对？登录状态如何保持？&lt;/strong&gt; 这篇文章将通过推导的方式，逐步解释清楚，并给出完整的代码示例。&lt;/p&gt;
@@ -108,10 +108,10 @@ value = &amp;ldquo;123456&amp;rdquo;&lt;/p&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;p&gt;&lt;img src=&#34;https://Yin123-ybh.github.io/p/session-%E4%B8%8E-cookie/smsLogin.png&#34;
+&lt;p&gt;&lt;img src=&#34;https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin.png&#34;
 	width=&#34;1202&#34;
 	height=&#34;622&#34;
-	srcset=&#34;https://Yin123-ybh.github.io/p/session-%E4%B8%8E-cookie/smsLogin_hu_acdb368d88fab652.png 480w, https://Yin123-ybh.github.io/p/session-%E4%B8%8E-cookie/smsLogin_hu_be9690a6a3938655.png 1024w&#34;
+	srcset=&#34;https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin_hu_acdb368d88fab652.png 480w, https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin_hu_be9690a6a3938655.png 1024w&#34;
 	loading=&#34;lazy&#34;
 	
 		alt=&#34;短信登录流程图&#34;
@@ -313,6 +313,14 @@ value = &amp;ldquo;123456&amp;rdquo;&lt;/p&gt;
 &lt;/ul&gt;
 &lt;p&gt;这样，不管是做一个小 demo，还是将来应对生产级的项目，你都能举一反三。&lt;/p&gt;
 </description>
+        </item>
+        <item>
+        <title></title>
+        <link>https://Yin123-ybh.github.io/p/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>https://Yin123-ybh.github.io/p/</guid>
+        <description></description>
         </item>
         
     </channel>
