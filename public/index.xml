@@ -286,26 +286,7 @@ data-flex-basis="463px"
 &lt;li>短信验证码应该存放在哪里&lt;/li>
 &lt;li>验证逻辑为什么要在后端&lt;/li>
 &lt;/ul>
-&lt;p>这样，不管是做一个小 demo，还是将来应对生产级的项目，你都能举一反三。&lt;/p></description></item><item><title>Archives</title><link>https://Yin123-ybh.github.io/archives/</link><pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/archives/</guid><description/></item><item><title>About</title><link>https://Yin123-ybh.github.io/about/</link><pubDate>Thu, 28 Feb 2019 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/about/</guid><description>&lt;p>Written in Go, Hugo is an open source static site generator available under the &lt;a class="link" href="https://github.com/gohugoio/hugo/blob/master/LICENSE" target="_blank" rel="noopener"
->Apache License 2.0.&lt;/a> Hugo supports TOML, YAML and JSON data file types, Markdown and HTML content files and uses shortcodes to add rich content. Other notable features are taxonomies, multilingual mode, image processing, custom output formats, HTML/CSS/JS minification and support for Sass SCSS workflows.&lt;/p>
-&lt;p>Hugo makes use of a variety of open source projects including:&lt;/p>
-&lt;ul>
-&lt;li>&lt;a class="link" href="https://github.com/yuin/goldmark" target="_blank" rel="noopener"
->https://github.com/yuin/goldmark&lt;/a>&lt;/li>
-&lt;li>&lt;a class="link" href="https://github.com/alecthomas/chroma" target="_blank" rel="noopener"
->https://github.com/alecthomas/chroma&lt;/a>&lt;/li>
-&lt;li>&lt;a class="link" href="https://github.com/muesli/smartcrop" target="_blank" rel="noopener"
->https://github.com/muesli/smartcrop&lt;/a>&lt;/li>
-&lt;li>&lt;a class="link" href="https://github.com/spf13/cobra" target="_blank" rel="noopener"
->https://github.com/spf13/cobra&lt;/a>&lt;/li>
-&lt;li>&lt;a class="link" href="https://github.com/spf13/viper" target="_blank" rel="noopener"
->https://github.com/spf13/viper&lt;/a>&lt;/li>
-&lt;/ul>
-&lt;p>Hugo is ideal for blogs, corporate websites, creative portfolios, online magazines, single page applications or even a website with thousands of pages.&lt;/p>
-&lt;p>Hugo is for people who want to hand code their own website without worrying about setting up complicated runtimes, dependencies and databases.&lt;/p>
-&lt;p>Websites built with Hugo are extremely fast, secure and can be deployed anywhere including, AWS, GitHub Pages, Heroku, Netlify and any other hosting provider.&lt;/p>
-&lt;p>Learn more and contribute on &lt;a class="link" href="https://github.com/gohugoio" target="_blank" rel="noopener"
->GitHub&lt;/a>.&lt;/p></description></item><item><title/><link>https://Yin123-ybh.github.io/p/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/</guid><description>&lt;h1 id="秒杀活动功能完善指南---第一部分">秒杀活动功能完善指南 - 第一部分
+&lt;p>这样，不管是做一个小 demo，还是将来应对生产级的项目，你都能举一反三。&lt;/p></description></item><item><title>秒杀活动功能完善指南 - 第一部分</title><link>https://Yin123-ybh.github.io/p/%E7%A7%92%E6%9D%80%E6%B4%BB%E5%8A%A8%E5%8A%9F%E8%83%BD%E5%AE%8C%E5%96%84%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86/</link><pubDate>Sun, 12 Jan 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E7%A7%92%E6%9D%80%E6%B4%BB%E5%8A%A8%E5%8A%9F%E8%83%BD%E5%AE%8C%E5%96%84%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86/</guid><description>&lt;h1 id="秒杀活动功能完善指南---第一部分">秒杀活动功能完善指南 - 第一部分
 &lt;/h1>&lt;h2 id="目录">目录
 &lt;/h2>&lt;ol>
 &lt;li>&lt;a class="link" href="#%e9%a1%b9%e7%9b%ae%e6%a6%82%e8%bf%b0" >项目概述&lt;/a>&lt;/li>
@@ -1296,7 +1277,26 @@ data-flex-basis="463px"
 &lt;/ol>
 &lt;p>这些是构建高并发秒杀系统的基础，下一部分将介绍前端界面开发和微信小程序集成。&lt;/p>
 &lt;hr>
-&lt;p>&lt;em>继续阅读：&lt;a class="link" href="./%e7%a7%92%e6%9d%80%e6%b4%bb%e5%8a%a8%e5%8a%9f%e8%83%bd%e5%ae%8c%e5%96%84%e6%8c%87%e5%8d%97-%e7%ac%ac%e4%ba%8c%e9%83%a8%e5%88%86.md" >秒杀活动功能完善指南 - 第二部分&lt;/a>&lt;/em>&lt;/p></description></item><item><title/><link>https://Yin123-ybh.github.io/p/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/</guid><description/></item><item><title>Links</title><link>https://Yin123-ybh.github.io/links/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/links/</guid><description>&lt;p>To use this feature, add &lt;code>links&lt;/code> section to frontmatter.&lt;/p>
+&lt;p>&lt;em>继续阅读：&lt;a class="link" href="./%e7%a7%92%e6%9d%80%e6%b4%bb%e5%8a%a8%e5%8a%9f%e8%83%bd%e5%ae%8c%e5%96%84%e6%8c%87%e5%8d%97-%e7%ac%ac%e4%ba%8c%e9%83%a8%e5%88%86.md" >秒杀活动功能完善指南 - 第二部分&lt;/a>&lt;/em>&lt;/p></description></item><item><title>Archives</title><link>https://Yin123-ybh.github.io/archives/</link><pubDate>Tue, 28 May 2019 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/archives/</guid><description/></item><item><title>About</title><link>https://Yin123-ybh.github.io/about/</link><pubDate>Thu, 28 Feb 2019 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/about/</guid><description>&lt;p>Written in Go, Hugo is an open source static site generator available under the &lt;a class="link" href="https://github.com/gohugoio/hugo/blob/master/LICENSE" target="_blank" rel="noopener"
+>Apache License 2.0.&lt;/a> Hugo supports TOML, YAML and JSON data file types, Markdown and HTML content files and uses shortcodes to add rich content. Other notable features are taxonomies, multilingual mode, image processing, custom output formats, HTML/CSS/JS minification and support for Sass SCSS workflows.&lt;/p>
+&lt;p>Hugo makes use of a variety of open source projects including:&lt;/p>
+&lt;ul>
+&lt;li>&lt;a class="link" href="https://github.com/yuin/goldmark" target="_blank" rel="noopener"
+>https://github.com/yuin/goldmark&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="https://github.com/alecthomas/chroma" target="_blank" rel="noopener"
+>https://github.com/alecthomas/chroma&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="https://github.com/muesli/smartcrop" target="_blank" rel="noopener"
+>https://github.com/muesli/smartcrop&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="https://github.com/spf13/cobra" target="_blank" rel="noopener"
+>https://github.com/spf13/cobra&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="https://github.com/spf13/viper" target="_blank" rel="noopener"
+>https://github.com/spf13/viper&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;p>Hugo is ideal for blogs, corporate websites, creative portfolios, online magazines, single page applications or even a website with thousands of pages.&lt;/p>
+&lt;p>Hugo is for people who want to hand code their own website without worrying about setting up complicated runtimes, dependencies and databases.&lt;/p>
+&lt;p>Websites built with Hugo are extremely fast, secure and can be deployed anywhere including, AWS, GitHub Pages, Heroku, Netlify and any other hosting provider.&lt;/p>
+&lt;p>Learn more and contribute on &lt;a class="link" href="https://github.com/gohugoio" target="_blank" rel="noopener"
+>GitHub&lt;/a>.&lt;/p></description></item><item><title/><link>https://Yin123-ybh.github.io/p/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/</guid><description/></item><item><title>Links</title><link>https://Yin123-ybh.github.io/links/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/links/</guid><description>&lt;p>To use this feature, add &lt;code>links&lt;/code> section to frontmatter.&lt;/p>
 &lt;p>This page&amp;rsquo;s frontmatter:&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
