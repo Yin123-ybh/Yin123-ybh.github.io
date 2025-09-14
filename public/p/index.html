@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
     <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="">
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="Redisson 可重入锁原理详解 1. 为什么需要可重入锁？ 在日常开发中，锁 是保证线程安全的重要手段。但有时候，一个线程在持有锁时，会调用另一个也需要同一把锁的方法，这时问题就来了：\n如果锁 不可重入，线程在第二次尝试加锁时会失败，因为锁已经存在，它相当于 把自己卡死了。 如果锁 可重入，同一个线程可以多次获取这把锁，直到最后释放时才真正解锁。 所以，可重入锁的意义在于：避免同一线程因为方法嵌套调用而死锁。\n2. 普通分布式锁的问题 最简单的分布式锁通常用 Redis 的 SETNX 实现：\n1 SET key value NX EX 30 NX 表示如果 key 不存在才设置，保证原子性。 EX 30 设置过期时间，防止死锁。 问题出在哪里？ 当一个线程已经持有锁时，如果在方法嵌套中再次尝试获取锁：\nRedis 发现 key 已存在，直接返回失败。 虽然是 同一个线程 想再次获取锁，但因为锁实现里只区分 &ldquo;有锁 / 无锁&rdquo;，并不会识别线程。 结果就是：自己把自己锁死了。 3. Redisson 的改进（可重入实现） Redisson 在 value 的存储上做了改进，它并不是简单的字符串，而是一个 Hash 结构：\n1 2 3 lockKey -&gt; { threadId : reentrantCount } threadId：唯一标识某个 JVM 里的某个线程（一般是 UUID:threadId）。 reentrantCount：记录这个线程持有锁的次数。 这样就可以支持 可重入 了。\n">
 <title></title>
 
 <link rel='canonical' href='http://localhost:1313/p/'>
 
 <link rel="stylesheet" href="/scss/style.min.946cca6c6259ef94ac55abfae7c7bf3291ea3ed5eea17ef77500b257217c6710.css"><meta property='og:title' content="">
-<meta property='og:description' content="">
+<meta property='og:description' content="Redisson 可重入锁原理详解 1. 为什么需要可重入锁？ 在日常开发中，锁 是保证线程安全的重要手段。但有时候，一个线程在持有锁时，会调用另一个也需要同一把锁的方法，这时问题就来了：\n如果锁 不可重入，线程在第二次尝试加锁时会失败，因为锁已经存在，它相当于 把自己卡死了。 如果锁 可重入，同一个线程可以多次获取这把锁，直到最后释放时才真正解锁。 所以，可重入锁的意义在于：避免同一线程因为方法嵌套调用而死锁。\n2. 普通分布式锁的问题 最简单的分布式锁通常用 Redis 的 SETNX 实现：\n1 SET key value NX EX 30 NX 表示如果 key 不存在才设置，保证原子性。 EX 30 设置过期时间，防止死锁。 问题出在哪里？ 当一个线程已经持有锁时，如果在方法嵌套中再次尝试获取锁：\nRedis 发现 key 已存在，直接返回失败。 虽然是 同一个线程 想再次获取锁，但因为锁实现里只区分 &ldquo;有锁 / 无锁&rdquo;，并不会识别线程。 结果就是：自己把自己锁死了。 3. Redisson 的改进（可重入实现） Redisson 在 value 的存储上做了改进，它并不是简单的字符串，而是一个 Hash 结构：\n1 2 3 lockKey -&gt; { threadId : reentrantCount } threadId：唯一标识某个 JVM 里的某个线程（一般是 UUID:threadId）。 reentrantCount：记录这个线程持有锁的次数。 这样就可以支持 可重入 了。\n">
 <meta property='og:url' content='http://localhost:1313/p/'>
 <meta property='og:site_name' content='Cecilia-塞西莉娅'>
 <meta property='og:type' content='article'><meta property='article:section' content='Post' />
 <meta name="twitter:title" content="">
-<meta name="twitter:description" content="">
+<meta name="twitter:description" content="Redisson 可重入锁原理详解 1. 为什么需要可重入锁？ 在日常开发中，锁 是保证线程安全的重要手段。但有时候，一个线程在持有锁时，会调用另一个也需要同一把锁的方法，这时问题就来了：\n如果锁 不可重入，线程在第二次尝试加锁时会失败，因为锁已经存在，它相当于 把自己卡死了。 如果锁 可重入，同一个线程可以多次获取这把锁，直到最后释放时才真正解锁。 所以，可重入锁的意义在于：避免同一线程因为方法嵌套调用而死锁。\n2. 普通分布式锁的问题 最简单的分布式锁通常用 Redis 的 SETNX 实现：\n1 SET key value NX EX 30 NX 表示如果 key 不存在才设置，保证原子性。 EX 30 设置过期时间，防止死锁。 问题出在哪里？ 当一个线程已经持有锁时，如果在方法嵌套中再次尝试获取锁：\nRedis 发现 key 已存在，直接返回失败。 虽然是 同一个线程 想再次获取锁，但因为锁实现里只区分 &ldquo;有锁 / 无锁&rdquo;，并不会识别线程。 结果就是：自己把自己锁死了。 3. Redisson 的改进（可重入实现） Redisson 在 value 的存储上做了改进，它并不是简单的字符串，而是一个 Hash 结构：\n1 2 3 lockKey -&gt; { threadId : reentrantCount } threadId：唯一标识某个 JVM 里的某个线程（一般是 UUID:threadId）。 reentrantCount：记录这个线程持有锁的次数。 这样就可以支持 可重入 了。\n">
     <link rel="shortcut icon" href="/favicon.ico" />
 
     </head>
@@ -270,7 +270,74 @@
     </ol>
 </aside>
 
-    
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">Table of contents</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#1-为什么需要可重入锁">1. 为什么需要可重入锁？</a></li>
+    <li><a href="#2-普通分布式锁的问题">2. 普通分布式锁的问题</a>
+      <ol>
+        <li><a href="#问题出在哪里">问题出在哪里？</a></li>
+      </ol>
+    </li>
+    <li><a href="#3-redisson-的改进可重入实现">3. Redisson 的改进（可重入实现）</a></li>
+    <li><a href="#4-执行流程举例">4. 执行流程举例</a>
+      <ol>
+        <li><a href="#41-第一次加锁methoda">4.1 第一次加锁（methodA）</a></li>
+        <li><a href="#42-第二次加锁methodb">4.2 第二次加锁（methodB）</a></li>
+        <li><a href="#43-methodb-执行完释放锁">4.3 methodB 执行完释放锁</a></li>
+        <li><a href="#44-methoda-执行完释放锁">4.4 methodA 执行完释放锁</a></li>
+      </ol>
+    </li>
+    <li><a href="#5-通俗解释">5. 通俗解释</a></li>
+    <li><a href="#6-核心实现原理">6. 核心实现原理</a>
+      <ol>
+        <li><a href="#61-加锁流程">6.1 加锁流程</a></li>
+        <li><a href="#62-释放锁流程">6.2 释放锁流程</a></li>
+      </ol>
+    </li>
+    <li><a href="#7-关键特性">7. 关键特性</a>
+      <ol>
+        <li><a href="#71-线程安全">7.1 线程安全</a></li>
+        <li><a href="#72-自动续期">7.2 自动续期</a></li>
+        <li><a href="#73-公平性">7.3 公平性</a></li>
+        <li><a href="#74-可重入性">7.4 可重入性</a></li>
+      </ol>
+    </li>
+    <li><a href="#8-使用示例">8. 使用示例</a></li>
+    <li><a href="#9-总结升华">9. 总结升华</a>
+      <ol>
+        <li><a href="#一句话总结">一句话总结：</a></li>
+      </ol>
+    </li>
+    <li><a href="#10-扩展阅读">10. 扩展阅读</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
 
             <main class="main full-width">
     <article class="main-article">
@@ -305,7 +372,7 @@
 
 
                 <time class="article-time--reading">
-                    0 minute read
+                    3 minute read
                 </time>
             </div>
         
@@ -320,7 +387,334 @@
     <section class="article-content">
     
     
-    
+    <h1 id="redisson-可重入锁原理详解">Redisson 可重入锁原理详解
+</h1><h2 id="1-为什么需要可重入锁">1. 为什么需要可重入锁？
+</h2><p>在日常开发中，<strong>锁</strong> 是保证线程安全的重要手段。但有时候，一个线程在持有锁时，会调用另一个也需要同一把锁的方法，这时问题就来了：</p>
+<ul>
+<li>如果锁 <strong>不可重入</strong>，线程在第二次尝试加锁时会失败，因为锁已经存在，它相当于 <strong>把自己卡死了</strong>。</li>
+<li>如果锁 <strong>可重入</strong>，同一个线程可以多次获取这把锁，直到最后释放时才真正解锁。</li>
+</ul>
+<p>所以，可重入锁的意义在于：<strong>避免同一线程因为方法嵌套调用而死锁</strong>。</p>
+<hr>
+<h2 id="2-普通分布式锁的问题">2. 普通分布式锁的问题
+</h2><p>最简单的分布式锁通常用 Redis 的 <code>SETNX</code> 实现：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">SET key value NX EX 30
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li><code>NX</code> 表示如果 key 不存在才设置，保证原子性。</li>
+<li><code>EX 30</code> 设置过期时间，防止死锁。</li>
+</ul>
+<h3 id="问题出在哪里">问题出在哪里？
+</h3><p>当一个线程已经持有锁时，如果在方法嵌套中再次尝试获取锁：</p>
+<ol>
+<li>Redis 发现 key 已存在，直接返回失败。</li>
+<li>虽然是 <strong>同一个线程</strong> 想再次获取锁，但因为锁实现里只区分 &ldquo;有锁 / 无锁&rdquo;，并不会识别线程。</li>
+<li>结果就是：<strong>自己把自己锁死了</strong>。</li>
+</ol>
+<hr>
+<h2 id="3-redisson-的改进可重入实现">3. Redisson 的改进（可重入实现）
+</h2><p>Redisson 在 value 的存储上做了改进，它并不是简单的字符串，而是一个 <strong>Hash 结构</strong>：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">lockKey -&gt; {
+</span></span><span class="line"><span class="cl">   threadId : reentrantCount
+</span></span><span class="line"><span class="cl">}
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li><strong>threadId</strong>：唯一标识某个 JVM 里的某个线程（一般是 UUID:threadId）。</li>
+<li><strong>reentrantCount</strong>：记录这个线程持有锁的次数。</li>
+</ul>
+<p>这样就可以支持 <strong>可重入</strong> 了。</p>
+<hr>
+<h2 id="4-执行流程举例">4. 执行流程举例
+</h2><p>假设我们有两个方法：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">methodA</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">lock</span><span class="p">.</span><span class="na">lock</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">methodB</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">lock</span><span class="p">.</span><span class="na">unlock</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">methodB</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">lock</span><span class="p">.</span><span class="na">lock</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// 执行逻辑</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">lock</span><span class="p">.</span><span class="na">unlock</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="41-第一次加锁methoda">4.1 第一次加锁（methodA）
+</h3><ul>
+<li>Redis 里还没有 <code>lockKey</code>。</li>
+<li>Redisson 会写入：
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">lockKey -&gt; { &#34;UUID:thread-1&#34; : 1 }
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>表示线程 <code>thread-1</code> 第一次获取锁，重入次数 = 1。</li>
+</ul>
+<h3 id="42-第二次加锁methodb">4.2 第二次加锁（methodB）
+</h3><ul>
+<li>Redis 发现 <code>lockKey</code> 已存在，但 owner 是 <strong>同一个线程</strong>。</li>
+<li>允许重入，计数 +1：
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">lockKey -&gt; { &#34;UUID:thread-1&#34; : 2 }
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h3 id="43-methodb-执行完释放锁">4.3 methodB 执行完释放锁
+</h3><ul>
+<li>调用 <code>unlock()</code>，计数 -1：
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">lockKey -&gt; { &#34;UUID:thread-1&#34; : 1 }
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>锁仍然由当前线程持有。</li>
+</ul>
+<h3 id="44-methoda-执行完释放锁">4.4 methodA 执行完释放锁
+</h3><ul>
+<li>再次调用 <code>unlock()</code>，计数 -1 → 变成 0。</li>
+<li>Redisson 删除 <code>lockKey</code>：
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">lockKey 删除
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>此时锁才真正释放，其他线程才有机会获取。</li>
+</ul>
+<hr>
+<h2 id="5-通俗解释">5. 通俗解释
+</h2><p>你总结得非常到位，可以用通俗的话再描述一次：</p>
+<p>假如一个线程调用多个方法时，第一个方法用了锁去调用第二个方法，第二个方法再次调用这个线程的锁就会失败。因为虽然锁的 key 一样，但是第二次获取锁的时候会发现锁已经存在了，就获取失败。</p>
+<p>Redisson 在这个基础上做了改进：它在锁的 value 里加上了一个 <strong>重入次数</strong>，并利用 Redis Hash 结构来存储。</p>
+<p>Hash 结构里有两个值：</p>
+<ul>
+<li><strong>field</strong>：当前线程的标识（UUID + threadId）</li>
+<li><strong>value</strong>：重入次数</li>
+</ul>
+<p>执行过程是这样的：</p>
+<ol>
+<li><strong>方法一第一次获取锁</strong>：重入次数 +1，变成 1</li>
+<li><strong>方法一调用方法二，方法二又要用锁</strong>：重入次数再 +1，变成 2</li>
+<li><strong>方法二执行完释放锁</strong>：重入次数 -1，变回 1</li>
+<li><strong>方法一执行完释放锁</strong>：重入次数 -1，变回 0，锁才真正释放</li>
+</ol>
+<p>这样就避免了同一个线程因为嵌套调用而死锁。</p>
+<hr>
+<h2 id="6-核心实现原理">6. 核心实现原理
+</h2><h3 id="61-加锁流程">6.1 加锁流程
+</h3><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-lua" data-lang="lua"><span class="line"><span class="cl"><span class="c1">-- 加锁脚本</span>
+</span></span><span class="line"><span class="cl"><span class="kr">if</span> <span class="p">(</span><span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;exists&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="kr">then</span>
+</span></span><span class="line"><span class="cl">    <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;hset&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;pexpire&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">return</span> <span class="kc">nil</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">end</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">if</span> <span class="p">(</span><span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;hexists&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="kr">then</span>
+</span></span><span class="line"><span class="cl">    <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;hincrby&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;pexpire&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">return</span> <span class="kc">nil</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">end</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">return</span> <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;pttl&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="62-释放锁流程">6.2 释放锁流程
+</h3><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-lua" data-lang="lua"><span class="line"><span class="cl"><span class="c1">-- 释放锁脚本</span>
+</span></span><span class="line"><span class="cl"><span class="kr">if</span> <span class="p">(</span><span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;hexists&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="kr">then</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">return</span> <span class="kc">nil</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">end</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kd">local</span> <span class="n">counter</span> <span class="o">=</span> <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;hincrby&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="kr">if</span> <span class="p">(</span><span class="n">counter</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="kr">then</span>
+</span></span><span class="line"><span class="cl">    <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;pexpire&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">2</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">else</span>
+</span></span><span class="line"><span class="cl">    <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;del&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="n">redis.call</span><span class="p">(</span><span class="s1">&#39;publish&#39;</span><span class="p">,</span> <span class="n">KEYS</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ARGV</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="kr">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kr">end</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><hr>
+<h2 id="7-关键特性">7. 关键特性
+</h2><h3 id="71-线程安全">7.1 线程安全
+</h3><ul>
+<li>使用 Lua 脚本保证原子性</li>
+<li>避免竞态条件</li>
+</ul>
+<h3 id="72-自动续期">7.2 自动续期
+</h3><ul>
+<li>通过 <code>pexpire</code> 自动续期</li>
+<li>防止业务执行时间过长导致锁过期</li>
+</ul>
+<h3 id="73-公平性">7.3 公平性
+</h3><ul>
+<li>支持公平锁和非公平锁</li>
+<li>通过队列机制保证获取锁的顺序</li>
+</ul>
+<h3 id="74-可重入性">7.4 可重入性
+</h3><ul>
+<li>同一线程可多次获取锁</li>
+<li>通过重入计数器实现</li>
+</ul>
+<hr>
+<h2 id="8-使用示例">8. 使用示例
+</h2><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="c1">// 获取可重入锁</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="n">RLock</span><span class="w"> </span><span class="n">lock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">redisson</span><span class="p">.</span><span class="na">getLock</span><span class="p">(</span><span class="s">&#34;myLock&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 尝试加锁，最多等待100秒，上锁以后10秒自动解锁</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">boolean</span><span class="w"> </span><span class="n">res</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">lock</span><span class="p">.</span><span class="na">tryLock</span><span class="p">(</span><span class="n">100</span><span class="p">,</span><span class="w"> </span><span class="n">10</span><span class="p">,</span><span class="w"> </span><span class="n">TimeUnit</span><span class="p">.</span><span class="na">SECONDS</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">res</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="c1">// 业务逻辑</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">doSomething</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">lock</span><span class="p">.</span><span class="na">unlock</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">InterruptedException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">e</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span><span class="w">
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><hr>
+<h2 id="9-总结升华">9. 总结升华
+</h2><ol>
+<li>
+<p><strong>普通分布式锁</strong>只关心 &ldquo;有锁 / 无锁&rdquo;，不关心是谁加的锁，导致 <strong>同一线程重入时也会失败</strong>。</p>
+</li>
+<li>
+<p><strong>Redisson</strong> 通过在 Redis 的 Hash 结构 中记录 &ldquo;线程标识 + 重入计数&rdquo;，让锁具备了 <strong>可重入能力</strong>。</p>
+</li>
+<li>
+<p><strong>意义</strong>：可重入锁避免了一个线程在嵌套调用中把自己卡死，同时对外仍然保持分布式锁的特性。</p>
+</li>
+</ol>
+<h3 id="一句话总结">一句话总结：
+</h3><blockquote>
+<p><strong>Redisson 的可重入锁，本质上就是用 Redis Hash 存储线程 ID 和重入次数，直到重入次数归零才真正释放锁。</strong></p></blockquote>
+<hr>
+<h2 id="10-扩展阅读">10. 扩展阅读
+</h2><ul>
+<li><a class="link" href="https://github.com/redisson/redisson"  target="_blank" rel="noopener"
+    >Redisson 官方文档</a></li>
+<li><a class="link" href="https://redis.io/docs/manual/patterns/distributed-locks/"  target="_blank" rel="noopener"
+    >Redis 分布式锁最佳实践</a></li>
+<li><a class="link" href="https://book.douban.com/subject/10484692/"  target="_blank" rel="noopener"
+    >Java 并发编程实战</a></li>
+</ul>
+<hr>
+<p><em>本文档详细介绍了 Redisson 可重入锁的实现原理，帮助开发者深入理解分布式锁的核心机制。</em></p>
+
 </section>
 
 
