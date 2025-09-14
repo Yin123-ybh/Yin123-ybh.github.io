@@ -1,10 +1,10 @@
 ---
-title: "秒杀活动功能完善指南 - 第3部分"
+title: "Redisson 可重入锁原理详解"
 date: 2025-01-12
 draft: false
 tags: ["Java", "Spring Boot", "Redis", "高并发", "秒杀系统"]
 categories: ["Web开发"]
-description: "详细介绍如何从零开始构建一个高并发的秒杀活动系统，包括防超卖、分布式锁、Redis缓存等核心技术实现。"
+description: "通俗介绍redission可重入锁原理和普通分布式锁不可重入性"
 ---
 # Redisson 可重入锁原理详解
 
