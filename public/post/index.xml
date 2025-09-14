@@ -1,292 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Cecilia-塞西莉娅</title><link>https://Yin123-ybh.github.io/post/</link><description>Recent content in Posts on Cecilia-塞西莉娅</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>Cecilia-塞西莉娅</copyright><lastBuildDate>Tue, 26 Aug 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://Yin123-ybh.github.io/post/index.xml" rel="self" type="application/rss+xml"/><item><title>基于 Session 的短信登录完整解析</title><link>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</link><pubDate>Tue, 26 Aug 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</guid><description>&lt;h1 id="基于-session-的短信登录完整解析">基于 Session 的短信登录完整解析
-&lt;/h1>&lt;p>在现代 Web 应用中，&lt;strong>短信验证码登录&lt;/strong> 是一种非常常见的无密码认证方式。它的好处是简单、安全，用户只需要输入手机号和验证码即可登录，而不用记复杂的密码。&lt;/p>
-&lt;p>很多初学者在实现时会有疑惑：&lt;strong>验证码存哪？怎么比对？登录状态如何保持？&lt;/strong> 这篇文章将通过推导的方式，逐步解释清楚，并给出完整的代码示例。&lt;/p>
-&lt;hr>
-&lt;h2 id="一为什么需要-session">一、为什么需要 Session
-&lt;/h2>&lt;p>要理解短信登录，必须先搞清楚 &lt;strong>Session&lt;/strong> 的概念。&lt;/p>
-&lt;p>HTTP 协议的一个最大特点是：&lt;strong>无状态&lt;/strong>。&lt;br>
-这意味着每一次请求，服务器都不会记得你是谁。&lt;/p>
-&lt;p>但是在实际应用里，我们需要：&lt;/p>
-&lt;ul>
-&lt;li>登录之后，保持登录状态&lt;/li>
-&lt;li>购物车内容能够一直保存&lt;/li>
-&lt;li>验证码发送后，能够正确地校验&lt;/li>
-&lt;/ul>
-&lt;p>这时候就需要 &lt;strong>Session&lt;/strong>。&lt;/p>
-&lt;h3 id="11-session-的类比">1.1 Session 的类比
-&lt;/h3>&lt;p>你可以把 &lt;strong>Session&lt;/strong> 想象成服务器给用户开的一间小储物柜：&lt;/p>
-&lt;ul>
-&lt;li>当用户第一次访问时，服务器（tomcat）分配一个储物柜（Session），并生成一个唯一编号（Session ID）&lt;/li>
-&lt;li>服务器把这个编号写在一张小纸条上（Cookie），交给浏览器（客户端）保存&lt;/li>
-&lt;li>以后浏览器每次访问时，都会带上这张小纸条&lt;/li>
-&lt;li>服务器根据纸条上的编号，就能找到对应的储物柜，从里面取出属于该用户的数据&lt;/li>
-&lt;/ul>
-&lt;p>&lt;img src="https://www.elecfans.com/uploads/allimg/171115/2749555-1G1151I643X7.png"
-loading="lazy"
-alt="Session 工作原理示意图"
->&lt;/p>
-&lt;hr>
-&lt;h3 id="12-session-vs-cookie">1.2 Session vs Cookie
-&lt;/h3>&lt;table>
-&lt;thead>
-&lt;tr>
-&lt;th>特性&lt;/th>
-&lt;th>Cookie（小纸条）&lt;/th>
-&lt;th>Session（储物柜）&lt;/th>
-&lt;/tr>
-&lt;/thead>
-&lt;tbody>
-&lt;tr>
-&lt;td>存储位置&lt;/td>
-&lt;td>浏览器端&lt;/td>
-&lt;td>服务器端&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>安全性&lt;/td>
-&lt;td>较低（容易被篡改）&lt;/td>
-&lt;td>较高（由服务器维护）&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>容量&lt;/td>
-&lt;td>4KB 左右&lt;/td>
-&lt;td>取决于服务器内存&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>生命周期&lt;/td>
-&lt;td>可设置长时间保存&lt;/td>
-&lt;td>默认随浏览器关闭或超时清除&lt;/td>
-&lt;/tr>
-&lt;/tbody>
-&lt;/table>
-&lt;hr>
-&lt;h2 id="二短信登录的推导过程">二、短信登录的推导过程
-&lt;/h2>&lt;p>现在我们把 Session 的原理放到 &lt;strong>短信验证码登录&lt;/strong> 的场景中，来一步步推导。&lt;/p>
-&lt;h3 id="21-用户提交手机号">2.1 用户提交手机号
-&lt;/h3>&lt;ul>
-&lt;li>用户在前端页面输入手机号&lt;/li>
-&lt;li>前端把手机号发送给后端&lt;/li>
-&lt;/ul>
-&lt;h3 id="22-服务器生成验证码">2.2 服务器生成验证码
-&lt;/h3>&lt;ul>
-&lt;li>后端生成一个 6 位随机数（例如 &lt;code>123456&lt;/code>）&lt;/li>
-&lt;li>把这个验证码保存到 &lt;strong>Session 储物柜&lt;/strong> 里&lt;/li>
-&lt;li>同时调用短信服务商的 API，把验证码发送到用户手机&lt;/li>
-&lt;/ul>
-&lt;p>此时，&lt;strong>Session 中保存的是：&lt;/strong>
-key = &amp;ldquo;SMS_CODE_手机号&amp;rdquo;
-value = &amp;ldquo;123456&amp;rdquo;&lt;/p>
-&lt;h3 id="23-用户输入验证码登录">2.3 用户输入验证码登录
-&lt;/h3>&lt;ul>
-&lt;li>用户收到验证码，在页面输入&lt;/li>
-&lt;li>浏览器在发起请求时，会自动带上 Session ID 的小纸条（Cookie）&lt;/li>
-&lt;li>后端根据 Session ID 找到储物柜，从中取出验证码&lt;/li>
-&lt;li>比对用户输入的验证码与 Session 中保存的验证码
-&lt;ul>
-&lt;li>一致 ✅ → 登录成功&lt;/li>
-&lt;li>不一致 ❌ → 登录失败&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;/ul>
-&lt;p>&lt;img src="https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin.png"
-width="1202"
-height="622"
-srcset="https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin_hu_acdb368d88fab652.png 480w, https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin_hu_be9690a6a3938655.png 1024w"
-loading="lazy"
-alt="短信登录流程图"
-class="gallery-image"
-data-flex-grow="193"
-data-flex-basis="463px"
->&lt;/p>
-&lt;hr>
-&lt;h2 id="三代码实现示例spring-boot">三、代码实现示例（Spring Boot）
-&lt;/h2>&lt;p>接下来用 Java + Spring Boot 来实现一个最简化的 &lt;strong>基于 Session 的短信登录&lt;/strong>。&lt;/p>
-&lt;h3 id="31-发送验证码接口">3.1 发送验证码接口
-&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
-&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
-&lt;/span>&lt;span class="lnt"> 2
-&lt;/span>&lt;span class="lnt"> 3
-&lt;/span>&lt;span class="lnt"> 4
-&lt;/span>&lt;span class="lnt"> 5
-&lt;/span>&lt;span class="lnt"> 6
-&lt;/span>&lt;span class="lnt"> 7
-&lt;/span>&lt;span class="lnt"> 8
-&lt;/span>&lt;span class="lnt"> 9
-&lt;/span>&lt;span class="lnt">10
-&lt;/span>&lt;span class="lnt">11
-&lt;/span>&lt;span class="lnt">12
-&lt;/span>&lt;span class="lnt">13
-&lt;/span>&lt;span class="lnt">14
-&lt;/span>&lt;span class="lnt">15
-&lt;/span>&lt;span class="lnt">16
-&lt;/span>&lt;span class="lnt">17
-&lt;/span>&lt;span class="lnt">18
-&lt;/span>&lt;span class="lnt">19
-&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
-&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@RestController&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@RequestMapping&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/auth&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">class&lt;/span> &lt;span class="nc">SmsLoginController&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@PostMapping&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/sendCode&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">sendCode&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nd">@RequestParam&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">HttpSession&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 生成 6 位验证码&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">valueOf&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">)((&lt;/span>&lt;span class="n">Math&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">random&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">9&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">100000&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 模拟发送短信（真实情况需接入短信服务商 API）&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;向手机号 &amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34; 发送验证码：&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 保存到 session&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">setAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">setAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_TIME_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">currentTimeMillis&lt;/span>&lt;span class="p">());&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">ok&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;验证码已发送&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
-&lt;/div>
-&lt;/div>&lt;p>说明：
-验证码保存在 Session 中，不存前端
-建议同时保存验证码生成时间，方便后续判断是否过期&lt;/p>
-&lt;h3 id="32-验证登录接口">3.2 验证登录接口
-&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
-&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
-&lt;/span>&lt;span class="lnt"> 2
-&lt;/span>&lt;span class="lnt"> 3
-&lt;/span>&lt;span class="lnt"> 4
-&lt;/span>&lt;span class="lnt"> 5
-&lt;/span>&lt;span class="lnt"> 6
-&lt;/span>&lt;span class="lnt"> 7
-&lt;/span>&lt;span class="lnt"> 8
-&lt;/span>&lt;span class="lnt"> 9
-&lt;/span>&lt;span class="lnt">10
-&lt;/span>&lt;span class="lnt">11
-&lt;/span>&lt;span class="lnt">12
-&lt;/span>&lt;span class="lnt">13
-&lt;/span>&lt;span class="lnt">14
-&lt;/span>&lt;span class="lnt">15
-&lt;/span>&lt;span class="lnt">16
-&lt;/span>&lt;span class="lnt">17
-&lt;/span>&lt;span class="lnt">18
-&lt;/span>&lt;span class="lnt">19
-&lt;/span>&lt;span class="lnt">20
-&lt;/span>&lt;span class="lnt">21
-&lt;/span>&lt;span class="lnt">22
-&lt;/span>&lt;span class="lnt">23
-&lt;/span>&lt;span class="lnt">24
-&lt;/span>&lt;span class="lnt">25
-&lt;/span>&lt;span class="lnt">26
-&lt;/span>&lt;span class="lnt">27
-&lt;/span>&lt;span class="lnt">28
-&lt;/span>&lt;span class="lnt">29
-&lt;/span>&lt;span class="lnt">30
-&lt;/span>&lt;span class="lnt">31
-&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
-&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@PostMapping&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/login&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">login&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nd">@RequestParam&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@RequestParam&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">HttpSession&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">sessionCode&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">codeTime&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_TIME_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">sessionCode&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">null&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">400&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="na">body&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;验证码未发送或已过期&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 验证是否过期（5分钟有效）&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">currentTimeMillis&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">codeTime&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">5&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">60&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1000&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">removeAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">removeAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_TIME_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">400&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="na">body&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;验证码已过期&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">!&lt;/span>&lt;span class="n">sessionCode&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">equals&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">400&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="na">body&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;验证码错误&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 登录成功，写入用户登录状态&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">setAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;LOGIN_USER&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 清理验证码&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">removeAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">removeAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_TIME_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">ok&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;登录成功&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
-&lt;/div>
-&lt;/div>&lt;p>说明：
-核心逻辑在 后端比对，前端只负责收集输入
-验证码过期机制必须有，防止重复使用&lt;/p>
-&lt;h3 id="33-获取当前登录用户接口">3.3 获取当前登录用户接口
-&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
-&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
-&lt;/span>&lt;span class="lnt">2
-&lt;/span>&lt;span class="lnt">3
-&lt;/span>&lt;span class="lnt">4
-&lt;/span>&lt;span class="lnt">5
-&lt;/span>&lt;span class="lnt">6
-&lt;/span>&lt;span class="lnt">7
-&lt;/span>&lt;span class="lnt">8
-&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
-&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@GetMapping&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/me&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">getUser&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">HttpSession&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;LOGIN_USER&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">null&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">401&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="na">body&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;未登录&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">ok&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;当前登录用户：&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
-&lt;/div>
-&lt;/div>&lt;h2 id="四关键点总结">四、关键点总结
-&lt;/h2>&lt;h4 id="1session-是储物柜cookie-是储物柜的取件凭证证">1.Session 是储物柜，Cookie 是储物柜的取件凭证证
-&lt;/h4>&lt;ul>
-&lt;li>验证码存放在 Session（服务器端），不存浏览器&lt;/li>
-&lt;li>浏览器只保留 Session ID（Cookie）&lt;/li>
-&lt;/ul>
-&lt;h4 id="2比对逻辑必须在后端完成">2.比对逻辑必须在后端完成
-&lt;/h4>&lt;ul>
-&lt;li>前端只负责收集和提交手机号、验证码&lt;/li>
-&lt;li>服务器根据 Session 找到验证码并比对，决定是否登录&lt;/li>
-&lt;/ul>
-&lt;h4 id="3安全性措施">3.安全性措施
-&lt;/h4>&lt;ul>
-&lt;li>验证码要有过期时间（一般 5 分钟）&lt;/li>
-&lt;li>验证码要有发送频率限制，防止被恶意刷&lt;/li>
-&lt;/ul>
-&lt;h2 id="五流程回顾">五、流程回顾
-&lt;/h2>&lt;h3 id="让我们回顾整个短信登录的过程">让我们回顾整个短信登录的过程：
-&lt;/h3>&lt;h5 id="1用户输入手机号">1.用户输入手机号
-&lt;/h5>&lt;h5 id="2服务器生成验证码存到-session并通过短信发送">2.服务器生成验证码，存到 Session，并通过短信发送
-&lt;/h5>&lt;h5 id="3用户收到验证码输入到前端页面">3.用户收到验证码，输入到前端页面
-&lt;/h5>&lt;h5 id="4浏览器请求时带上-cookiesession-id">4.浏览器请求时带上 Cookie（Session ID）
-&lt;/h5>&lt;h5 id="5服务器用-session-id-找到储物柜取出验证码进行比对">5.服务器用 Session ID 找到储物柜，取出验证码进行比对
-&lt;/h5>&lt;ul>
-&lt;li>一致 → 登录成功；&lt;/li>
-&lt;li>不一致/过期 → 登录失败&lt;/li>
-&lt;/ul>
-&lt;h3 id="6扩展思考">6.扩展思考
-&lt;/h3>&lt;p>在实际生产环境中，Session 可能存放在 Redis 里，以便支持分布式部署。&lt;/p>
-&lt;p>另外，也可以替代 Session，用 &lt;strong>JWT（JSON Web Token）&lt;/strong> 实现无状态的登录。
-但核心思想是一致的：&lt;/p>
-&lt;ul>
-&lt;li>验证码必须在后端保存和比对&lt;/li>
-&lt;li>前端只负责展示和输入&lt;/li>
-&lt;/ul>
-&lt;h3 id="7结语">7.结语
-&lt;/h3>&lt;p>通过上面的推导，我们把“短信登录”这个常见需求，完整地拆解成了 业务流程 + Session 原理 + 实现代码。&lt;/p>
-&lt;p>如果你刚开始学习后端开发，希望你能从这篇文章中真正理解：&lt;/p>
-&lt;ul>
-&lt;li>为什么要用 Session&lt;/li>
-&lt;li>短信验证码应该存放在哪里&lt;/li>
-&lt;li>验证逻辑为什么要在后端&lt;/li>
-&lt;/ul>
-&lt;p>这样，不管是做一个小 demo，还是将来应对生产级的项目，你都能举一反三。&lt;/p></description></item><item><title>Redisson 可重入锁原理详解</title><link>https://Yin123-ybh.github.io/p/redisson-%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3/</link><pubDate>Sun, 12 Jan 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/redisson-%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3/</guid><description>&lt;h1 id="redisson-可重入锁原理详解">Redisson 可重入锁原理详解
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts on Cecilia-塞西莉娅</title><link>https://Yin123-ybh.github.io/post/</link><description>Recent content in Posts on Cecilia-塞西莉娅</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>Cecilia-塞西莉娅</copyright><lastBuildDate>Sun, 14 Sep 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://Yin123-ybh.github.io/post/index.xml" rel="self" type="application/rss+xml"/><item><title>Redisson 可重入锁原理详解</title><link>https://Yin123-ybh.github.io/p/redisson-%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3/</link><pubDate>Sun, 14 Sep 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/redisson-%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3/</guid><description>&lt;h1 id="redisson-可重入锁原理详解">Redisson 可重入锁原理详解
 &lt;/h1>&lt;h2 id="1-为什么需要可重入锁">1. 为什么需要可重入锁？
 &lt;/h2>&lt;p>在日常开发中，&lt;strong>锁&lt;/strong> 是保证线程安全的重要手段。但有时候，一个线程在持有锁时，会调用另一个也需要同一把锁的方法，这时问题就来了：&lt;/p>
 &lt;ul>
@@ -612,7 +324,295 @@ data-flex-basis="463px"
 >Java 并发编程实战&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;hr>
-&lt;p>&lt;em>本文档详细介绍了 Redisson 可重入锁的实现原理，帮助开发者深入理解分布式锁的核心机制。&lt;/em>&lt;/p></description></item><item><title>秒杀活动功能完善指南 - 第一部分</title><link>https://Yin123-ybh.github.io/p/%E7%A7%92%E6%9D%80%E6%B4%BB%E5%8A%A8%E5%8A%9F%E8%83%BD%E5%AE%8C%E5%96%84%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86/</link><pubDate>Sun, 12 Jan 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E7%A7%92%E6%9D%80%E6%B4%BB%E5%8A%A8%E5%8A%9F%E8%83%BD%E5%AE%8C%E5%96%84%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86/</guid><description>&lt;h1 id="秒杀活动功能完善指南---第一部分">秒杀活动功能完善指南 - 第一部分
+&lt;p>&lt;em>本文档详细介绍了 Redisson 可重入锁的实现原理，帮助开发者深入理解分布式锁的核心机制。&lt;/em>&lt;/p></description></item><item><title>基于 Session 的短信登录完整解析</title><link>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</link><pubDate>Tue, 26 Aug 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</guid><description>&lt;h1 id="基于-session-的短信登录完整解析">基于 Session 的短信登录完整解析
+&lt;/h1>&lt;p>在现代 Web 应用中，&lt;strong>短信验证码登录&lt;/strong> 是一种非常常见的无密码认证方式。它的好处是简单、安全，用户只需要输入手机号和验证码即可登录，而不用记复杂的密码。&lt;/p>
+&lt;p>很多初学者在实现时会有疑惑：&lt;strong>验证码存哪？怎么比对？登录状态如何保持？&lt;/strong> 这篇文章将通过推导的方式，逐步解释清楚，并给出完整的代码示例。&lt;/p>
+&lt;hr>
+&lt;h2 id="一为什么需要-session">一、为什么需要 Session
+&lt;/h2>&lt;p>要理解短信登录，必须先搞清楚 &lt;strong>Session&lt;/strong> 的概念。&lt;/p>
+&lt;p>HTTP 协议的一个最大特点是：&lt;strong>无状态&lt;/strong>。&lt;br>
+这意味着每一次请求，服务器都不会记得你是谁。&lt;/p>
+&lt;p>但是在实际应用里，我们需要：&lt;/p>
+&lt;ul>
+&lt;li>登录之后，保持登录状态&lt;/li>
+&lt;li>购物车内容能够一直保存&lt;/li>
+&lt;li>验证码发送后，能够正确地校验&lt;/li>
+&lt;/ul>
+&lt;p>这时候就需要 &lt;strong>Session&lt;/strong>。&lt;/p>
+&lt;h3 id="11-session-的类比">1.1 Session 的类比
+&lt;/h3>&lt;p>你可以把 &lt;strong>Session&lt;/strong> 想象成服务器给用户开的一间小储物柜：&lt;/p>
+&lt;ul>
+&lt;li>当用户第一次访问时，服务器（tomcat）分配一个储物柜（Session），并生成一个唯一编号（Session ID）&lt;/li>
+&lt;li>服务器把这个编号写在一张小纸条上（Cookie），交给浏览器（客户端）保存&lt;/li>
+&lt;li>以后浏览器每次访问时，都会带上这张小纸条&lt;/li>
+&lt;li>服务器根据纸条上的编号，就能找到对应的储物柜，从里面取出属于该用户的数据&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://www.elecfans.com/uploads/allimg/171115/2749555-1G1151I643X7.png"
+loading="lazy"
+alt="Session 工作原理示意图"
+>&lt;/p>
+&lt;hr>
+&lt;h3 id="12-session-vs-cookie">1.2 Session vs Cookie
+&lt;/h3>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>特性&lt;/th>
+&lt;th>Cookie（小纸条）&lt;/th>
+&lt;th>Session（储物柜）&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>存储位置&lt;/td>
+&lt;td>浏览器端&lt;/td>
+&lt;td>服务器端&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>安全性&lt;/td>
+&lt;td>较低（容易被篡改）&lt;/td>
+&lt;td>较高（由服务器维护）&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>容量&lt;/td>
+&lt;td>4KB 左右&lt;/td>
+&lt;td>取决于服务器内存&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>生命周期&lt;/td>
+&lt;td>可设置长时间保存&lt;/td>
+&lt;td>默认随浏览器关闭或超时清除&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;hr>
+&lt;h2 id="二短信登录的推导过程">二、短信登录的推导过程
+&lt;/h2>&lt;p>现在我们把 Session 的原理放到 &lt;strong>短信验证码登录&lt;/strong> 的场景中，来一步步推导。&lt;/p>
+&lt;h3 id="21-用户提交手机号">2.1 用户提交手机号
+&lt;/h3>&lt;ul>
+&lt;li>用户在前端页面输入手机号&lt;/li>
+&lt;li>前端把手机号发送给后端&lt;/li>
+&lt;/ul>
+&lt;h3 id="22-服务器生成验证码">2.2 服务器生成验证码
+&lt;/h3>&lt;ul>
+&lt;li>后端生成一个 6 位随机数（例如 &lt;code>123456&lt;/code>）&lt;/li>
+&lt;li>把这个验证码保存到 &lt;strong>Session 储物柜&lt;/strong> 里&lt;/li>
+&lt;li>同时调用短信服务商的 API，把验证码发送到用户手机&lt;/li>
+&lt;/ul>
+&lt;p>此时，&lt;strong>Session 中保存的是：&lt;/strong>
+key = &amp;ldquo;SMS_CODE_手机号&amp;rdquo;
+value = &amp;ldquo;123456&amp;rdquo;&lt;/p>
+&lt;h3 id="23-用户输入验证码登录">2.3 用户输入验证码登录
+&lt;/h3>&lt;ul>
+&lt;li>用户收到验证码，在页面输入&lt;/li>
+&lt;li>浏览器在发起请求时，会自动带上 Session ID 的小纸条（Cookie）&lt;/li>
+&lt;li>后端根据 Session ID 找到储物柜，从中取出验证码&lt;/li>
+&lt;li>比对用户输入的验证码与 Session 中保存的验证码
+&lt;ul>
+&lt;li>一致 ✅ → 登录成功&lt;/li>
+&lt;li>不一致 ❌ → 登录失败&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;img src="https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin.png"
+width="1202"
+height="622"
+srcset="https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin_hu_acdb368d88fab652.png 480w, https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/smsLogin_hu_be9690a6a3938655.png 1024w"
+loading="lazy"
+alt="短信登录流程图"
+class="gallery-image"
+data-flex-grow="193"
+data-flex-basis="463px"
+>&lt;/p>
+&lt;hr>
+&lt;h2 id="三代码实现示例spring-boot">三、代码实现示例（Spring Boot）
+&lt;/h2>&lt;p>接下来用 Java + Spring Boot 来实现一个最简化的 &lt;strong>基于 Session 的短信登录&lt;/strong>。&lt;/p>
+&lt;h3 id="31-发送验证码接口">3.1 发送验证码接口
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@RestController&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@RequestMapping&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/auth&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">class&lt;/span> &lt;span class="nc">SmsLoginController&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@PostMapping&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/sendCode&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">sendCode&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nd">@RequestParam&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">HttpSession&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 生成 6 位验证码&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">valueOf&lt;/span>&lt;span class="p">((&lt;/span>&lt;span class="kt">int&lt;/span>&lt;span class="p">)((&lt;/span>&lt;span class="n">Math&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">random&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">9&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">100000&lt;/span>&lt;span class="p">));&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 模拟发送短信（真实情况需接入短信服务商 API）&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">out&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">println&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;向手机号 &amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34; 发送验证码：&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 保存到 session&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">setAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">setAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_TIME_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">currentTimeMillis&lt;/span>&lt;span class="p">());&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">ok&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;验证码已发送&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>说明：
+验证码保存在 Session 中，不存前端
+建议同时保存验证码生成时间，方便后续判断是否过期&lt;/p>
+&lt;h3 id="32-验证登录接口">3.2 验证登录接口
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@PostMapping&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/login&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">login&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nd">@RequestParam&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@RequestParam&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">HttpSession&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">sessionCode&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">codeTime&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_TIME_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">sessionCode&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">null&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">400&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="na">body&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;验证码未发送或已过期&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 验证是否过期（5分钟有效）&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">System&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">currentTimeMillis&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">-&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">codeTime&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">5&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">60&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">*&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">1000&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">removeAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">removeAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_TIME_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">400&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="na">body&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;验证码已过期&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="o">!&lt;/span>&lt;span class="n">sessionCode&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">equals&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">code&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">400&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="na">body&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;验证码错误&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 登录成功，写入用户登录状态&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">setAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;LOGIN_USER&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 清理验证码&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">removeAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">removeAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;SMS_CODE_TIME_&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">ok&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;登录成功&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>说明：
+核心逻辑在 后端比对，前端只负责收集输入
+验证码过期机制必须有，防止重复使用&lt;/p>
+&lt;h3 id="33-获取当前登录用户接口">3.3 获取当前登录用户接口
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;span class="lnt">7
+&lt;/span>&lt;span class="lnt">8
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="nd">@GetMapping&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;/me&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">getUser&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">HttpSession&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">session&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getAttribute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;LOGIN_USER&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">==&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">null&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">401&lt;/span>&lt;span class="p">).&lt;/span>&lt;span class="na">body&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;未登录&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">return&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResponseEntity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">ok&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;当前登录用户：&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">phone&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h2 id="四关键点总结">四、关键点总结
+&lt;/h2>&lt;h4 id="1session-是储物柜cookie-是储物柜的取件凭证证">1.Session 是储物柜，Cookie 是储物柜的取件凭证证
+&lt;/h4>&lt;ul>
+&lt;li>验证码存放在 Session（服务器端），不存浏览器&lt;/li>
+&lt;li>浏览器只保留 Session ID（Cookie）&lt;/li>
+&lt;/ul>
+&lt;h4 id="2比对逻辑必须在后端完成">2.比对逻辑必须在后端完成
+&lt;/h4>&lt;ul>
+&lt;li>前端只负责收集和提交手机号、验证码&lt;/li>
+&lt;li>服务器根据 Session 找到验证码并比对，决定是否登录&lt;/li>
+&lt;/ul>
+&lt;h4 id="3安全性措施">3.安全性措施
+&lt;/h4>&lt;ul>
+&lt;li>验证码要有过期时间（一般 5 分钟）&lt;/li>
+&lt;li>验证码要有发送频率限制，防止被恶意刷&lt;/li>
+&lt;/ul>
+&lt;h2 id="五流程回顾">五、流程回顾
+&lt;/h2>&lt;h3 id="让我们回顾整个短信登录的过程">让我们回顾整个短信登录的过程：
+&lt;/h3>&lt;h5 id="1用户输入手机号">1.用户输入手机号
+&lt;/h5>&lt;h5 id="2服务器生成验证码存到-session并通过短信发送">2.服务器生成验证码，存到 Session，并通过短信发送
+&lt;/h5>&lt;h5 id="3用户收到验证码输入到前端页面">3.用户收到验证码，输入到前端页面
+&lt;/h5>&lt;h5 id="4浏览器请求时带上-cookiesession-id">4.浏览器请求时带上 Cookie（Session ID）
+&lt;/h5>&lt;h5 id="5服务器用-session-id-找到储物柜取出验证码进行比对">5.服务器用 Session ID 找到储物柜，取出验证码进行比对
+&lt;/h5>&lt;ul>
+&lt;li>一致 → 登录成功；&lt;/li>
+&lt;li>不一致/过期 → 登录失败&lt;/li>
+&lt;/ul>
+&lt;h3 id="6扩展思考">6.扩展思考
+&lt;/h3>&lt;p>在实际生产环境中，Session 可能存放在 Redis 里，以便支持分布式部署。&lt;/p>
+&lt;p>另外，也可以替代 Session，用 &lt;strong>JWT（JSON Web Token）&lt;/strong> 实现无状态的登录。
+但核心思想是一致的：&lt;/p>
+&lt;ul>
+&lt;li>验证码必须在后端保存和比对&lt;/li>
+&lt;li>前端只负责展示和输入&lt;/li>
+&lt;/ul>
+&lt;h3 id="7结语">7.结语
+&lt;/h3>&lt;p>通过上面的推导，我们把“短信登录”这个常见需求，完整地拆解成了 业务流程 + Session 原理 + 实现代码。&lt;/p>
+&lt;p>如果你刚开始学习后端开发，希望你能从这篇文章中真正理解：&lt;/p>
+&lt;ul>
+&lt;li>为什么要用 Session&lt;/li>
+&lt;li>短信验证码应该存放在哪里&lt;/li>
+&lt;li>验证逻辑为什么要在后端&lt;/li>
+&lt;/ul>
+&lt;p>这样，不管是做一个小 demo，还是将来应对生产级的项目，你都能举一反三。&lt;/p></description></item><item><title>秒杀活动功能完善指南 - 第一部分</title><link>https://Yin123-ybh.github.io/p/%E7%A7%92%E6%9D%80%E6%B4%BB%E5%8A%A8%E5%8A%9F%E8%83%BD%E5%AE%8C%E5%96%84%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86/</link><pubDate>Sun, 12 Jan 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E7%A7%92%E6%9D%80%E6%B4%BB%E5%8A%A8%E5%8A%9F%E8%83%BD%E5%AE%8C%E5%96%84%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86/</guid><description>&lt;h1 id="秒杀活动功能完善指南---第一部分">秒杀活动功能完善指南 - 第一部分
 &lt;/h1>&lt;h2 id="目录">目录
 &lt;/h2>&lt;ol>
 &lt;li>&lt;a class="link" href="#%e9%a1%b9%e7%9b%ae%e6%a6%82%e8%bf%b0" >项目概述&lt;/a>&lt;/li>
