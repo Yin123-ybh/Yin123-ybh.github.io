@@ -2,8 +2,8 @@
 title: "Redisson 可重入锁原理详解"
 date: 2025-01-12
 draft: false
-tags: ["Java", "Spring Boot", "Redis", "高并发", "秒杀系统"]
-categories: ["Web开发"]
+tags: ["Java", " redission可重入锁", "Redis"]
+categories: ["可重入锁原理详解"]
 description: "通俗介绍redission可重入锁原理和普通分布式锁不可重入性"
 ---
 # Redisson 可重入锁原理详解

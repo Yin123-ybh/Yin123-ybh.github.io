@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Redission可重入锁 on Cecilia-塞西莉娅</title><link>https://Yin123-ybh.github.io/tags/-redission%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81/</link><description>Recent content in Redission可重入锁 on Cecilia-塞西莉娅</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>Cecilia-塞西莉娅</copyright><lastBuildDate>Sun, 12 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://Yin123-ybh.github.io/tags/-redission%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81/index.xml" rel="self" type="application/rss+xml"/><item><title>Redisson 可重入锁原理详解</title><link>https://Yin123-ybh.github.io/p/redisson-%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3/</link><pubDate>Sun, 12 Jan 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/redisson-%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3/</guid><description>&lt;h1 id="redisson-可重入锁原理详解">Redisson 可重入锁原理详解
+&lt;/h1>&lt;h2 id="1-为什么需要可重入锁">1. 为什么需要可重入锁？
+&lt;/h2>&lt;p>在日常开发中，&lt;strong>锁&lt;/strong> 是保证线程安全的重要手段。但有时候，一个线程在持有锁时，会调用另一个也需要同一把锁的方法，这时问题就来了：&lt;/p>
+&lt;ul>
+&lt;li>如果锁 &lt;strong>不可重入&lt;/strong>，线程在第二次尝试加锁时会失败，因为锁已经存在，它相当于 &lt;strong>把自己卡死了&lt;/strong>。&lt;/li>
+&lt;li>如果锁 &lt;strong>可重入&lt;/strong>，同一个线程可以多次获取这把锁，直到最后释放时才真正解锁。&lt;/li>
+&lt;/ul>
+&lt;p>所以，可重入锁的意义在于：&lt;strong>避免同一线程因为方法嵌套调用而死锁&lt;/strong>。&lt;/p>
+&lt;hr>
+&lt;h2 id="2-普通分布式锁的问题">2. 普通分布式锁的问题
+&lt;/h2>&lt;p>最简单的分布式锁通常用 Redis 的 &lt;code>SETNX&lt;/code> 实现：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">SET key value NX EX 30
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;ul>
+&lt;li>&lt;code>NX&lt;/code> 表示如果 key 不存在才设置，保证原子性。&lt;/li>
+&lt;li>&lt;code>EX 30&lt;/code> 设置过期时间，防止死锁。&lt;/li>
+&lt;/ul>
+&lt;h3 id="问题出在哪里">问题出在哪里？
+&lt;/h3>&lt;p>当一个线程已经持有锁时，如果在方法嵌套中再次尝试获取锁：&lt;/p>
+&lt;ol>
+&lt;li>Redis 发现 key 已存在，直接返回失败。&lt;/li>
+&lt;li>虽然是 &lt;strong>同一个线程&lt;/strong> 想再次获取锁，但因为锁实现里只区分 &amp;ldquo;有锁 / 无锁&amp;rdquo;，并不会识别线程。&lt;/li>
+&lt;li>结果就是：&lt;strong>自己把自己锁死了&lt;/strong>。&lt;/li>
+&lt;/ol>
+&lt;hr>
+&lt;h2 id="3-redisson-的改进可重入实现">3. Redisson 的改进（可重入实现）
+&lt;/h2>&lt;p>Redisson 在 value 的存储上做了改进，它并不是简单的字符串，而是一个 &lt;strong>Hash 结构&lt;/strong>：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">lockKey -&amp;gt; {
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> threadId : reentrantCount
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;ul>
+&lt;li>&lt;strong>threadId&lt;/strong>：唯一标识某个 JVM 里的某个线程（一般是 UUID:threadId）。&lt;/li>
+&lt;li>&lt;strong>reentrantCount&lt;/strong>：记录这个线程持有锁的次数。&lt;/li>
+&lt;/ul>
+&lt;p>这样就可以支持 &lt;strong>可重入&lt;/strong> 了。&lt;/p>
+&lt;hr>
+&lt;h2 id="4-执行流程举例">4. 执行流程举例
+&lt;/h2>&lt;p>假设我们有两个方法：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">methodA&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">lock&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">lock&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">methodB&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">finally&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">lock&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">unlock&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">methodB&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">lock&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">lock&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 执行逻辑&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">finally&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">lock&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">unlock&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="41-第一次加锁methoda">4.1 第一次加锁（methodA）
+&lt;/h3>&lt;ul>
+&lt;li>Redis 里还没有 &lt;code>lockKey&lt;/code>。&lt;/li>
+&lt;li>Redisson 会写入：
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">lockKey -&amp;gt; { &amp;#34;UUID:thread-1&amp;#34; : 1 }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;/li>
+&lt;li>表示线程 &lt;code>thread-1&lt;/code> 第一次获取锁，重入次数 = 1。&lt;/li>
+&lt;/ul>
+&lt;h3 id="42-第二次加锁methodb">4.2 第二次加锁（methodB）
+&lt;/h3>&lt;ul>
+&lt;li>Redis 发现 &lt;code>lockKey&lt;/code> 已存在，但 owner 是 &lt;strong>同一个线程&lt;/strong>。&lt;/li>
+&lt;li>允许重入，计数 +1：
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">lockKey -&amp;gt; { &amp;#34;UUID:thread-1&amp;#34; : 2 }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;/li>
+&lt;/ul>
+&lt;h3 id="43-methodb-执行完释放锁">4.3 methodB 执行完释放锁
+&lt;/h3>&lt;ul>
+&lt;li>调用 &lt;code>unlock()&lt;/code>，计数 -1：
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">lockKey -&amp;gt; { &amp;#34;UUID:thread-1&amp;#34; : 1 }
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;/li>
+&lt;li>锁仍然由当前线程持有。&lt;/li>
+&lt;/ul>
+&lt;h3 id="44-methoda-执行完释放锁">4.4 methodA 执行完释放锁
+&lt;/h3>&lt;ul>
+&lt;li>再次调用 &lt;code>unlock()&lt;/code>，计数 -1 → 变成 0。&lt;/li>
+&lt;li>Redisson 删除 &lt;code>lockKey&lt;/code>：
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">lockKey 删除
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;/li>
+&lt;li>此时锁才真正释放，其他线程才有机会获取。&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="5-通俗解释">5. 通俗解释
+&lt;/h2>&lt;p>你总结得非常到位，可以用通俗的话再描述一次：&lt;/p>
+&lt;p>假如一个线程调用多个方法时，第一个方法用了锁去调用第二个方法，第二个方法再次调用这个线程的锁就会失败。因为虽然锁的 key 一样，但是第二次获取锁的时候会发现锁已经存在了，就获取失败。&lt;/p>
+&lt;p>Redisson 在这个基础上做了改进：它在锁的 value 里加上了一个 &lt;strong>重入次数&lt;/strong>，并利用 Redis Hash 结构来存储。&lt;/p>
+&lt;p>Hash 结构里有两个值：&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>field&lt;/strong>：当前线程的标识（UUID + threadId）&lt;/li>
+&lt;li>&lt;strong>value&lt;/strong>：重入次数&lt;/li>
+&lt;/ul>
+&lt;p>执行过程是这样的：&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>方法一第一次获取锁&lt;/strong>：重入次数 +1，变成 1&lt;/li>
+&lt;li>&lt;strong>方法一调用方法二，方法二又要用锁&lt;/strong>：重入次数再 +1，变成 2&lt;/li>
+&lt;li>&lt;strong>方法二执行完释放锁&lt;/strong>：重入次数 -1，变回 1&lt;/li>
+&lt;li>&lt;strong>方法一执行完释放锁&lt;/strong>：重入次数 -1，变回 0，锁才真正释放&lt;/li>
+&lt;/ol>
+&lt;p>这样就避免了同一个线程因为嵌套调用而死锁。&lt;/p>
+&lt;hr>
+&lt;h2 id="6-核心实现原理">6. 核心实现原理
+&lt;/h2>&lt;h3 id="61-加锁流程">6.1 加锁流程
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 加锁脚本&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;exists&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kr">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;hset&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;pexpire&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">end&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;hexists&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kr">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;hincrby&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;pexpire&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">end&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">return&lt;/span> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;pttl&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]);&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="62-释放锁流程">6.2 释放锁流程
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 释放锁脚本&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;hexists&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="o">==&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kr">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="kc">nil&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">end&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">counter&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;hincrby&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">if&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">counter&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="kr">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;pexpire&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">]);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="mi">0&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">else&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;del&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s1">&amp;#39;publish&amp;#39;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]);&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="mi">1&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">end&lt;/span>&lt;span class="p">;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;hr>
+&lt;h2 id="7-关键特性">7. 关键特性
+&lt;/h2>&lt;h3 id="71-线程安全">7.1 线程安全
+&lt;/h3>&lt;ul>
+&lt;li>使用 Lua 脚本保证原子性&lt;/li>
+&lt;li>避免竞态条件&lt;/li>
+&lt;/ul>
+&lt;h3 id="72-自动续期">7.2 自动续期
+&lt;/h3>&lt;ul>
+&lt;li>通过 &lt;code>pexpire&lt;/code> 自动续期&lt;/li>
+&lt;li>防止业务执行时间过长导致锁过期&lt;/li>
+&lt;/ul>
+&lt;h3 id="73-公平性">7.3 公平性
+&lt;/h3>&lt;ul>
+&lt;li>支持公平锁和非公平锁&lt;/li>
+&lt;li>通过队列机制保证获取锁的顺序&lt;/li>
+&lt;/ul>
+&lt;h3 id="74-可重入性">7.4 可重入性
+&lt;/h3>&lt;ul>
+&lt;li>同一线程可多次获取锁&lt;/li>
+&lt;li>通过重入计数器实现&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="8-使用示例">8. 使用示例
+&lt;/h2>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 获取可重入锁&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">RLock&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">lock&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">redisson&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getLock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;myLock&amp;#34;&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 尝试加锁，最多等待100秒，上锁以后10秒自动解锁&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">boolean&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">res&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">lock&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">tryLock&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">100&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">10&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">TimeUnit&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">SECONDS&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">res&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 业务逻辑&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">doSomething&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">finally&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">lock&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">unlock&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">catch&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">InterruptedException&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">e&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">printStackTrace&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;hr>
+&lt;h2 id="9-总结升华">9. 总结升华
+&lt;/h2>&lt;ol>
+&lt;li>
+&lt;p>&lt;strong>普通分布式锁&lt;/strong>只关心 &amp;ldquo;有锁 / 无锁&amp;rdquo;，不关心是谁加的锁，导致 &lt;strong>同一线程重入时也会失败&lt;/strong>。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Redisson&lt;/strong> 通过在 Redis 的 Hash 结构 中记录 &amp;ldquo;线程标识 + 重入计数&amp;rdquo;，让锁具备了 &lt;strong>可重入能力&lt;/strong>。&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>意义&lt;/strong>：可重入锁避免了一个线程在嵌套调用中把自己卡死，同时对外仍然保持分布式锁的特性。&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;h3 id="一句话总结">一句话总结：
+&lt;/h3>&lt;blockquote>
+&lt;p>&lt;strong>Redisson 的可重入锁，本质上就是用 Redis Hash 存储线程 ID 和重入次数，直到重入次数归零才真正释放锁。&lt;/strong>&lt;/p>&lt;/blockquote>
+&lt;hr>
+&lt;h2 id="10-扩展阅读">10. 扩展阅读
+&lt;/h2>&lt;ul>
+&lt;li>&lt;a class="link" href="https://github.com/redisson/redisson" target="_blank" rel="noopener"
+>Redisson 官方文档&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="https://redis.io/docs/manual/patterns/distributed-locks/" target="_blank" rel="noopener"
+>Redis 分布式锁最佳实践&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="https://book.douban.com/subject/10484692/" target="_blank" rel="noopener"
+>Java 并发编程实战&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;p>&lt;em>本文档详细介绍了 Redisson 可重入锁的实现原理，帮助开发者深入理解分布式锁的核心机制。&lt;/em>&lt;/p></description></item></channel></rss>
