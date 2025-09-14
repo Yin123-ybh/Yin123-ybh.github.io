@@ -1,8 +1,7 @@
 ---
 title: "深入理解 Redis + Lua 在秒杀系统中的应用"
-date: 2025-09-15
+date: 2025-09-14
 draft: false
-slug: "redis-lua-seckill"
 tags: ["Redis", "Lua", "秒杀系统", "高并发", "分布式锁"]
 categories: ["技术"]
 description: "通过完整的案例，详细讲解 Redis + Lua 脚本在秒杀活动中的使用方式，包括防超卖、限购控制等核心功能实现。"

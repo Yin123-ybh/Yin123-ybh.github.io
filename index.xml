@@ -324,7 +324,386 @@
 >Java 并发编程实战&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;hr>
-&lt;p>&lt;em>本文档详细介绍了 Redisson 可重入锁的实现原理，帮助开发者深入理解分布式锁的核心机制。&lt;/em>&lt;/p></description></item><item><title>基于 Session 的短信登录完整解析</title><link>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</link><pubDate>Tue, 26 Aug 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</guid><description>&lt;h1 id="基于-session-的短信登录完整解析">基于 Session 的短信登录完整解析
+&lt;p>&lt;em>本文档详细介绍了 Redisson 可重入锁的实现原理，帮助开发者深入理解分布式锁的核心机制。&lt;/em>&lt;/p></description></item><item><title>深入理解 Redis + Lua 在秒杀系统中的应用</title><link>https://Yin123-ybh.github.io/p/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3-redis--lua-%E5%9C%A8%E7%A7%92%E6%9D%80%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/</link><pubDate>Sun, 14 Sep 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3-redis--lua-%E5%9C%A8%E7%A7%92%E6%9D%80%E7%B3%BB%E7%BB%9F%E4%B8%AD%E7%9A%84%E5%BA%94%E7%94%A8/</guid><description>&lt;h1 id="深入理解-redis--lua-在秒杀系统中的应用">深入理解 Redis + Lua 在秒杀系统中的应用
+&lt;/h1>&lt;p>在高并发场景下，尤其是秒杀系统，如何保证&lt;strong>库存扣减的正确性&lt;/strong>和&lt;strong>用户限购的准确性&lt;/strong>，是一个非常经典的问题。&lt;br>
+本文将通过一个完整的案例，详细讲解 &lt;strong>Redis + Lua 脚本&lt;/strong> 在秒杀活动中的使用方式。&lt;/p>
+&lt;hr>
+&lt;h2 id="一背景介绍">一、背景介绍
+&lt;/h2>&lt;p>在秒杀场景中，如果单纯依赖后端数据库进行库存扣减与用户校验，往往会产生以下问题：&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>高并发下数据库压力过大&lt;/strong>：大量用户同时下单，数据库容易被打爆。&lt;/li>
+&lt;li>&lt;strong>超卖问题&lt;/strong>：多个线程并发操作时，可能会出现库存被扣成负数的情况。&lt;/li>
+&lt;li>&lt;strong>限购逻辑失效&lt;/strong>：如果并发控制不好，同一用户可能绕过限购限制。&lt;/li>
+&lt;/ol>
+&lt;p>为了解决这些问题，我们通常会 &lt;strong>将秒杀的核心逻辑放到 Redis 里&lt;/strong>，利用 Redis 的高性能与 Lua 脚本的原子性，来保证数据一致性。&lt;/p>
+&lt;hr>
+&lt;h2 id="二redis-key-设计">二、Redis Key 设计
+&lt;/h2>&lt;p>在这个秒杀系统中，我们为每个活动设计了两个关键的 Redis Key：&lt;/p>
+&lt;h3 id="1-库存-key">1. 库存 Key
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">seckill:stock:&lt;span class="o">{&lt;/span>activityId&lt;span class="o">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>作用&lt;/strong>：存放某个活动的剩余库存数量。&lt;/p>
+&lt;p>&lt;strong>示例&lt;/strong>：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">SET seckill:stock:1001 &lt;span class="m">50&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>表示活动 1001 还有 50 件商品。&lt;/p>
+&lt;h3 id="2-参与用户-key">2. 参与用户 Key
+&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">seckill:participants:&lt;span class="o">{&lt;/span>activityId&lt;span class="o">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>作用&lt;/strong>：存放某个活动所有用户的购买记录（哈希表）。&lt;/p>
+&lt;p>&lt;strong>示例&lt;/strong>：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-bash" data-lang="bash">&lt;span class="line">&lt;span class="cl">HSET seckill:participants:1001 &lt;span class="m">12345&lt;/span> &lt;span class="m">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">HSET seckill:participants:1001 &lt;span class="m">67890&lt;/span> &lt;span class="m">2&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>表示：&lt;/p>
+&lt;ul>
+&lt;li>用户 12345 已经购买 1 件&lt;/li>
+&lt;li>用户 67890 已经购买 2 件&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="三java-代码调用-lua-脚本">三、Java 代码调用 Lua 脚本
+&lt;/h2>&lt;p>在后端中，调用 Lua 脚本的方式如下：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">stockKey&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">seckillPrefix&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34;stock:&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">activityId&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">participantsKey&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">seckillPrefix&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34;participants:&amp;#34;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">activityId&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">DefaultRedisScript&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">List&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">script&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="k">new&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">DefaultRedisScript&lt;/span>&lt;span class="o">&amp;lt;&amp;gt;&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">script&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">setScriptSource&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="k">new&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ResourceScriptSource&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="k">new&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ClassPathResource&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;seckill_participate.lua&amp;#34;&lt;/span>&lt;span class="p">)));&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">script&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">setResultType&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">List&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">class&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">List&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">String&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">keys&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Arrays&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">asList&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">stockKey&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">participantsKey&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">List&lt;/span>&lt;span class="o">&amp;lt;&lt;/span>&lt;span class="n">Object&lt;/span>&lt;span class="o">&amp;gt;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">args&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Arrays&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">asList&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">userId&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">toString&lt;/span>&lt;span class="p">(),&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">quantity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">toString&lt;/span>&lt;span class="p">(),&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">activity&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getPerUserLimit&lt;/span>&lt;span class="p">().&lt;/span>&lt;span class="na">toString&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="n">List&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">result&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">redisTemplate&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">execute&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">script&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">keys&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">args&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">toArray&lt;/span>&lt;span class="p">());&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="参数传递说明">参数传递说明
+&lt;/h3>&lt;p>这里需要重点理解的有两部分：&lt;/p>
+&lt;p>&lt;strong>keys → 传递给 Lua 的 Redis Key，脚本里用 KEYS[] 访问：&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>KEYS[1] = &amp;quot;seckill:stock:1001&amp;quot;&lt;/code> （这个活动的库存）&lt;/li>
+&lt;li>&lt;code>KEYS[2] = &amp;quot;seckill:participants:1001&amp;quot;&lt;/code> （记录了这个活动所有用户的购买记录）&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>args → 附加参数，脚本里用 ARGV[] 访问：&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>ARGV[1] = userId&lt;/code> （当前用户 ID）&lt;/li>
+&lt;li>&lt;code>ARGV[2] = quantity&lt;/code> （本次购买数量）&lt;/li>
+&lt;li>&lt;code>ARGV[3] = perUserLimit&lt;/code> （每人限购数量）&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="四lua-脚本逻辑详解">四、Lua 脚本逻辑详解
+&lt;/h2>&lt;p>Lua 脚本具有原子性，在 Redis 中执行时不会被打断，非常适合秒杀场景。&lt;/p>
+&lt;p>典型的 &lt;code>seckill_participate.lua&lt;/code> 脚本如下：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 获取参数&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">stock&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">tonumber&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;GET&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]))&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">userId&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">quantity&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">tonumber&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">perUserLimit&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">tonumber&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">])&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 查询用户已购买数量&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">userBought&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">tonumber&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;HGET&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">userId&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="ow">or&lt;/span> &lt;span class="s2">&amp;#34;0&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 1. 校验是否超过个人限购&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">if&lt;/span> &lt;span class="n">userBought&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">quantity&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="n">perUserLimit&lt;/span> &lt;span class="kr">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="p">{&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;超过个人限购&amp;#34;&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 2. 校验库存是否足够&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">if&lt;/span> &lt;span class="n">stock&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">quantity&lt;/span> &lt;span class="kr">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="p">{&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;库存不足&amp;#34;&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">end&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 3. 扣减库存&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;DECRBY&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">quantity&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 4. 更新用户购买数量&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;HINCRBY&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">userId&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">quantity&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 5. 返回成功&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">return&lt;/span> &lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;成功&amp;#34;&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="脚本执行流程详解">脚本执行流程详解
+&lt;/h3>&lt;p>让我们逐步分析这个脚本的执行过程：&lt;/p>
+&lt;h4 id="1-参数接收">1. 参数接收
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">userId&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">]&lt;/span> &lt;span class="c1">-- 接收用户ID&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">quantity&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">tonumber&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">-- 接收购买数量&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">perUserLimit&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">tonumber&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ARGV&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">3&lt;/span>&lt;span class="p">])&lt;/span> &lt;span class="c1">-- 接收限购数量&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>后端通过 &lt;code>redisTemplate.execute(...)&lt;/code> 传入这些 ARGV 参数给 Lua 脚本，脚本接收每个参数。&lt;/p>
+&lt;h4 id="2-查询用户购买记录">2. 查询用户购买记录
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">userBought&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="n">tonumber&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;HGET&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">userId&lt;/span>&lt;span class="p">)&lt;/span> &lt;span class="ow">or&lt;/span> &lt;span class="s2">&amp;#34;0&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>这段代码的作用&lt;/strong>：查询当前 userId 的购买记录。&lt;/p>
+&lt;p>&lt;strong>原理&lt;/strong>：因为传入了 &lt;code>participantsKey&lt;/code>（这个活动的用户购买记录）和 &lt;code>userId&lt;/code>（这个用户），就可以根据 &lt;code>userId&lt;/code> 在 &lt;code>participantsKey&lt;/code> 里面查出对应的用户购买记录。&lt;/p>
+&lt;h4 id="3-限购校验">3. 限购校验
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="kr">if&lt;/span> &lt;span class="n">userBought&lt;/span> &lt;span class="o">+&lt;/span> &lt;span class="n">quantity&lt;/span> &lt;span class="o">&amp;gt;&lt;/span> &lt;span class="n">perUserLimit&lt;/span> &lt;span class="kr">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="p">{&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;超过个人限购&amp;#34;&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>判断逻辑&lt;/strong>：用户目前已购买数 + 新购买数 quantity 是否大于最大购买量 perUserLimit。&lt;/p>
+&lt;ul>
+&lt;li>如果是，返回 &lt;code>{0, &amp;quot;超过个人限购&amp;quot;}&lt;/code>&lt;/li>
+&lt;li>如果不是，继续下一步&lt;/li>
+&lt;/ul>
+&lt;h4 id="4-库存校验">4. 库存校验
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="kr">if&lt;/span> &lt;span class="n">stock&lt;/span> &lt;span class="o">&amp;lt;&lt;/span> &lt;span class="n">quantity&lt;/span> &lt;span class="kr">then&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="kr">return&lt;/span> &lt;span class="p">{&lt;/span>&lt;span class="mi">0&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;库存不足&amp;#34;&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kr">end&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>检查库存是否足够，如果不够，则返回 &lt;code>{0, &amp;quot;库存不足&amp;quot;}&lt;/code>。&lt;/p>
+&lt;h4 id="5-执行购买操作">5. 执行购买操作
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 扣减库存&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;DECRBY&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">quantity&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 记录用户购买数量&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;HINCRBY&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">userId&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">quantity&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>如果库存足够，则：&lt;/p>
+&lt;ul>
+&lt;li>扣减库存：&lt;code>DECRBY&lt;/code> 命令将库存减少 quantity 数量&lt;/li>
+&lt;li>记录用户购买数量：&lt;code>HINCRBY&lt;/code> 命令将用户的购买记录增加 quantity 数量&lt;/li>
+&lt;/ul>
+&lt;h4 id="6-返回成功">6. 返回成功
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="kr">return&lt;/span> &lt;span class="p">{&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="s2">&amp;#34;成功&amp;#34;&lt;/span>&lt;span class="p">}&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>最后返回 &lt;code>{1, &amp;quot;成功&amp;quot;}&lt;/code>，表示购买成功。&lt;/p>
+&lt;hr>
+&lt;h2 id="五执行流程示例">五、执行流程示例
+&lt;/h2>&lt;p>我们以用户 12345 参与活动 1001 为例，假设初始库存为 10，限购为 3：&lt;/p>
+&lt;h3 id="第一次购买买-2-件">第一次购买（买 2 件）
+&lt;/h3>&lt;p>&lt;strong>输入参数：&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>KEYS[1] = seckill:stock:1001&lt;/code>&lt;/li>
+&lt;li>&lt;code>KEYS[2] = seckill:participants:1001&lt;/code>&lt;/li>
+&lt;li>&lt;code>ARGV[1] = &amp;quot;12345&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>ARGV[2] = &amp;quot;2&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>ARGV[3] = &amp;quot;3&amp;quot;&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>脚本执行：&lt;/strong>&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>userBought = 0&lt;/code>（没买过）&lt;/li>
+&lt;li>&lt;code>stock = 10&lt;/code>，足够&lt;/li>
+&lt;li>扣减库存：&lt;code>DECRBY seckill:stock:1001 2&lt;/code> → 库存变 8&lt;/li>
+&lt;li>更新购买记录：&lt;code>HINCRBY seckill:participants:1001 12345 2&lt;/code> → 用户买了 2 件&lt;/li>
+&lt;li>返回 &lt;code>{1, &amp;quot;成功&amp;quot;}&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;h3 id="第二次购买再买-2-件">第二次购买（再买 2 件）
+&lt;/h3>&lt;p>&lt;strong>输入参数：&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>ARGV[1] = &amp;quot;12345&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>ARGV[2] = &amp;quot;2&amp;quot;&lt;/code>&lt;/li>
+&lt;li>&lt;code>ARGV[3] = &amp;quot;3&amp;quot;&lt;/code>&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>脚本执行：&lt;/strong>&lt;/p>
+&lt;ol>
+&lt;li>&lt;code>userBought = 2&lt;/code>（上次买了 2 件）&lt;/li>
+&lt;li>本次要买 2 件，总数 = 4 &amp;gt; 限购 3&lt;/li>
+&lt;li>返回 &lt;code>{0, &amp;quot;超过个人限购&amp;quot;}&lt;/code>&lt;/li>
+&lt;/ol>
+&lt;hr>
+&lt;h2 id="六核心优势">六、核心优势
+&lt;/h2>&lt;p>通过 Redis Key 设计 + Lua 脚本原子执行，我们实现了以下目标：&lt;/p>
+&lt;h3 id="1-防止超卖">1. 防止超卖
+&lt;/h3>&lt;p>库存扣减和用户购买记录更新在同一个脚本里完成，保证了原子性。&lt;/p>
+&lt;h3 id="2-限购控制">2. 限购控制
+&lt;/h3>&lt;p>利用哈希表存储用户购买记录，结合 Lua 脚本校验，避免了用户绕过限购。&lt;/p>
+&lt;h3 id="3-高并发性能">3. 高并发性能
+&lt;/h3>&lt;p>逻辑全部在 Redis 内部执行，不依赖数据库事务，性能极高。&lt;/p>
+&lt;h3 id="4-数据一致性">4. 数据一致性
+&lt;/h3>&lt;p>Lua 脚本的原子性保证了所有操作要么全部成功，要么全部失败。&lt;/p>
+&lt;hr>
+&lt;h2 id="七实际应用场景">七、实际应用场景
+&lt;/h2>&lt;p>这种方式是很多电商平台在秒杀场景中的标准做法，也是分布式系统里常见的&amp;quot;数据库削峰&amp;quot;与&amp;quot;Redis 限流&amp;quot;的结合应用。&lt;/p>
+&lt;h3 id="适用场景">适用场景
+&lt;/h3>&lt;ul>
+&lt;li>秒杀活动&lt;/li>
+&lt;li>限时抢购&lt;/li>
+&lt;li>限量商品销售&lt;/li>
+&lt;li>优惠券发放&lt;/li>
+&lt;li>积分兑换&lt;/li>
+&lt;/ul>
+&lt;h3 id="技术特点">技术特点
+&lt;/h3>&lt;ul>
+&lt;li>&lt;strong>高性能&lt;/strong>：Redis 内存操作，响应速度快&lt;/li>
+&lt;li>&lt;strong>原子性&lt;/strong>：Lua 脚本保证操作原子性&lt;/li>
+&lt;li>&lt;strong>可扩展&lt;/strong>：支持分布式部署&lt;/li>
+&lt;li>&lt;strong>可靠性&lt;/strong>：避免超卖和重复购买&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="八延伸思考">八、延伸思考
+&lt;/h2>&lt;h3 id="1-退款退货支持">1. 退款退货支持
+&lt;/h3>&lt;p>如果要支持退款退货，需要在 Lua 脚本里增加库存回滚逻辑：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 退款时回滚库存&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;INCRBY&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">1&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">quantity&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 减少用户购买记录&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="n">redis.call&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s2">&amp;#34;HINCRBY&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="n">KEYS&lt;/span>&lt;span class="p">[&lt;/span>&lt;span class="mi">2&lt;/span>&lt;span class="p">],&lt;/span> &lt;span class="n">userId&lt;/span>&lt;span class="p">,&lt;/span> &lt;span class="o">-&lt;/span>&lt;span class="n">quantity&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="2-分片存储优化">2. 分片存储优化
+&lt;/h3>&lt;p>如果活动商品数量非常大，可以考虑分片存储库存，进一步提高并发性能：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-lua" data-lang="lua">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">-- 根据用户ID进行分片&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="kd">local&lt;/span> &lt;span class="n">shardKey&lt;/span> &lt;span class="o">=&lt;/span> &lt;span class="s2">&amp;#34;seckill:stock:&amp;#34;&lt;/span> &lt;span class="o">..&lt;/span> &lt;span class="n">activityId&lt;/span> &lt;span class="o">..&lt;/span> &lt;span class="s2">&amp;#34;:&amp;#34;&lt;/span> &lt;span class="o">..&lt;/span> &lt;span class="p">(&lt;/span>&lt;span class="n">userId&lt;/span> &lt;span class="o">%&lt;/span> &lt;span class="mi">10&lt;/span>&lt;span class="p">)&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="3-异步处理">3. 异步处理
+&lt;/h3>&lt;p>在真实生产环境中，还需要配合消息队列（MQ）和异步下单，以保证后续数据库写入的可靠性。&lt;/p>
+&lt;h3 id="4-监控和告警">4. 监控和告警
+&lt;/h3>&lt;ul>
+&lt;li>监控 Redis 性能指标&lt;/li>
+&lt;li>设置库存告警阈值&lt;/li>
+&lt;li>记录用户购买行为日志&lt;/li>
+&lt;/ul>
+&lt;hr>
+&lt;h2 id="九总结">九、总结
+&lt;/h2>&lt;p>Redis + Lua 脚本在秒杀系统中的应用，通过以下方式解决了高并发场景下的核心问题：&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>利用 Redis 的高性能&lt;/strong>：将核心逻辑从数据库转移到内存&lt;/li>
+&lt;li>&lt;strong>保证操作的原子性&lt;/strong>：Lua 脚本确保所有操作要么全部成功，要么全部失败&lt;/li>
+&lt;li>&lt;strong>实现精确的限购控制&lt;/strong>：通过哈希表记录用户购买历史&lt;/li>
+&lt;li>&lt;strong>避免超卖问题&lt;/strong>：库存扣减和用户记录更新在同一脚本中完成&lt;/li>
+&lt;/ol>
+&lt;p>这种方案不仅适用于秒杀系统，在需要高并发、强一致性的场景中都有广泛应用价值。&lt;/p>
+&lt;hr>
+&lt;p>&lt;em>以上就是关于秒杀系统中 Redis + Lua 脚本的完整应用解析。通过深入理解这些核心概念，你就能在实际项目中灵活运用这些技术，构建出高性能、高可靠的分布式系统。&lt;/em>&lt;/p></description></item><item><title>基于 Session 的短信登录完整解析</title><link>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</link><pubDate>Tue, 26 Aug 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E5%9F%BA%E4%BA%8E-session-%E7%9A%84%E7%9F%AD%E4%BF%A1%E7%99%BB%E5%BD%95%E5%AE%8C%E6%95%B4%E8%A7%A3%E6%9E%90/</guid><description>&lt;h1 id="基于-session-的短信登录完整解析">基于 Session 的短信登录完整解析
 &lt;/h1>&lt;p>在现代 Web 应用中，&lt;strong>短信验证码登录&lt;/strong> 是一种非常常见的无密码认证方式。它的好处是简单、安全，用户只需要输入手机号和验证码即可登录，而不用记复杂的密码。&lt;/p>
 &lt;p>很多初学者在实现时会有疑惑：&lt;strong>验证码存哪？怎么比对？登录状态如何保持？&lt;/strong> 这篇文章将通过推导的方式，逐步解释清楚，并给出完整的代码示例。&lt;/p>
 &lt;hr>
