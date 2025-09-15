@@ -1,6 +1,6 @@
 ---
 title: "数据库与 Redis 双写一致性问题全解析"
-date: 2025-01-14
+date: 2025-08-14
 draft: false
 tags: ["Java", "Redis", "MySQL", "缓存一致性", "分布式系统", "高并发"]
 categories: ["缓存技术"]

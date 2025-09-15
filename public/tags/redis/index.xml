@@ -703,7 +703,7 @@
 &lt;/ol>
 &lt;p>这种方案不仅适用于秒杀系统，在需要高并发、强一致性的场景中都有广泛应用价值。&lt;/p>
 &lt;hr>
-&lt;p>&lt;em>以上就是关于秒杀系统中 Redis + Lua 脚本的完整应用解析。通过深入理解这些核心概念，你就能在实际项目中灵活运用这些技术，构建出高性能、高可靠的分布式系统。&lt;/em>&lt;/p></description></item><item><title>数据库与 Redis 双写一致性问题全解析</title><link>https://Yin123-ybh.github.io/p/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E-redis-%E5%8F%8C%E5%86%99%E4%B8%80%E8%87%B4%E6%80%A7%E9%97%AE%E9%A2%98%E5%85%A8%E8%A7%A3%E6%9E%90/</link><pubDate>Tue, 14 Jan 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E-redis-%E5%8F%8C%E5%86%99%E4%B8%80%E8%87%B4%E6%80%A7%E9%97%AE%E9%A2%98%E5%85%A8%E8%A7%A3%E6%9E%90/</guid><description>&lt;h1 id="数据库与-redis-双写一致性问题全解析">数据库与 Redis 双写一致性问题全解析
+&lt;p>&lt;em>以上就是关于秒杀系统中 Redis + Lua 脚本的完整应用解析。通过深入理解这些核心概念，你就能在实际项目中灵活运用这些技术，构建出高性能、高可靠的分布式系统。&lt;/em>&lt;/p></description></item><item><title>数据库与 Redis 双写一致性问题全解析</title><link>https://Yin123-ybh.github.io/p/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E-redis-%E5%8F%8C%E5%86%99%E4%B8%80%E8%87%B4%E6%80%A7%E9%97%AE%E9%A2%98%E5%85%A8%E8%A7%A3%E6%9E%90/</link><pubDate>Thu, 14 Aug 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%8E-redis-%E5%8F%8C%E5%86%99%E4%B8%80%E8%87%B4%E6%80%A7%E9%97%AE%E9%A2%98%E5%85%A8%E8%A7%A3%E6%9E%90/</guid><description>&lt;h1 id="数据库与-redis-双写一致性问题全解析">数据库与 Redis 双写一致性问题全解析
 &lt;/h1>&lt;p>在高并发系统中，Redis 作为缓存层，MySQL 作为存储层的组合几乎是标配。Redis 的高性能极大缓解了数据库的压力，但这也带来了一个核心难题：&lt;strong>如何保证数据库与缓存的数据一致性？&lt;/strong>&lt;/p>
 &lt;p>本文将全面分析数据库与 Redis 双写一致性问题，包括 &lt;strong>不一致产生的原因、常见解决方案、优缺点分析、代码示例&lt;/strong>，以及通俗的生活类比。读完本文，你将对缓存一致性问题有系统、深刻的理解。&lt;/p>
 &lt;hr>
