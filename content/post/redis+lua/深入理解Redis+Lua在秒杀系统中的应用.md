@@ -283,6 +283,7 @@ local shardKey = "seckill:stock:" .. activityId .. ":" .. (userId % 10)
 
 ### 3. 异步处理
 在真实生产环境中，还需要配合消息队列（MQ）和异步下单，以保证后续数据库写入的可靠性。
+详情可前往此处了解https://yin123-ybh.github.io/p/异步秒杀系统深度解析含redis预扣库存与消息队列实现/
 
 ### 4. 监控和告警
 - 监控 Redis 性能指标
