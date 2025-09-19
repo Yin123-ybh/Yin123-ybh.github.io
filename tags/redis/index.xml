@@ -4864,16 +4864,16 @@
 &lt;td>防超卖和并发控制&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>前端&lt;/td>
+&lt;td>管理端前端&lt;/td>
 &lt;td>Vue.js + Element UI&lt;/td>
 &lt;td>-&lt;/td>
-&lt;td>管理端和用户端界面&lt;/td>
+&lt;td>管理端界面（苍穹外卖前端-frontend）&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>小程序&lt;/td>
+&lt;td>用户端&lt;/td>
 &lt;td>UniApp&lt;/td>
 &lt;td>-&lt;/td>
-&lt;td>微信小程序开发&lt;/td>
+&lt;td>微信小程序用户端（project-rjwm-weixin-uniapp-develop-wsy）&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>反向代理&lt;/td>
@@ -4919,39 +4919,64 @@
 &lt;/span>&lt;span class="lnt">21
 &lt;/span>&lt;span class="lnt">22
 &lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">┌─────────────────┐ ┌─────────────────┐ ┌─────────────────┐
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│ 管理端前端 │ │ 用户端前端 │ │ 微信小程序 │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│ (Vue.js) │ │ (Vue.js) │ │ (UniApp) │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└─────────┬───────┘ └─────────┬───────┘ └─────────┬───────┘
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> └──────────────────────┼──────────────────────┘
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ┌─────────────┴─────────────┐
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ Nginx 反向代理 │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ (端口: 80, 8083) │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> └─────────────┬─────────────┘
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ┌─────────────┴─────────────┐
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ 后端服务 │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ (sky-server: 8084) │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> └─────────────┬─────────────┘
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ┌────────────────────────┼────────────────────────┐
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">┌───────┴────────┐ ┌─────────┴─────────┐ ┌─────────┴─────────┐
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│ MySQL 8.0 │ │ Redis 6.2 │ │ RabbitMQ 3.9 │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│ (端口: 3306) │ │ (端口: 6379) │ │ (端口: 5672) │
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└────────────────┘ └───────────────────┘ └───────────────────┘
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">graph TB
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> subgraph &amp;#34;前端层&amp;#34;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> A[管理端前端&amp;lt;br/&amp;gt;Hash咖啡前端-frontend&amp;lt;br/&amp;gt;Vue.js + Element UI]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B[微信小程序用户端&amp;lt;br/&amp;gt;project-rjwm-weixin-uniapp-develop-wsy&amp;lt;br/&amp;gt;UniApp]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> end
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> subgraph &amp;#34;网关层&amp;#34;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C[Nginx反向代理&amp;lt;br/&amp;gt;负载均衡 + 限流]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> end
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> subgraph &amp;#34;后端服务层&amp;#34;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D[Hash Coffee后端&amp;lt;br/&amp;gt;Spring Boot + MyBatis&amp;lt;br/&amp;gt;端口: 8084]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> end
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> subgraph &amp;#34;中间件层&amp;#34;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> E[Redis缓存&amp;lt;br/&amp;gt;分布式锁 + 秒杀缓存]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F[RabbitMQ消息队列&amp;lt;br/&amp;gt;异步处理 + 延迟消息]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> G[Redisson分布式锁&amp;lt;br/&amp;gt;防超卖 + 幂等性]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> end
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> subgraph &amp;#34;数据层&amp;#34;
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H[MySQL数据库&amp;lt;br/&amp;gt;主从复制 + 事务]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> end
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> A --&amp;gt; C
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B --&amp;gt; C
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C --&amp;gt; D
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; E
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; F
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; G
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; H
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;h3 id="数据流向">数据流向
 &lt;/h3>&lt;ol>
 &lt;li>
-&lt;p>&lt;strong>用户请求流程&lt;/strong>：&lt;/p>
+&lt;p>&lt;strong>管理员访问流程&lt;/strong>：&lt;/p>
 &lt;ul>
-&lt;li>用户通过前端/小程序发起请求&lt;/li>
+&lt;li>管理员通过管理端前端(Vue.js)发起请求&lt;/li>
+&lt;li>Nginx接收请求并进行反向代理&lt;/li>
+&lt;li>后端服务处理业务逻辑&lt;/li>
+&lt;li>返回响应给管理员&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>用户访问流程&lt;/strong>：&lt;/p>
+&lt;ul>
+&lt;li>用户通过微信小程序(UniApp)发起请求&lt;/li>
 &lt;li>Nginx接收请求并进行反向代理&lt;/li>
 &lt;li>后端服务处理业务逻辑&lt;/li>
 &lt;li>返回响应给用户&lt;/li>
