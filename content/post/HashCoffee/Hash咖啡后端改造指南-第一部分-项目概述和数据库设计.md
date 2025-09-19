@@ -285,16 +285,24 @@ CREATE INDEX idx_coupon_template_time ON coupon_template(start_time, end_time, s
 
 在接下来的部分中，我们将详细讲解：
 
-- **第二部分**：实体类和DTO设计
-- **第三部分**：数据访问层（Mapper）实现
-- **第四部分**：分布式锁和Lua脚本
-- **第五部分**：消息队列架构设计
-- **第六部分**：业务服务层实现
-- **第七部分**：控制器层和API接口
-- **第八部分**：配置文件和部署方案
+- **第二部分**：实体类和分布式锁实现
+  - 实体类设计（SeckillParticipant、SeckillOrder、SeckillStockLog）
+  - DTO类创建（SeckillParticipateDTO、SeckillOrderDTO）
+  - Mapper接口实现和XML配置
+  - 分布式锁服务（DistributedLockService）
+  - Lua脚本实现（防超卖核心逻辑）
+  - 服务层增强（SeckillActivityServiceImpl）
+
+- **第三部分**：消息队列和API接口
+  - RabbitMQ配置和消息队列架构
+  - 消息实体类设计（OrderPayMessage、PointsEarnMessage等）
+  - 消息生产者服务（MessageProducerService）
+  - 消息消费者服务（MessageConsumerService）
+  - API接口开发（用户端控制器）
+  - 配置文件完善和部署测试
 
 每个部分都会提供完整的代码示例和详细的实现说明，确保你可以按照指南逐步完成后端改造。
 
 ---
 
-*继续阅读：[Hash咖啡后端改造指南 - 第二部分：实体类和DTO设计](./Hash咖啡后端改造指南-第二部分-实体类和DTO设计.md)*
+*继续阅读：[Hash咖啡后端改造指南 - 第二部分：实体类和分布式锁实现](./Hash咖啡后端改造指南-第二部分-实体类和分布式锁实现.md)*

@@ -5280,14 +5280,29 @@
 &lt;h2 id="下一步计划">下一步计划
 &lt;/h2>&lt;p>在接下来的部分中，我们将详细讲解：&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>第二部分&lt;/strong>：实体类和DTO设计&lt;/li>
-&lt;li>&lt;strong>第三部分&lt;/strong>：数据访问层（Mapper）实现&lt;/li>
-&lt;li>&lt;strong>第四部分&lt;/strong>：分布式锁和Lua脚本&lt;/li>
-&lt;li>&lt;strong>第五部分&lt;/strong>：消息队列架构设计&lt;/li>
-&lt;li>&lt;strong>第六部分&lt;/strong>：业务服务层实现&lt;/li>
-&lt;li>&lt;strong>第七部分&lt;/strong>：控制器层和API接口&lt;/li>
-&lt;li>&lt;strong>第八部分&lt;/strong>：配置文件和部署方案&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>第二部分&lt;/strong>：实体类和分布式锁实现&lt;/p>
+&lt;ul>
+&lt;li>实体类设计（SeckillParticipant、SeckillOrder、SeckillStockLog）&lt;/li>
+&lt;li>DTO类创建（SeckillParticipateDTO、SeckillOrderDTO）&lt;/li>
+&lt;li>Mapper接口实现和XML配置&lt;/li>
+&lt;li>分布式锁服务（DistributedLockService）&lt;/li>
+&lt;li>Lua脚本实现（防超卖核心逻辑）&lt;/li>
+&lt;li>服务层增强（SeckillActivityServiceImpl）&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>第三部分&lt;/strong>：消息队列和API接口&lt;/p>
+&lt;ul>
+&lt;li>RabbitMQ配置和消息队列架构&lt;/li>
+&lt;li>消息实体类设计（OrderPayMessage、PointsEarnMessage等）&lt;/li>
+&lt;li>消息生产者服务（MessageProducerService）&lt;/li>
+&lt;li>消息消费者服务（MessageConsumerService）&lt;/li>
+&lt;li>API接口开发（用户端控制器）&lt;/li>
+&lt;li>配置文件完善和部署测试&lt;/li>
+&lt;/ul>
+&lt;/li>
 &lt;/ul>
 &lt;p>每个部分都会提供完整的代码示例和详细的实现说明，确保你可以按照指南逐步完成后端改造。&lt;/p>
 &lt;hr>
-&lt;p>&lt;em>继续阅读：&lt;a class="link" href="./Hash%e5%92%96%e5%95%a1%e5%90%8e%e7%ab%af%e6%94%b9%e9%80%a0%e6%8c%87%e5%8d%97-%e7%ac%ac%e4%ba%8c%e9%83%a8%e5%88%86-%e5%ae%9e%e4%bd%93%e7%b1%bb%e5%92%8cDTO%e8%ae%be%e8%ae%a1.md" >Hash咖啡后端改造指南 - 第二部分：实体类和DTO设计&lt;/a>&lt;/em>&lt;/p></description></item></channel></rss>
+&lt;p>&lt;em>继续阅读：&lt;a class="link" href="./Hash%e5%92%96%e5%95%a1%e5%90%8e%e7%ab%af%e6%94%b9%e9%80%a0%e6%8c%87%e5%8d%97-%e7%ac%ac%e4%ba%8c%e9%83%a8%e5%88%86-%e5%ae%9e%e4%bd%93%e7%b1%bb%e5%92%8c%e5%88%86%e5%b8%83%e5%bc%8f%e9%94%81%e5%ae%9e%e7%8e%b0.md" >Hash咖啡后端改造指南 - 第二部分：实体类和分布式锁实现&lt;/a>&lt;/em>&lt;/p></description></item></channel></rss>
