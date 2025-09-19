@@ -41,37 +41,43 @@
 </span><span class=lnt>29
 </span><span class=lnt>30
 </span><span class=lnt>31
-</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>graph TB
-</span></span><span class=line><span class=cl>    subgraph &#34;前端层&#34;
-</span></span><span class=line><span class=cl>        A[管理端前端&lt;br/&gt;Hash咖啡前端-frontend&lt;br/&gt;Vue.js + Element UI]
-</span></span><span class=line><span class=cl>        B[微信小程序用户端&lt;br/&gt;project-rjwm-weixin-uniapp-develop-wsy&lt;br/&gt;UniApp]
-</span></span><span class=line><span class=cl>    end
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    subgraph &#34;网关层&#34;
-</span></span><span class=line><span class=cl>        C[Nginx反向代理&lt;br/&gt;负载均衡 + 限流]
-</span></span><span class=line><span class=cl>    end
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    subgraph &#34;后端服务层&#34;
-</span></span><span class=line><span class=cl>        D[Hash Coffee后端&lt;br/&gt;Spring Boot + MyBatis&lt;br/&gt;端口: 8084]
-</span></span><span class=line><span class=cl>    end
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    subgraph &#34;中间件层&#34;
-</span></span><span class=line><span class=cl>        E[Redis缓存&lt;br/&gt;分布式锁 + 秒杀缓存]
-</span></span><span class=line><span class=cl>        F[RabbitMQ消息队列&lt;br/&gt;异步处理 + 延迟消息]
-</span></span><span class=line><span class=cl>        G[Redisson分布式锁&lt;br/&gt;防超卖 + 幂等性]
-</span></span><span class=line><span class=cl>    end
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    subgraph &#34;数据层&#34;
-</span></span><span class=line><span class=cl>        H[MySQL数据库&lt;br/&gt;主从复制 + 事务]
-</span></span><span class=line><span class=cl>    end
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    A --&gt; C
-</span></span><span class=line><span class=cl>    B --&gt; C
-</span></span><span class=line><span class=cl>    C --&gt; D
-</span></span><span class=line><span class=cl>    D --&gt; E
-</span></span><span class=line><span class=cl>    D --&gt; F
-</span></span><span class=line><span class=cl>    D --&gt; G
-</span></span><span class=line><span class=cl>    D --&gt; H
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>┌─────────────────────────────────┐    ┌─────────────────────────────────┐
+</span></span><span class=line><span class=cl>│        管理端前端                │    │      微信小程序用户端            │
+</span></span><span class=line><span class=cl>│   Hash咖啡前端-frontend         │    │  project-rjwm-weixin-uniapp-   │
+</span></span><span class=line><span class=cl>│   Vue.js + Element UI          │    │  develop-wsy (UniApp)          │
+</span></span><span class=line><span class=cl>└─────────────┬───────────────────┘    └─────────────┬───────────────────┘
+</span></span><span class=line><span class=cl>              │                                      │
+</span></span><span class=line><span class=cl>              └──────────────────┬───────────────────┘
+</span></span><span class=line><span class=cl>                                 │
+</span></span><span class=line><span class=cl>                    ┌─────────────┴─────────────┐
+</span></span><span class=line><span class=cl>                    │      Nginx 反向代理        │
+</span></span><span class=line><span class=cl>                    │   (负载均衡 + 限流)        │
+</span></span><span class=line><span class=cl>                    └─────────────┬─────────────┘
+</span></span><span class=line><span class=cl>                                 │
+</span></span><span class=line><span class=cl>                    ┌─────────────┴─────────────┐
+</span></span><span class=line><span class=cl>                    │     Hash Coffee 后端      │
+</span></span><span class=line><span class=cl>                    │  Spring Boot + MyBatis   │
+</span></span><span class=line><span class=cl>                    │      (端口: 8084)        │
+</span></span><span class=line><span class=cl>                    └─────────────┬─────────────┘
+</span></span><span class=line><span class=cl>                                 │
+</span></span><span class=line><span class=cl>        ┌────────────────────────┼────────────────────────┐
+</span></span><span class=line><span class=cl>        │                       │                        │
+</span></span><span class=line><span class=cl>┌───────┴────────┐    ┌─────────┴─────────┐    ┌─────────┴─────────┐
+</span></span><span class=line><span class=cl>│   Redis 缓存   │    │  RabbitMQ 消息队列  │    │  Redisson 分布式锁 │
+</span></span><span class=line><span class=cl>│ 分布式锁+秒杀缓存│    │ 异步处理+延迟消息   │    │  防超卖+幂等性    │
+</span></span><span class=line><span class=cl>│  (端口: 6379)  │    │  (端口: 5672)     │    │                   │
+</span></span><span class=line><span class=cl>└────────────────┘    └───────────────────┘    └───────────────────┘
+</span></span><span class=line><span class=cl>        │                       │                        │
+</span></span><span class=line><span class=cl>        └───────────────────────┼────────────────────────┘
+</span></span><span class=line><span class=cl>                                │
+</span></span><span class=line><span class=cl>                    ┌─────────────┴─────────────┐
+</span></span><span class=line><span class=cl>                    │      MySQL 数据库         │
+</span></span><span class=line><span class=cl>                    │   (主从复制 + 事务)       │
+</span></span><span class=line><span class=cl>                    │     (端口: 3306)         │
+</span></span><span class=line><span class=cl>                    └───────────────────────────┘
 </span></span></code></pre></td></tr></table></div></div><h3 id=数据流向>数据流向</h3><ol><li><p><strong>管理员访问流程</strong>：</p><ul><li>管理员通过管理端前端(Vue.js)发起请求</li><li>Nginx接收请求并进行反向代理</li><li>后端服务处理业务逻辑</li><li>返回响应给管理员</li></ul></li><li><p><strong>用户访问流程</strong>：</p><ul><li>用户通过微信小程序(UniApp)发起请求</li><li>Nginx接收请求并进行反向代理</li><li>后端服务处理业务逻辑</li><li>返回响应给用户</li></ul></li><li><p><strong>秒杀流程</strong>：</p><ul><li>用户参与秒杀活动</li><li>Redis分布式锁防止重复参与</li><li>Lua脚本保证库存扣减原子性</li><li>异步创建订单和更新数据库</li></ul></li><li><p><strong>消息队列流程</strong>：</p><ul><li>订单支付成功后发送消息</li><li>RabbitMQ异步处理积分计算</li><li>解耦支付服务和积分服务</li></ul></li></ol><hr><h2 id=数据库设计完善>数据库设计完善</h2><h3 id=现有数据库表结构>现有数据库表结构</h3><p>项目已经包含了完整的数据库设计（<code>script3.sql</code>），主要包括：</p><h4 id=核心业务表>核心业务表</h4><p><strong>1. 秒杀活动表 (seckill_activity)</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
