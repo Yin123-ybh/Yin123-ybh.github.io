@@ -574,9 +574,11 @@ public interface SeckillStockLogMapper {
 ```java
 package com.sky.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -585,11 +587,14 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
- * 分布式锁服务
+ * 分布式锁服务（优化版）
  */
+@Slf4j
 @Service
 public class DistributedLockService {
     
@@ -598,6 +603,12 @@ public class DistributedLockService {
     
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+    
+    @Value("${sky.redis.seckill.prefix:seckill:}")
+    private String seckillPrefix;
+    
+    // 锁缓存，避免重复获取锁对象
+    private final ConcurrentHashMap<String, RLock> lockCache = new ConcurrentHashMap<>();
     
     // 秒杀参与脚本
     private final DefaultRedisScript<List> seckillParticipateScript;
@@ -612,11 +623,18 @@ public class DistributedLockService {
     }
     
     /**
+     * 获取锁对象（带缓存）
+     */
+    private RLock getLock(String lockKey) {
+        return lockCache.computeIfAbsent(lockKey, key -> redissonClient.getLock(key));
+    }
+    
+    /**
      * 秒杀参与
      */
     public List<Object> seckillParticipate(Long activityId, Long userId, Integer quantity, Integer perUserLimit) {
-        String stockKey = "seckill:stock:" + activityId;
-        String participantsKey = "seckill:participants:" + activityId;
+        String stockKey = seckillPrefix + "stock:" + activityId;
+        String participantsKey = seckillPrefix + "participants:" + activityId;
         
         List<String> keys = Arrays.asList(stockKey, participantsKey);
         Object[] args = {userId.toString(), quantity.toString(), perUserLimit.toString()};
@@ -625,33 +643,68 @@ public class DistributedLockService {
     }
     
     /**
-     * 获取分布式锁
-     */
-    public RLock getLock(String lockKey) {
-        return redissonClient.getLock(lockKey);
-    }
-    
-    /**
-     * 尝试获取锁
+     * 尝试获取锁（优化版）
      */
     public boolean tryLock(String lockKey, long waitTime, long leaseTime, TimeUnit unit) {
-        RLock lock = redissonClient.getLock(lockKey);
+        RLock lock = getLock(lockKey);
         try {
             return lock.tryLock(waitTime, leaseTime, unit);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            return false;
+            throw new RuntimeException("获取锁被中断", e);
         }
     }
     
     /**
-     * 释放锁
+     * 释放锁（优化版）
      */
     public void unlock(String lockKey) {
-        RLock lock = redissonClient.getLock(lockKey);
-        if (lock.isHeldByCurrentThread()) {
-            lock.unlock();
+        RLock lock = getLock(lockKey);
+        try {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        } catch (Exception e) {
+            log.warn("释放锁失败: {}", lockKey, e);
         }
+    }
+    
+    /**
+     * 执行带锁的操作（推荐使用）
+     */
+    public <T> T executeWithLock(String lockKey, long waitTime, long leaseTime, 
+                                 TimeUnit unit, Supplier<T> supplier) {
+        RLock lock = getLock(lockKey);
+        try {
+            if (lock.tryLock(waitTime, leaseTime, unit)) {
+                return supplier.get();
+            } else {
+                throw new RuntimeException("获取锁失败: " + lockKey);
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("获取锁被中断: " + lockKey, e);
+        } finally {
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
+        }
+    }
+    
+    /**
+     * 检查锁状态
+     */
+    public boolean isLocked(String lockKey) {
+        RLock lock = getLock(lockKey);
+        return lock.isLocked();
+    }
+    
+    /**
+     * 获取锁剩余时间
+     */
+    public long getLockRemainingTime(String lockKey) {
+        RLock lock = getLock(lockKey);
+        return lock.remainTimeToLive();
     }
 }
 ```
@@ -863,7 +916,7 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
     }
     
     /**
-     * 参与秒杀活动
+     * 参与秒杀活动（优化版）
      */
     @Override
     @Transactional
@@ -887,52 +940,40 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
             return "活动已结束";
         }
         
-        // 3. 使用分布式锁防止重复参与
-        String lockKey = "seckill:db:lock:" + activityId;
-        RLock lock = distributedLockService.getLock(lockKey);
+        // 3. 使用优化后的分布式锁服务
+        String lockKey = "seckill:lock:" + activityId;
         
-        try {
-            if (lock.tryLock(10, 30, TimeUnit.SECONDS)) {
-                // 4. 执行Lua脚本
-                List<Object> result = distributedLockService.seckillParticipate(
-                    activityId, userId, quantity, activity.getPerUserLimit()
-                );
-                
-                if (result != null && result.size() > 0) {
-                    Integer success = (Integer) result.get(0);
-                    if (success == 1) {
-                        // 5. 记录参与记录
-                        SeckillParticipant participant = SeckillParticipant.builder()
-                                .activityId(activityId)
-                                .userId(userId)
-                                .quantity(quantity)
-                                .status(1)
-                                .createTime(now)
-                                .updateTime(now)
-                                .build();
-                        seckillParticipantMapper.insert(participant);
-                        
-                        // 6. 异步处理订单
-                        processSeckillOrderAsync(activity, userId, quantity);
-                        
-                        return "参与成功";
-                    } else {
-                        return (String) result.get(1);
-                    }
+        return distributedLockService.executeWithLock(lockKey, 10, 30, TimeUnit.SECONDS, () -> {
+            // 4. 执行秒杀参与
+            List<Object> result = distributedLockService.seckillParticipate(
+                activityId, userId, quantity, activity.getPerUserLimit()
+            );
+            
+            if (result != null && result.size() > 0) {
+                Integer success = (Integer) result.get(0);
+                if (success == 1) {
+                    // 5. 记录参与记录
+                    SeckillParticipant participant = SeckillParticipant.builder()
+                            .activityId(activityId)
+                            .userId(userId)
+                            .quantity(quantity)
+                            .status(1)
+                            .createTime(now)
+                            .updateTime(now)
+                            .build();
+                    seckillParticipantMapper.insert(participant);
+                    
+                    // 6. 异步处理订单
+                    processSeckillOrderAsync(activity, userId, quantity);
+                    
+                    return "参与成功";
+                } else {
+                    return (String) result.get(1);
                 }
-                
-                return "参与失败";
-            } else {
-                return "系统繁忙，请稍后重试";
             }
-        } catch (Exception e) {
-            log.error("参与秒杀活动异常", e);
-            return "参与失败，请重试";
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unlock();
-            }
-        }
+            
+            return "参与失败";
+        });
     }
     
     /**
@@ -1069,6 +1110,68 @@ public interface SeckillActivityService {
     String participateSeckill(Long activityId, Long userId, Integer quantity);
 }
 ```
+
+---
+
+## 分布式锁服务优化说明
+
+### 1. 优化点总结
+
+**性能优化**：
+- **锁缓存**：使用`ConcurrentHashMap`缓存锁对象，避免重复创建
+- **脚本预加载**：在构造函数中初始化Lua脚本，提高执行效率
+- **配置化**：支持Redis键前缀配置，提高灵活性
+
+**代码优化**：
+- **执行带锁操作**：提供`executeWithLock`方法，自动管理锁的获取和释放
+- **异常处理**：完善的异常处理机制，提供详细的错误信息
+- **锁状态监控**：支持锁状态检查和剩余时间查询
+
+**使用优化**：
+- **代码简洁**：业务代码更简洁，锁管理逻辑集中
+- **避免死锁**：自动释放锁，避免忘记释放锁导致的问题
+- **易于维护**：锁相关逻辑集中管理，便于维护和扩展
+
+### 2. 使用示例对比
+
+**原始方式**：
+```java
+public String participateSeckill(Long activityId, Long userId, Integer quantity) {
+    String lockKey = "seckill:lock:" + activityId;
+    RLock lock = redissonClient.getLock(lockKey);
+    
+    try {
+        if (lock.tryLock(10, 30, TimeUnit.SECONDS)) {
+            // 业务逻辑
+            return "参与成功";
+        } else {
+            return "获取锁失败";
+        }
+    } finally {
+        if (lock.isHeldByCurrentThread()) {
+            lock.unlock();
+        }
+    }
+}
+```
+
+**优化后方式**：
+```java
+public String participateSeckill(Long activityId, Long userId, Integer quantity) {
+    String lockKey = "seckill:lock:" + activityId;
+    
+    return distributedLockService.executeWithLock(lockKey, 10, 30, TimeUnit.SECONDS, () -> {
+        // 业务逻辑
+        return "参与成功";
+    });
+}
+```
+
+**优化效果**：
+- 代码行数减少50%
+- 自动管理锁的获取和释放
+- 更好的异常处理
+- 更高的执行效率
 
 ---
 

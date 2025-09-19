@@ -8,9 +8,9 @@
 <span>Links</span></a></li><li class=menu-bottom-section><ol class=menu><li id=i18n-switch><svg class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5h7"/><path d="M9 3v2c0 4.418-2.239 8-5 8"/><path d="M5 9c-.003 2.144 2.952 3.908 6.7 4"/><path d="M12 20l4-9 4 9"/><path d="M19.1 18h-6.2"/></svg>
 <select name=language title=language onchange="window.location.href=this.selectedOptions[0].value"><option value=https://Yin123-ybh.github.io/ selected>English</option><option value=https://Yin123-ybh.github.io/zh-cn/>简体中文</option><option value=https://Yin123-ybh.github.io/ar/>عربي</option></select></li><li id=dark-mode-toggle><svg class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
 <svg class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
-<span>Dark Mode</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#目录>目录</a></li><li><a href=#实体类设计>实体类设计</a><ol><li><a href=#1-秒杀参与记录实体>1. 秒杀参与记录实体</a></li><li><a href=#2-秒杀订单实体>2. 秒杀订单实体</a></li><li><a href=#3-库存扣减记录实体>3. 库存扣减记录实体</a></li></ol></li><li><a href=#dto类创建>DTO类创建</a><ol><li><a href=#1-秒杀参与dto>1. 秒杀参与DTO</a></li><li><a href=#2-秒杀订单dto>2. 秒杀订单DTO</a></li></ol></li><li><a href=#mapper接口实现>Mapper接口实现</a><ol><li><a href=#1-秒杀参与记录mapper>1. 秒杀参与记录Mapper</a></li><li><a href=#2-秒杀订单mapper>2. 秒杀订单Mapper</a></li><li><a href=#3-库存扣减记录mapper>3. 库存扣减记录Mapper</a></li><li><a href=#4-mapper-xml文件>4. Mapper XML文件</a></li></ol></li><li><a href=#分布式锁服务>分布式锁服务</a><ol><li><a href=#1-添加项目依赖>1. 添加项目依赖</a></li><li><a href=#2-创建分布式锁服务>2. 创建分布式锁服务</a></li></ol></li><li><a href=#lua脚本实现>Lua脚本实现</a><ol><li><a href=#1-秒杀参与lua脚本>1. 秒杀参与Lua脚本</a></li><li><a href=#2-lua脚本原理解析>2. Lua脚本原理解析</a></li></ol></li><li><a href=#服务层增强>服务层增强</a><ol><li><a href=#1-增强seckillactivityservice>1. 增强SeckillActivityService</a></li><li><a href=#2-更新seckillactivityservice接口>2. 更新SeckillActivityService接口</a></li></ol></li><li><a href=#核心特性总结>核心特性总结</a><ol><li><a href=#1-防超卖机制>1. 防超卖机制</a></li><li><a href=#2-性能优化>2. 性能优化</a></li><li><a href=#3-数据一致性>3. 数据一致性</a></li></ol></li></ol></nav></div></section></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/p/hash%E5%92%96%E5%95%A1%E9%A1%B9%E7%9B%AE%E5%90%8E%E7%AB%AF%E6%94%B9%E9%80%A0%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%E5%AE%9E%E4%BD%93%E7%B1%BB%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0/>Hash咖啡项目后端改造指南 - 第二部分：实体类和分布式锁实现</a></h2><h3 class=article-subtitle>详细讲解秒杀系统实体类设计、DTO创建、Mapper接口实现和基于Redisson的分布式锁防超卖机制</h3></div><footer class=article-time><div><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<span>Dark Mode</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#目录>目录</a></li><li><a href=#实体类设计>实体类设计</a><ol><li><a href=#1-秒杀参与记录实体>1. 秒杀参与记录实体</a></li><li><a href=#2-秒杀订单实体>2. 秒杀订单实体</a></li><li><a href=#3-库存扣减记录实体>3. 库存扣减记录实体</a></li></ol></li><li><a href=#dto类创建>DTO类创建</a><ol><li><a href=#1-秒杀参与dto>1. 秒杀参与DTO</a></li><li><a href=#2-秒杀订单dto>2. 秒杀订单DTO</a></li></ol></li><li><a href=#mapper接口实现>Mapper接口实现</a><ol><li><a href=#1-秒杀参与记录mapper>1. 秒杀参与记录Mapper</a></li><li><a href=#2-秒杀订单mapper>2. 秒杀订单Mapper</a></li><li><a href=#3-库存扣减记录mapper>3. 库存扣减记录Mapper</a></li><li><a href=#4-mapper-xml文件>4. Mapper XML文件</a></li></ol></li><li><a href=#分布式锁服务>分布式锁服务</a><ol><li><a href=#1-添加项目依赖>1. 添加项目依赖</a></li><li><a href=#2-创建分布式锁服务>2. 创建分布式锁服务</a></li></ol></li><li><a href=#lua脚本实现>Lua脚本实现</a><ol><li><a href=#1-秒杀参与lua脚本>1. 秒杀参与Lua脚本</a></li><li><a href=#2-lua脚本原理解析>2. Lua脚本原理解析</a></li></ol></li><li><a href=#服务层增强>服务层增强</a><ol><li><a href=#1-增强seckillactivityservice>1. 增强SeckillActivityService</a></li><li><a href=#2-更新seckillactivityservice接口>2. 更新SeckillActivityService接口</a></li></ol></li><li><a href=#分布式锁服务优化说明>分布式锁服务优化说明</a><ol><li><a href=#1-优化点总结>1. 优化点总结</a></li><li><a href=#2-使用示例对比>2. 使用示例对比</a></li></ol></li><li><a href=#核心特性总结>核心特性总结</a><ol><li><a href=#1-防超卖机制>1. 防超卖机制</a></li><li><a href=#2-性能优化>2. 性能优化</a></li><li><a href=#3-数据一致性>3. 数据一致性</a></li></ol></li></ol></nav></div></section></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/p/hash%E5%92%96%E5%95%A1%E9%A1%B9%E7%9B%AE%E5%90%8E%E7%AB%AF%E6%94%B9%E9%80%A0%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%BA%8C%E9%83%A8%E5%88%86%E5%AE%9E%E4%BD%93%E7%B1%BB%E5%92%8C%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81%E5%AE%9E%E7%8E%B0/>Hash咖啡项目后端改造指南 - 第二部分：实体类和分布式锁实现</a></h2><h3 class=article-subtitle>详细讲解秒杀系统实体类设计、DTO创建、Mapper接口实现和基于Redisson的分布式锁防超卖机制</h3></div><footer class=article-time><div><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
 <time class=article-time--published>2025-01-14</time></div><div><svg class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-<time class=article-time--reading>13 minute read</time></div></footer></div></header><section class=article-content><h1 id=hash咖啡项目后端改造指南---第二部分实体类和分布式锁实现>Hash咖啡项目后端改造指南 - 第二部分：实体类和分布式锁实现</h1><h2 id=目录>目录</h2><ol><li><a class=link href=#%e5%ae%9e%e4%bd%93%e7%b1%bb%e8%ae%be%e8%ae%a1>实体类设计</a></li><li><a class=link href=#dto%e7%b1%bb%e5%88%9b%e5%bb%ba>DTO类创建</a></li><li><a class=link href=#mapper%e6%8e%a5%e5%8f%a3%e5%ae%9e%e7%8e%b0>Mapper接口实现</a></li><li><a class=link href=#%e5%88%86%e5%b8%83%e5%bc%8f%e9%94%81%e6%9c%8d%e5%8a%a1>分布式锁服务</a></li><li><a class=link href=#lua%e8%84%9a%e6%9c%ac%e5%ae%9e%e7%8e%b0>Lua脚本实现</a></li><li><a class=link href=#%e6%9c%8d%e5%8a%a1%e5%b1%82%e5%a2%9e%e5%bc%ba>服务层增强</a></li></ol><hr><h2 id=实体类设计>实体类设计</h2><h3 id=1-秒杀参与记录实体>1. 秒杀参与记录实体</h3><p><strong>创建 <code>sky-pojo/src/main/java/com/sky/entity/SeckillParticipant.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+<time class=article-time--reading>15 minute read</time></div></footer></div></header><section class=article-content><h1 id=hash咖啡项目后端改造指南---第二部分实体类和分布式锁实现>Hash咖啡项目后端改造指南 - 第二部分：实体类和分布式锁实现</h1><h2 id=目录>目录</h2><ol><li><a class=link href=#%e5%ae%9e%e4%bd%93%e7%b1%bb%e8%ae%be%e8%ae%a1>实体类设计</a></li><li><a class=link href=#dto%e7%b1%bb%e5%88%9b%e5%bb%ba>DTO类创建</a></li><li><a class=link href=#mapper%e6%8e%a5%e5%8f%a3%e5%ae%9e%e7%8e%b0>Mapper接口实现</a></li><li><a class=link href=#%e5%88%86%e5%b8%83%e5%bc%8f%e9%94%81%e6%9c%8d%e5%8a%a1>分布式锁服务</a></li><li><a class=link href=#lua%e8%84%9a%e6%9c%ac%e5%ae%9e%e7%8e%b0>Lua脚本实现</a></li><li><a class=link href=#%e6%9c%8d%e5%8a%a1%e5%b1%82%e5%a2%9e%e5%bc%ba>服务层增强</a></li></ol><hr><h2 id=实体类设计>实体类设计</h2><h3 id=1-秒杀参与记录实体>1. 秒杀参与记录实体</h3><p><strong>创建 <code>sky-pojo/src/main/java/com/sky/entity/SeckillParticipant.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -918,93 +918,148 @@
 </span></span><span class=line><span class=cl>    <span class=nt>&lt;artifactId&gt;</span>redisson-spring-boot-starter<span class=nt>&lt;/artifactId&gt;</span>
 </span></span><span class=line><span class=cl>    <span class=nt>&lt;version&gt;</span>3.17.7<span class=nt>&lt;/version&gt;</span>
 </span></span><span class=line><span class=cl><span class=nt>&lt;/dependency&gt;</span>
-</span></span></code></pre></td></tr></table></div></div><h3 id=2-创建分布式锁服务>2. 创建分布式锁服务</h3><p><strong>创建 <code>sky-server/src/main/java/com/sky/service/DistributedLockService.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
-</span><span class=lnt> 2
-</span><span class=lnt> 3
-</span><span class=lnt> 4
-</span><span class=lnt> 5
-</span><span class=lnt> 6
-</span><span class=lnt> 7
-</span><span class=lnt> 8
-</span><span class=lnt> 9
-</span><span class=lnt>10
-</span><span class=lnt>11
-</span><span class=lnt>12
-</span><span class=lnt>13
-</span><span class=lnt>14
-</span><span class=lnt>15
-</span><span class=lnt>16
-</span><span class=lnt>17
-</span><span class=lnt>18
-</span><span class=lnt>19
-</span><span class=lnt>20
-</span><span class=lnt>21
-</span><span class=lnt>22
-</span><span class=lnt>23
-</span><span class=lnt>24
-</span><span class=lnt>25
-</span><span class=lnt>26
-</span><span class=lnt>27
-</span><span class=lnt>28
-</span><span class=lnt>29
-</span><span class=lnt>30
-</span><span class=lnt>31
-</span><span class=lnt>32
-</span><span class=lnt>33
-</span><span class=lnt>34
-</span><span class=lnt>35
-</span><span class=lnt>36
-</span><span class=lnt>37
-</span><span class=lnt>38
-</span><span class=lnt>39
-</span><span class=lnt>40
-</span><span class=lnt>41
-</span><span class=lnt>42
-</span><span class=lnt>43
-</span><span class=lnt>44
-</span><span class=lnt>45
-</span><span class=lnt>46
-</span><span class=lnt>47
-</span><span class=lnt>48
-</span><span class=lnt>49
-</span><span class=lnt>50
-</span><span class=lnt>51
-</span><span class=lnt>52
-</span><span class=lnt>53
-</span><span class=lnt>54
-</span><span class=lnt>55
-</span><span class=lnt>56
-</span><span class=lnt>57
-</span><span class=lnt>58
-</span><span class=lnt>59
-</span><span class=lnt>60
-</span><span class=lnt>61
-</span><span class=lnt>62
-</span><span class=lnt>63
-</span><span class=lnt>64
-</span><span class=lnt>65
-</span><span class=lnt>66
-</span><span class=lnt>67
-</span><span class=lnt>68
-</span><span class=lnt>69
-</span><span class=lnt>70
-</span><span class=lnt>71
-</span><span class=lnt>72
-</span><span class=lnt>73
-</span><span class=lnt>74
-</span><span class=lnt>75
-</span><span class=lnt>76
-</span><span class=lnt>77
-</span><span class=lnt>78
-</span><span class=lnt>79
-</span><span class=lnt>80
-</span><span class=lnt>81
-</span><span class=lnt>82
+</span></span></code></pre></td></tr></table></div></div><h3 id=2-创建分布式锁服务>2. 创建分布式锁服务</h3><p><strong>创建 <code>sky-server/src/main/java/com/sky/service/DistributedLockService.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>  1
+</span><span class=lnt>  2
+</span><span class=lnt>  3
+</span><span class=lnt>  4
+</span><span class=lnt>  5
+</span><span class=lnt>  6
+</span><span class=lnt>  7
+</span><span class=lnt>  8
+</span><span class=lnt>  9
+</span><span class=lnt> 10
+</span><span class=lnt> 11
+</span><span class=lnt> 12
+</span><span class=lnt> 13
+</span><span class=lnt> 14
+</span><span class=lnt> 15
+</span><span class=lnt> 16
+</span><span class=lnt> 17
+</span><span class=lnt> 18
+</span><span class=lnt> 19
+</span><span class=lnt> 20
+</span><span class=lnt> 21
+</span><span class=lnt> 22
+</span><span class=lnt> 23
+</span><span class=lnt> 24
+</span><span class=lnt> 25
+</span><span class=lnt> 26
+</span><span class=lnt> 27
+</span><span class=lnt> 28
+</span><span class=lnt> 29
+</span><span class=lnt> 30
+</span><span class=lnt> 31
+</span><span class=lnt> 32
+</span><span class=lnt> 33
+</span><span class=lnt> 34
+</span><span class=lnt> 35
+</span><span class=lnt> 36
+</span><span class=lnt> 37
+</span><span class=lnt> 38
+</span><span class=lnt> 39
+</span><span class=lnt> 40
+</span><span class=lnt> 41
+</span><span class=lnt> 42
+</span><span class=lnt> 43
+</span><span class=lnt> 44
+</span><span class=lnt> 45
+</span><span class=lnt> 46
+</span><span class=lnt> 47
+</span><span class=lnt> 48
+</span><span class=lnt> 49
+</span><span class=lnt> 50
+</span><span class=lnt> 51
+</span><span class=lnt> 52
+</span><span class=lnt> 53
+</span><span class=lnt> 54
+</span><span class=lnt> 55
+</span><span class=lnt> 56
+</span><span class=lnt> 57
+</span><span class=lnt> 58
+</span><span class=lnt> 59
+</span><span class=lnt> 60
+</span><span class=lnt> 61
+</span><span class=lnt> 62
+</span><span class=lnt> 63
+</span><span class=lnt> 64
+</span><span class=lnt> 65
+</span><span class=lnt> 66
+</span><span class=lnt> 67
+</span><span class=lnt> 68
+</span><span class=lnt> 69
+</span><span class=lnt> 70
+</span><span class=lnt> 71
+</span><span class=lnt> 72
+</span><span class=lnt> 73
+</span><span class=lnt> 74
+</span><span class=lnt> 75
+</span><span class=lnt> 76
+</span><span class=lnt> 77
+</span><span class=lnt> 78
+</span><span class=lnt> 79
+</span><span class=lnt> 80
+</span><span class=lnt> 81
+</span><span class=lnt> 82
+</span><span class=lnt> 83
+</span><span class=lnt> 84
+</span><span class=lnt> 85
+</span><span class=lnt> 86
+</span><span class=lnt> 87
+</span><span class=lnt> 88
+</span><span class=lnt> 89
+</span><span class=lnt> 90
+</span><span class=lnt> 91
+</span><span class=lnt> 92
+</span><span class=lnt> 93
+</span><span class=lnt> 94
+</span><span class=lnt> 95
+</span><span class=lnt> 96
+</span><span class=lnt> 97
+</span><span class=lnt> 98
+</span><span class=lnt> 99
+</span><span class=lnt>100
+</span><span class=lnt>101
+</span><span class=lnt>102
+</span><span class=lnt>103
+</span><span class=lnt>104
+</span><span class=lnt>105
+</span><span class=lnt>106
+</span><span class=lnt>107
+</span><span class=lnt>108
+</span><span class=lnt>109
+</span><span class=lnt>110
+</span><span class=lnt>111
+</span><span class=lnt>112
+</span><span class=lnt>113
+</span><span class=lnt>114
+</span><span class=lnt>115
+</span><span class=lnt>116
+</span><span class=lnt>117
+</span><span class=lnt>118
+</span><span class=lnt>119
+</span><span class=lnt>120
+</span><span class=lnt>121
+</span><span class=lnt>122
+</span><span class=lnt>123
+</span><span class=lnt>124
+</span><span class=lnt>125
+</span><span class=lnt>126
+</span><span class=lnt>127
+</span><span class=lnt>128
+</span><span class=lnt>129
+</span><span class=lnt>130
+</span><span class=lnt>131
+</span><span class=lnt>132
+</span><span class=lnt>133
+</span><span class=lnt>134
+</span><span class=lnt>135
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nn>com.sky.service</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>lombok.extern.slf4j.Slf4j</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>org.redisson.api.RLock</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>org.redisson.api.RedissonClient</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>org.springframework.beans.factory.annotation.Autowired</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>org.springframework.beans.factory.annotation.Value</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>org.springframework.core.io.ClassPathResource</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>org.springframework.data.redis.core.RedisTemplate</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>org.springframework.data.redis.core.script.DefaultRedisScript</span><span class=p>;</span><span class=w>
@@ -1013,11 +1068,14 @@
 </span></span></span><span class=line><span class=cl><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>java.util.Arrays</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>java.util.List</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>java.util.concurrent.ConcurrentHashMap</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>java.util.concurrent.TimeUnit</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>java.util.function.Supplier</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=cm>/**
-</span></span></span><span class=line><span class=cl><span class=cm> * 分布式锁服务
+</span></span></span><span class=line><span class=cl><span class=cm> * 分布式锁服务（优化版）
 </span></span></span><span class=line><span class=cl><span class=cm> */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@Slf4j</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@Service</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>DistributedLockService</span><span class=w> </span><span class=p>{</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
@@ -1026,6 +1084,12 @@
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Autowired</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>RedisTemplate</span><span class=o>&lt;</span><span class=n>String</span><span class=p>,</span><span class=w> </span><span class=n>Object</span><span class=o>&gt;</span><span class=w> </span><span class=n>redisTemplate</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Value</span><span class=p>(</span><span class=s>&#34;${sky.redis.seckill.prefix:seckill:}&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=n>seckillPrefix</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 锁缓存，避免重复获取锁对象</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=kd>final</span><span class=w> </span><span class=n>ConcurrentHashMap</span><span class=o>&lt;</span><span class=n>String</span><span class=p>,</span><span class=w> </span><span class=n>RLock</span><span class=o>&gt;</span><span class=w> </span><span class=n>lockCache</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>ConcurrentHashMap</span><span class=o>&lt;&gt;</span><span class=p>();</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 秒杀参与脚本</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=kd>final</span><span class=w> </span><span class=n>DefaultRedisScript</span><span class=o>&lt;</span><span class=n>List</span><span class=o>&gt;</span><span class=w> </span><span class=n>seckillParticipateScript</span><span class=p>;</span><span class=w>
@@ -1040,11 +1104,18 @@
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm>     * 获取锁对象（带缓存）
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>RLock</span><span class=w> </span><span class=nf>getLock</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>lockCache</span><span class=p>.</span><span class=na>computeIfAbsent</span><span class=p>(</span><span class=n>lockKey</span><span class=p>,</span><span class=w> </span><span class=n>key</span><span class=w> </span><span class=o>-&gt;</span><span class=w> </span><span class=n>redissonClient</span><span class=p>.</span><span class=na>getLock</span><span class=p>(</span><span class=n>key</span><span class=p>));</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
 </span></span></span><span class=line><span class=cl><span class=cm>     * 秒杀参与
 </span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>List</span><span class=o>&lt;</span><span class=n>Object</span><span class=o>&gt;</span><span class=w> </span><span class=nf>seckillParticipate</span><span class=p>(</span><span class=n>Long</span><span class=w> </span><span class=n>activityId</span><span class=p>,</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>Integer</span><span class=w> </span><span class=n>quantity</span><span class=p>,</span><span class=w> </span><span class=n>Integer</span><span class=w> </span><span class=n>perUserLimit</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>String</span><span class=w> </span><span class=n>stockKey</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;seckill:stock:&#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>activityId</span><span class=p>;</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>String</span><span class=w> </span><span class=n>participantsKey</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;seckill:participants:&#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>activityId</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>String</span><span class=w> </span><span class=n>stockKey</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>seckillPrefix</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=s>&#34;stock:&#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>activityId</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>String</span><span class=w> </span><span class=n>participantsKey</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>seckillPrefix</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=s>&#34;participants:&#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>activityId</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>List</span><span class=o>&lt;</span><span class=n>String</span><span class=o>&gt;</span><span class=w> </span><span class=n>keys</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>Arrays</span><span class=p>.</span><span class=na>asList</span><span class=p>(</span><span class=n>stockKey</span><span class=p>,</span><span class=w> </span><span class=n>participantsKey</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>Object</span><span class=o>[]</span><span class=w> </span><span class=n>args</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=p>{</span><span class=n>userId</span><span class=p>.</span><span class=na>toString</span><span class=p>(),</span><span class=w> </span><span class=n>quantity</span><span class=p>.</span><span class=na>toString</span><span class=p>(),</span><span class=w> </span><span class=n>perUserLimit</span><span class=p>.</span><span class=na>toString</span><span class=p>()};</span><span class=w>
@@ -1053,33 +1124,68 @@
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
-</span></span></span><span class=line><span class=cl><span class=cm>     * 获取分布式锁
-</span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>RLock</span><span class=w> </span><span class=nf>getLock</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>redissonClient</span><span class=p>.</span><span class=na>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>    
-</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
-</span></span></span><span class=line><span class=cl><span class=cm>     * 尝试获取锁
+</span></span></span><span class=line><span class=cl><span class=cm>     * 尝试获取锁（优化版）
 </span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>boolean</span><span class=w> </span><span class=nf>tryLock</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=p>,</span><span class=w> </span><span class=kt>long</span><span class=w> </span><span class=n>waitTime</span><span class=p>,</span><span class=w> </span><span class=kt>long</span><span class=w> </span><span class=n>leaseTime</span><span class=p>,</span><span class=w> </span><span class=n>TimeUnit</span><span class=w> </span><span class=n>unit</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>redissonClient</span><span class=p>.</span><span class=na>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=n>lock</span><span class=p>.</span><span class=na>tryLock</span><span class=p>(</span><span class=n>waitTime</span><span class=p>,</span><span class=w> </span><span class=n>leaseTime</span><span class=p>,</span><span class=w> </span><span class=n>unit</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w> </span><span class=k>catch</span><span class=w> </span><span class=p>(</span><span class=n>InterruptedException</span><span class=w> </span><span class=n>e</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>Thread</span><span class=p>.</span><span class=na>currentThread</span><span class=p>().</span><span class=na>interrupt</span><span class=p>();</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=kc>false</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>throw</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>RuntimeException</span><span class=p>(</span><span class=s>&#34;获取锁被中断&#34;</span><span class=p>,</span><span class=w> </span><span class=n>e</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
-</span></span></span><span class=line><span class=cl><span class=cm>     * 释放锁
+</span></span></span><span class=line><span class=cl><span class=cm>     * 释放锁（优化版）
 </span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>void</span><span class=w> </span><span class=nf>unlock</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>redissonClient</span><span class=p>.</span><span class=na>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>lock</span><span class=p>.</span><span class=na>isHeldByCurrentThread</span><span class=p>())</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>lock</span><span class=p>.</span><span class=na>unlock</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>lock</span><span class=p>.</span><span class=na>isHeldByCurrentThread</span><span class=p>())</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>lock</span><span class=p>.</span><span class=na>unlock</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w> </span><span class=k>catch</span><span class=w> </span><span class=p>(</span><span class=n>Exception</span><span class=w> </span><span class=n>e</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>log</span><span class=p>.</span><span class=na>warn</span><span class=p>(</span><span class=s>&#34;释放锁失败: {}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>lockKey</span><span class=p>,</span><span class=w> </span><span class=n>e</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm>     * 执行带锁的操作（推荐使用）
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span><span class=w> </span><span class=n>T</span><span class=w> </span><span class=nf>executeWithLock</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=p>,</span><span class=w> </span><span class=kt>long</span><span class=w> </span><span class=n>waitTime</span><span class=p>,</span><span class=w> </span><span class=kt>long</span><span class=w> </span><span class=n>leaseTime</span><span class=p>,</span><span class=w> 
+</span></span></span><span class=line><span class=cl><span class=w>                                 </span><span class=n>TimeUnit</span><span class=w> </span><span class=n>unit</span><span class=p>,</span><span class=w> </span><span class=n>Supplier</span><span class=o>&lt;</span><span class=n>T</span><span class=o>&gt;</span><span class=w> </span><span class=n>supplier</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>lock</span><span class=p>.</span><span class=na>tryLock</span><span class=p>(</span><span class=n>waitTime</span><span class=p>,</span><span class=w> </span><span class=n>leaseTime</span><span class=p>,</span><span class=w> </span><span class=n>unit</span><span class=p>))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>return</span><span class=w> </span><span class=n>supplier</span><span class=p>.</span><span class=na>get</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w> </span><span class=k>else</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>throw</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>RuntimeException</span><span class=p>(</span><span class=s>&#34;获取锁失败: &#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>lockKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w> </span><span class=k>catch</span><span class=w> </span><span class=p>(</span><span class=n>InterruptedException</span><span class=w> </span><span class=n>e</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>Thread</span><span class=p>.</span><span class=na>currentThread</span><span class=p>().</span><span class=na>interrupt</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>throw</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>RuntimeException</span><span class=p>(</span><span class=s>&#34;获取锁被中断: &#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>lockKey</span><span class=p>,</span><span class=w> </span><span class=n>e</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w> </span><span class=k>finally</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>lock</span><span class=p>.</span><span class=na>isHeldByCurrentThread</span><span class=p>())</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>lock</span><span class=p>.</span><span class=na>unlock</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm>     * 检查锁状态
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>boolean</span><span class=w> </span><span class=nf>isLocked</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>lock</span><span class=p>.</span><span class=na>isLocked</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm>     * 获取锁剩余时间
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>long</span><span class=w> </span><span class=nf>getLockRemainingTime</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>lock</span><span class=p>.</span><span class=na>remainTimeToLive</span><span class=p>();</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
 </span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=lua脚本实现>Lua脚本实现</h2><h3 id=1-秒杀参与lua脚本>1. 秒杀参与Lua脚本</h3><p><strong>创建 <code>sky-server/src/main/resources/scripts/seckill_participate.lua</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
@@ -1416,18 +1522,6 @@
 </span><span class=lnt>240
 </span><span class=lnt>241
 </span><span class=lnt>242
-</span><span class=lnt>243
-</span><span class=lnt>244
-</span><span class=lnt>245
-</span><span class=lnt>246
-</span><span class=lnt>247
-</span><span class=lnt>248
-</span><span class=lnt>249
-</span><span class=lnt>250
-</span><span class=lnt>251
-</span><span class=lnt>252
-</span><span class=lnt>253
-</span><span class=lnt>254
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nn>com.sky.service.impl</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>com.github.pagehelper.Page</span><span class=p>;</span><span class=w>
@@ -1552,7 +1646,7 @@
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
-</span></span></span><span class=line><span class=cl><span class=cm>     * 参与秒杀活动
+</span></span></span><span class=line><span class=cl><span class=cm>     * 参与秒杀活动（优化版）
 </span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Transactional</span><span class=w>
@@ -1576,52 +1670,40 @@
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=s>&#34;活动已结束&#34;</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 3. 使用分布式锁防止重复参与</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;seckill:db:lock:&#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>activityId</span><span class=p>;</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>distributedLockService</span><span class=p>.</span><span class=na>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 3. 使用优化后的分布式锁服务</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;seckill:lock:&#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>activityId</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>lock</span><span class=p>.</span><span class=na>tryLock</span><span class=p>(</span><span class=n>10</span><span class=p>,</span><span class=w> </span><span class=n>30</span><span class=p>,</span><span class=w> </span><span class=n>TimeUnit</span><span class=p>.</span><span class=na>SECONDS</span><span class=p>))</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=c1>// 4. 执行Lua脚本</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>List</span><span class=o>&lt;</span><span class=n>Object</span><span class=o>&gt;</span><span class=w> </span><span class=n>result</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>distributedLockService</span><span class=p>.</span><span class=na>seckillParticipate</span><span class=p>(</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>activityId</span><span class=p>,</span><span class=w> </span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>quantity</span><span class=p>,</span><span class=w> </span><span class=n>activity</span><span class=p>.</span><span class=na>getPerUserLimit</span><span class=p>()</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>);</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                
-</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>result</span><span class=w> </span><span class=o>!=</span><span class=w> </span><span class=kc>null</span><span class=w> </span><span class=o>&amp;&amp;</span><span class=w> </span><span class=n>result</span><span class=p>.</span><span class=na>size</span><span class=p>()</span><span class=w> </span><span class=o>&gt;</span><span class=w> </span><span class=n>0</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>Integer</span><span class=w> </span><span class=n>success</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=p>(</span><span class=n>Integer</span><span class=p>)</span><span class=w> </span><span class=n>result</span><span class=p>.</span><span class=na>get</span><span class=p>(</span><span class=n>0</span><span class=p>);</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>success</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=n>1</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=c1>// 5. 记录参与记录</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=n>SeckillParticipant</span><span class=w> </span><span class=n>participant</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>SeckillParticipant</span><span class=p>.</span><span class=na>builder</span><span class=p>()</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                                </span><span class=p>.</span><span class=na>activityId</span><span class=p>(</span><span class=n>activityId</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                                </span><span class=p>.</span><span class=na>userId</span><span class=p>(</span><span class=n>userId</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                                </span><span class=p>.</span><span class=na>quantity</span><span class=p>(</span><span class=n>quantity</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                                </span><span class=p>.</span><span class=na>status</span><span class=p>(</span><span class=n>1</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                                </span><span class=p>.</span><span class=na>createTime</span><span class=p>(</span><span class=n>now</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                                </span><span class=p>.</span><span class=na>updateTime</span><span class=p>(</span><span class=n>now</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                                </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=n>seckillParticipantMapper</span><span class=p>.</span><span class=na>insert</span><span class=p>(</span><span class=n>participant</span><span class=p>);</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                        
-</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=c1>// 6. 异步处理订单</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=n>processSeckillOrderAsync</span><span class=p>(</span><span class=n>activity</span><span class=p>,</span><span class=w> </span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>quantity</span><span class=p>);</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                        
-</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=k>return</span><span class=w> </span><span class=s>&#34;参与成功&#34;</span><span class=p>;</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>}</span><span class=w> </span><span class=k>else</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=k>return</span><span class=w> </span><span class=p>(</span><span class=n>String</span><span class=p>)</span><span class=w> </span><span class=n>result</span><span class=p>.</span><span class=na>get</span><span class=p>(</span><span class=n>1</span><span class=p>);</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>distributedLockService</span><span class=p>.</span><span class=na>executeWithLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>,</span><span class=w> </span><span class=n>10</span><span class=p>,</span><span class=w> </span><span class=n>30</span><span class=p>,</span><span class=w> </span><span class=n>TimeUnit</span><span class=p>.</span><span class=na>SECONDS</span><span class=p>,</span><span class=w> </span><span class=p>()</span><span class=w> </span><span class=o>-&gt;</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 4. 执行秒杀参与</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>List</span><span class=o>&lt;</span><span class=n>Object</span><span class=o>&gt;</span><span class=w> </span><span class=n>result</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>distributedLockService</span><span class=p>.</span><span class=na>seckillParticipate</span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>activityId</span><span class=p>,</span><span class=w> </span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>quantity</span><span class=p>,</span><span class=w> </span><span class=n>activity</span><span class=p>.</span><span class=na>getPerUserLimit</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>result</span><span class=w> </span><span class=o>!=</span><span class=w> </span><span class=kc>null</span><span class=w> </span><span class=o>&amp;&amp;</span><span class=w> </span><span class=n>result</span><span class=p>.</span><span class=na>size</span><span class=p>()</span><span class=w> </span><span class=o>&gt;</span><span class=w> </span><span class=n>0</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>Integer</span><span class=w> </span><span class=n>success</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=p>(</span><span class=n>Integer</span><span class=p>)</span><span class=w> </span><span class=n>result</span><span class=p>.</span><span class=na>get</span><span class=p>(</span><span class=n>0</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>success</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=n>1</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=c1>// 5. 记录参与记录</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>SeckillParticipant</span><span class=w> </span><span class=n>participant</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>SeckillParticipant</span><span class=p>.</span><span class=na>builder</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                            </span><span class=p>.</span><span class=na>activityId</span><span class=p>(</span><span class=n>activityId</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                            </span><span class=p>.</span><span class=na>userId</span><span class=p>(</span><span class=n>userId</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                            </span><span class=p>.</span><span class=na>quantity</span><span class=p>(</span><span class=n>quantity</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                            </span><span class=p>.</span><span class=na>status</span><span class=p>(</span><span class=n>1</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                            </span><span class=p>.</span><span class=na>createTime</span><span class=p>(</span><span class=n>now</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                            </span><span class=p>.</span><span class=na>updateTime</span><span class=p>(</span><span class=n>now</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                            </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>seckillParticipantMapper</span><span class=p>.</span><span class=na>insert</span><span class=p>(</span><span class=n>participant</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=c1>// 6. 异步处理订单</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>processSeckillOrderAsync</span><span class=p>(</span><span class=n>activity</span><span class=p>,</span><span class=w> </span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>quantity</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=k>return</span><span class=w> </span><span class=s>&#34;参与成功&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>}</span><span class=w> </span><span class=k>else</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=k>return</span><span class=w> </span><span class=p>(</span><span class=n>String</span><span class=p>)</span><span class=w> </span><span class=n>result</span><span class=p>.</span><span class=na>get</span><span class=p>(</span><span class=n>1</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>}</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                
-</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>return</span><span class=w> </span><span class=s>&#34;参与失败&#34;</span><span class=p>;</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w> </span><span class=k>else</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>return</span><span class=w> </span><span class=s>&#34;系统繁忙，请稍后重试&#34;</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w> </span><span class=k>catch</span><span class=w> </span><span class=p>(</span><span class=n>Exception</span><span class=w> </span><span class=n>e</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>log</span><span class=p>.</span><span class=na>error</span><span class=p>(</span><span class=s>&#34;参与秒杀活动异常&#34;</span><span class=p>,</span><span class=w> </span><span class=n>e</span><span class=p>);</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=s>&#34;参与失败，请重试&#34;</span><span class=p>;</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w> </span><span class=k>finally</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>lock</span><span class=p>.</span><span class=na>isHeldByCurrentThread</span><span class=p>())</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>lock</span><span class=p>.</span><span class=na>unlock</span><span class=p>();</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=s>&#34;参与失败&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>});</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
@@ -1818,7 +1900,57 @@
 </span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>String</span><span class=w> </span><span class=nf>participateSeckill</span><span class=p>(</span><span class=n>Long</span><span class=w> </span><span class=n>activityId</span><span class=p>,</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>Integer</span><span class=w> </span><span class=n>quantity</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
-</span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=核心特性总结>核心特性总结</h2><h3 id=1-防超卖机制>1. 防超卖机制</h3><ul><li><strong>Redis分布式锁</strong>：防止同一用户重复参与</li><li><strong>Lua脚本</strong>：保证库存扣减的原子性</li><li><strong>数据库锁</strong>：防止数据库层面的并发问题</li></ul><h3 id=2-性能优化>2. 性能优化</h3><ul><li><strong>Redis缓存</strong>：秒杀库存存储在Redis中，提高访问速度</li><li><strong>异步处理</strong>：订单创建和库存更新异步执行</li><li><strong>批量操作</strong>：减少数据库交互次数</li></ul><h3 id=3-数据一致性>3. 数据一致性</h3><ul><li><strong>事务管理</strong>：关键操作使用@Transactional保证一致性</li><li><strong>补偿机制</strong>：失败时自动回滚Redis库存</li><li><strong>日志记录</strong>：完整的操作日志便于问题排查</li></ul><hr><p><em>继续阅读：<a class=link href=./Hash%e5%92%96%e5%95%a1%e5%90%8e%e7%ab%af%e6%94%b9%e9%80%a0%e6%8c%87%e5%8d%97-%e7%ac%ac%e4%b8%89%e9%83%a8%e5%88%86-%e6%b6%88%e6%81%af%e9%98%9f%e5%88%97%e5%92%8cAPI%e6%8e%a5%e5%8f%a3.md>Hash咖啡后端改造指南 - 第三部分：消息队列和API接口</a></em></p></section><footer class=article-footer><section class=article-tags><a href=/tags/java/>Java</a>
+</span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=分布式锁服务优化说明>分布式锁服务优化说明</h2><h3 id=1-优化点总结>1. 优化点总结</h3><p><strong>性能优化</strong>：</p><ul><li><strong>锁缓存</strong>：使用<code>ConcurrentHashMap</code>缓存锁对象，避免重复创建</li><li><strong>脚本预加载</strong>：在构造函数中初始化Lua脚本，提高执行效率</li><li><strong>配置化</strong>：支持Redis键前缀配置，提高灵活性</li></ul><p><strong>代码优化</strong>：</p><ul><li><strong>执行带锁操作</strong>：提供<code>executeWithLock</code>方法，自动管理锁的获取和释放</li><li><strong>异常处理</strong>：完善的异常处理机制，提供详细的错误信息</li><li><strong>锁状态监控</strong>：支持锁状态检查和剩余时间查询</li></ul><p><strong>使用优化</strong>：</p><ul><li><strong>代码简洁</strong>：业务代码更简洁，锁管理逻辑集中</li><li><strong>避免死锁</strong>：自动释放锁，避免忘记释放锁导致的问题</li><li><strong>易于维护</strong>：锁相关逻辑集中管理，便于维护和扩展</li></ul><h3 id=2-使用示例对比>2. 使用示例对比</h3><p><strong>原始方式</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=nf>participateSeckill</span><span class=p>(</span><span class=n>Long</span><span class=w> </span><span class=n>activityId</span><span class=p>,</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>Integer</span><span class=w> </span><span class=n>quantity</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;seckill:lock:&#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>activityId</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>RLock</span><span class=w> </span><span class=n>lock</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>redissonClient</span><span class=p>.</span><span class=na>getLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>lock</span><span class=p>.</span><span class=na>tryLock</span><span class=p>(</span><span class=n>10</span><span class=p>,</span><span class=w> </span><span class=n>30</span><span class=p>,</span><span class=w> </span><span class=n>TimeUnit</span><span class=p>.</span><span class=na>SECONDS</span><span class=p>))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 业务逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=s>&#34;参与成功&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w> </span><span class=k>else</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=k>return</span><span class=w> </span><span class=s>&#34;获取锁失败&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w> </span><span class=k>finally</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>lock</span><span class=p>.</span><span class=na>isHeldByCurrentThread</span><span class=p>())</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>lock</span><span class=p>.</span><span class=na>unlock</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p><strong>优化后方式</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=nf>participateSeckill</span><span class=p>(</span><span class=n>Long</span><span class=w> </span><span class=n>activityId</span><span class=p>,</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>Integer</span><span class=w> </span><span class=n>quantity</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>String</span><span class=w> </span><span class=n>lockKey</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;seckill:lock:&#34;</span><span class=w> </span><span class=o>+</span><span class=w> </span><span class=n>activityId</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=n>distributedLockService</span><span class=p>.</span><span class=na>executeWithLock</span><span class=p>(</span><span class=n>lockKey</span><span class=p>,</span><span class=w> </span><span class=n>10</span><span class=p>,</span><span class=w> </span><span class=n>30</span><span class=p>,</span><span class=w> </span><span class=n>TimeUnit</span><span class=p>.</span><span class=na>SECONDS</span><span class=p>,</span><span class=w> </span><span class=p>()</span><span class=w> </span><span class=o>-&gt;</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 业务逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=s>&#34;参与成功&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>});</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p><strong>优化效果</strong>：</p><ul><li>代码行数减少50%</li><li>自动管理锁的获取和释放</li><li>更好的异常处理</li><li>更高的执行效率</li></ul><hr><h2 id=核心特性总结>核心特性总结</h2><h3 id=1-防超卖机制>1. 防超卖机制</h3><ul><li><strong>Redis分布式锁</strong>：防止同一用户重复参与</li><li><strong>Lua脚本</strong>：保证库存扣减的原子性</li><li><strong>数据库锁</strong>：防止数据库层面的并发问题</li></ul><h3 id=2-性能优化>2. 性能优化</h3><ul><li><strong>Redis缓存</strong>：秒杀库存存储在Redis中，提高访问速度</li><li><strong>异步处理</strong>：订单创建和库存更新异步执行</li><li><strong>批量操作</strong>：减少数据库交互次数</li></ul><h3 id=3-数据一致性>3. 数据一致性</h3><ul><li><strong>事务管理</strong>：关键操作使用@Transactional保证一致性</li><li><strong>补偿机制</strong>：失败时自动回滚Redis库存</li><li><strong>日志记录</strong>：完整的操作日志便于问题排查</li></ul><hr><p><em>继续阅读：<a class=link href=./Hash%e5%92%96%e5%95%a1%e5%90%8e%e7%ab%af%e6%94%b9%e9%80%a0%e6%8c%87%e5%8d%97-%e7%ac%ac%e4%b8%89%e9%83%a8%e5%88%86-%e6%b6%88%e6%81%af%e9%98%9f%e5%88%97%e5%92%8cAPI%e6%8e%a5%e5%8f%a3.md>Hash咖啡后端改造指南 - 第三部分：消息队列和API接口</a></em></p></section><footer class=article-footer><section class=article-tags><a href=/tags/java/>Java</a>
 <a href=/tags/spring-boot/>Spring Boot</a>
 <a href=/tags/redisson/>Redisson</a>
 <a href=/tags/lua%E8%84%9A%E6%9C%AC/>Lua脚本</a>
