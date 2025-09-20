@@ -567,7 +567,58 @@ public interface SeckillStockLogMapper {
 </dependency>
 ```
 
-### 2. 创建分布式锁服务
+### 2. 优化 Redis 常量类
+
+**修改 `sky-common/src/main/java/com/sky/constant/RedisKeyConstants.java`：**
+
+```java
+package com.sky.constant;
+
+/**
+ * Redis键常量类
+ */
+public class RedisKeyConstants {
+
+    // 秒杀相关前缀
+    public static final String SECKILL_PREFIX = "seckill:";
+
+    // 秒杀子键
+    public static final String STOCK_KEY = "stock:";
+    public static final String PARTICIPANTS_KEY = "participants:";
+    public static final String LOCK_KEY = "lock:";
+    public static final String ORDER_KEY = "order:";
+    
+    /**
+     * 生成库存键
+     */
+    public static String getStockKey(Long activityId) {
+        return SECKILL_PREFIX + STOCK_KEY + activityId;
+    }
+    
+    /**
+     * 生成参与者键
+     */
+    public static String getParticipantsKey(Long activityId) {
+        return SECKILL_PREFIX + PARTICIPANTS_KEY + activityId;
+    }
+    
+    /**
+     * 生成锁键
+     */
+    public static String getLockKey(String businessKey) {
+        return SECKILL_PREFIX + LOCK_KEY + businessKey;
+    }
+    
+    /**
+     * 生成订单键
+     */
+    public static String getOrderKey(Long orderId) {
+        return SECKILL_PREFIX + ORDER_KEY + orderId;
+    }
+}
+```
+
+### 3. 创建分布式锁服务
 
 **创建 `sky-server/src/main/java/com/sky/service/DistributedLockService.java`：**
 
@@ -634,9 +685,9 @@ public class DistributedLockService {
      * 秒杀参与
      */
     public List<Object> seckillParticipate(Long activityId, Long userId, Integer quantity, Integer perUserLimit) {
-        // 使用常量+activityId
-        String stockKey = seckillPrefix + RedisKeyConstants.STOCK_KEY + activityId;
-        String participantsKey = seckillPrefix + RedisKeyConstants.PARTICIPANTS_KEY + activityId;
+        // 使用工具方法生成键
+        String stockKey = seckillPrefix + RedisKeyConstants.getStockKey(activityId);
+        String participantsKey = seckillPrefix + RedisKeyConstants.getParticipantsKey(activityId);
         
         List<String> keys = Arrays.asList(stockKey, participantsKey);
         Object[] args = {userId.toString(), quantity.toString(), perUserLimit.toString()};
@@ -864,8 +915,8 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
         seckillActivity.setSoldCount(0);
         seckillActivityMapper.insert(seckillActivity);
         
-        // 使用常量+activityId初始化Redis库存
-        String stockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.STOCK_KEY + seckillActivity.getId();
+        // 使用工具方法生成库存键
+        String stockKey = RedisKeyConstants.getStockKey(seckillActivity.getId());
         redisTemplate.opsForValue().set(stockKey, seckillActivity.getStock());
         
         log.info("秒杀活动创建成功，活动ID：{}，库存：{}", seckillActivity.getId(), seckillActivity.getStock());
@@ -878,8 +929,8 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
         BeanUtils.copyProperties(seckillActivityDTO, seckillActivity);
         seckillActivityMapper.update(seckillActivity);
         
-        // 使用常量+activityId更新Redis库存
-        String stockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.STOCK_KEY + seckillActivity.getId();
+        // 使用工具方法生成库存键
+        String stockKey = RedisKeyConstants.getStockKey(seckillActivity.getId());
         redisTemplate.opsForValue().set(stockKey, seckillActivity.getStock());
     }
 
@@ -887,8 +938,8 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
     public void deleteById(Long id) {
         seckillActivityMapper.deleteById(id);
         
-        // 使用常量+activityId删除Redis库存
-        String stockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.STOCK_KEY + id;
+        // 使用工具方法生成库存键
+        String stockKey = RedisKeyConstants.getStockKey(id);
         redisTemplate.delete(stockKey);
     }
 
@@ -942,8 +993,8 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
             return "活动已结束";
         }
         
-        // 3. 使用常量+activityId生成锁键
-        String lockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.LOCK_KEY + "participant:" + userId + ":" + activityId;
+        // 3. 使用工具方法生成锁键
+        String lockKey = RedisKeyConstants.getLockKey("participant:" + userId + ":" + activityId);
         
         return distributedLockService.executeWithLock(lockKey, 10, 30, TimeUnit.SECONDS, () -> {
             // 4. 执行秒杀参与
@@ -1129,6 +1180,7 @@ public interface SeckillActivityService {
 - **异常处理**：完善的异常处理机制，提供详细的错误信息
 - **锁状态监控**：支持锁状态检查和剩余时间查询
 - **常量管理**：使用`RedisKeyConstants`统一管理Redis键，避免硬编码
+- **工具方法**：提供简洁的工具方法生成Redis键，代码更美观
 
 **使用优化**：
 - **代码简洁**：业务代码更简洁，锁管理逻辑集中
@@ -1162,8 +1214,8 @@ public String participateSeckill(Long activityId, Long userId, Integer quantity)
 **优化后方式**：
 ```java
 public String participateSeckill(Long activityId, Long userId, Integer quantity) {
-    // 使用常量生成锁键
-    String lockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.LOCK_KEY + "participant:" + userId + ":" + activityId;
+    // 使用工具方法生成锁键
+    String lockKey = RedisKeyConstants.getLockKey("participant:" + userId + ":" + activityId);
     
     return distributedLockService.executeWithLock(lockKey, 10, 30, TimeUnit.SECONDS, () -> {
         // 业务逻辑
@@ -1178,6 +1230,7 @@ public String participateSeckill(Long activityId, Long userId, Integer quantity)
 - 更好的异常处理
 - 更高的执行效率
 - 统一的常量管理，避免硬编码
+- 代码更简洁美观，使用工具方法生成键
 
 ---
 
