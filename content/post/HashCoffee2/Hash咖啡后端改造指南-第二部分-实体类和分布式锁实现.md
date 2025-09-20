@@ -574,6 +574,7 @@ public interface SeckillStockLogMapper {
 ```java
 package com.sky.service;
 
+import com.sky.constant.RedisKeyConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -633,8 +634,9 @@ public class DistributedLockService {
      * 秒杀参与
      */
     public List<Object> seckillParticipate(Long activityId, Long userId, Integer quantity, Integer perUserLimit) {
-        String stockKey = seckillPrefix + "stock:" + activityId;
-        String participantsKey = seckillPrefix + "participants:" + activityId;
+        // 使用常量+activityId
+        String stockKey = seckillPrefix + RedisKeyConstants.STOCK_KEY + activityId;
+        String participantsKey = seckillPrefix + RedisKeyConstants.PARTICIPANTS_KEY + activityId;
         
         List<String> keys = Arrays.asList(stockKey, participantsKey);
         Object[] args = {userId.toString(), quantity.toString(), perUserLimit.toString()};
@@ -795,6 +797,7 @@ return {1, '参与成功', newStock}
 package com.sky.service.impl;
 
 import com.github.pagehelper.Page;
+import com.sky.constant.RedisKeyConstants;
 import com.sky.dto.SeckillActivityDTO;
 import com.sky.dto.SeckillActivityPageQueryDTO;
 import com.sky.entity.SeckillActivity;
@@ -809,7 +812,6 @@ import com.sky.service.DistributedLockService;
 import com.sky.service.SeckillActivityService;
 import com.sky.vo.SeckillStatisticsVO;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -862,8 +864,8 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
         seckillActivity.setSoldCount(0);
         seckillActivityMapper.insert(seckillActivity);
         
-        // 初始化Redis库存
-        String stockKey = "seckill:stock:" + seckillActivity.getId();
+        // 使用常量+activityId初始化Redis库存
+        String stockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.STOCK_KEY + seckillActivity.getId();
         redisTemplate.opsForValue().set(stockKey, seckillActivity.getStock());
         
         log.info("秒杀活动创建成功，活动ID：{}，库存：{}", seckillActivity.getId(), seckillActivity.getStock());
@@ -876,8 +878,8 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
         BeanUtils.copyProperties(seckillActivityDTO, seckillActivity);
         seckillActivityMapper.update(seckillActivity);
         
-        // 更新Redis库存
-        String stockKey = "seckill:stock:" + seckillActivity.getId();
+        // 使用常量+activityId更新Redis库存
+        String stockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.STOCK_KEY + seckillActivity.getId();
         redisTemplate.opsForValue().set(stockKey, seckillActivity.getStock());
     }
 
@@ -885,8 +887,8 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
     public void deleteById(Long id) {
         seckillActivityMapper.deleteById(id);
         
-        // 删除Redis库存
-        String stockKey = "seckill:stock:" + id;
+        // 使用常量+activityId删除Redis库存
+        String stockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.STOCK_KEY + id;
         redisTemplate.delete(stockKey);
     }
 
@@ -940,8 +942,8 @@ public class SeckillActivityServiceImpl implements SeckillActivityService {
             return "活动已结束";
         }
         
-        // 3. 使用优化后的分布式锁服务
-        String lockKey = "seckill:lock:" + activityId;
+        // 3. 使用常量+activityId生成锁键
+        String lockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.LOCK_KEY + "participant:" + userId + ":" + activityId;
         
         return distributedLockService.executeWithLock(lockKey, 10, 30, TimeUnit.SECONDS, () -> {
             // 4. 执行秒杀参与
@@ -1126,11 +1128,13 @@ public interface SeckillActivityService {
 - **执行带锁操作**：提供`executeWithLock`方法，自动管理锁的获取和释放
 - **异常处理**：完善的异常处理机制，提供详细的错误信息
 - **锁状态监控**：支持锁状态检查和剩余时间查询
+- **常量管理**：使用`RedisKeyConstants`统一管理Redis键，避免硬编码
 
 **使用优化**：
 - **代码简洁**：业务代码更简洁，锁管理逻辑集中
 - **避免死锁**：自动释放锁，避免忘记释放锁导致的问题
 - **易于维护**：锁相关逻辑集中管理，便于维护和扩展
+- **统一规范**：所有Redis键使用统一的常量定义，提高代码规范性
 
 ### 2. 使用示例对比
 
@@ -1158,7 +1162,8 @@ public String participateSeckill(Long activityId, Long userId, Integer quantity)
 **优化后方式**：
 ```java
 public String participateSeckill(Long activityId, Long userId, Integer quantity) {
-    String lockKey = "seckill:lock:" + activityId;
+    // 使用常量生成锁键
+    String lockKey = RedisKeyConstants.SECKILL_PREFIX + RedisKeyConstants.LOCK_KEY + "participant:" + userId + ":" + activityId;
     
     return distributedLockService.executeWithLock(lockKey, 10, 30, TimeUnit.SECONDS, () -> {
         // 业务逻辑
@@ -1172,6 +1177,7 @@ public String participateSeckill(Long activityId, Long userId, Integer quantity)
 - 自动管理锁的获取和释放
 - 更好的异常处理
 - 更高的执行效率
+- 统一的常量管理，避免硬编码
 
 ---
 
