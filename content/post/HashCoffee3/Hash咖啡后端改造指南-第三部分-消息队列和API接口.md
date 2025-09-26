@@ -866,7 +866,117 @@ public void cancelTimeoutOrder(Long orderId) {
 }
 ```
 
-### 5. 添加Mapper方法
+### 5. 在CouponTemplateService接口中添加方法
+
+**修改 `sky-server/src/main/java/com/sky/service/CouponTemplateService.java`：**
+
+```java
+// 在现有方法后添加以下方法
+
+/**
+ * 获取可领取的优惠券模板
+ * @return 可领取的优惠券模板列表
+ */
+List<CouponTemplate> getAvailableTemplates();
+```
+
+### 6. 在CouponService接口中添加方法
+
+**修改 `sky-server/src/main/java/com/sky/service/CouponService.java`：**
+
+```java
+// 在现有方法后添加以下方法
+
+/**
+ * 领取优惠券
+ * @param templateId 优惠券模板ID
+ * @param userId 用户ID
+ * @return 领取结果
+ */
+String claimCoupon(Long templateId, Long userId);
+
+/**
+ * 获取用户优惠券
+ * @param userId 用户ID
+ * @return 用户优惠券列表
+ */
+List<Coupon> getUserCoupons(Long userId);
+```
+
+### 7. 在CouponTemplateServiceImpl中添加实现
+
+**修改 `sky-server/src/main/java/com/sky/service/impl/CouponTemplateServiceImpl.java`：**
+
+```java
+// 在现有方法后添加以下方法
+
+/**
+ * 获取可领取的优惠券模板
+ * @return 可领取的优惠券模板列表
+ */
+@Override
+public List<CouponTemplate> getAvailableTemplates() {
+    // 查询状态为启用且未过期的优惠券模板
+    return couponTemplateMapper.getAvailableTemplates();
+}
+```
+
+### 8. 在CouponServiceImpl中添加实现
+
+**修改 `sky-server/src/main/java/com/sky/service/impl/CouponServiceImpl.java`：**
+
+```java
+// 在现有方法后添加以下方法
+
+/**
+ * 领取优惠券
+ * @param templateId 优惠券模板ID
+ * @param userId 用户ID
+ * @return 领取结果
+ */
+@Override
+public String claimCoupon(Long templateId, Long userId) {
+    // 检查用户是否已领取该模板的优惠券
+    if (hasReceived(userId, templateId)) {
+        return "您已经领取过该优惠券了";
+    }
+    
+    // 检查优惠券模板是否存在且可用
+    CouponTemplate template = couponTemplateService.getById(templateId);
+    if (template == null || template.getStatus() != 1) {
+        return "优惠券模板不存在或已禁用";
+    }
+    
+    // 检查是否在有效期内
+    if (template.getEndTime().isBefore(LocalDateTime.now())) {
+        return "优惠券已过期";
+    }
+    
+    // 创建优惠券
+    Coupon coupon = Coupon.builder()
+            .templateId(templateId)
+            .userId(userId)
+            .status(0) // 0-未使用
+            .createTime(LocalDateTime.now())
+            .expireTime(template.getEndTime())
+            .build();
+    
+    couponMapper.insert(coupon);
+    return "优惠券领取成功";
+}
+
+/**
+ * 获取用户优惠券
+ * @param userId 用户ID
+ * @return 用户优惠券列表
+ */
+@Override
+public List<Coupon> getUserCoupons(Long userId) {
+    return couponMapper.getByUserId(userId, null);
+}
+```
+
+### 9. 添加Mapper方法
 
 **在 `UserMapper.java` 中添加：**
 ```java
@@ -883,6 +993,26 @@ void updateUserPoints(@Param("userId") Long userId, @Param("points") Integer poi
 <update id="updateUserPoints">
     UPDATE user SET points = #{points} WHERE id = #{userId}
 </update>
+```
+
+**在 `CouponTemplateMapper.java` 中添加：**
+```java
+/**
+ * 获取可领取的优惠券模板
+ * @return 可领取的优惠券模板列表
+ */
+List<CouponTemplate> getAvailableTemplates();
+```
+
+**在 `CouponTemplateMapper.xml` 中添加：**
+```xml
+<select id="getAvailableTemplates" resultType="com.sky.entity.CouponTemplate">
+    SELECT * FROM coupon_template 
+    WHERE status = 1 
+    AND start_time <= NOW() 
+    AND end_time >= NOW()
+    ORDER BY create_time DESC
+</select>
 ```
 
 ---

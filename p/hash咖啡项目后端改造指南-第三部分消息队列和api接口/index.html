@@ -8,9 +8,9 @@
 <span>Links</span></a></li><li class=menu-bottom-section><ol class=menu><li id=i18n-switch><svg class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5h7"/><path d="M9 3v2c0 4.418-2.239 8-5 8"/><path d="M5 9c-.003 2.144 2.952 3.908 6.7 4"/><path d="M12 20l4-9 4 9"/><path d="M19.1 18h-6.2"/></svg>
 <select name=language title=language onchange="window.location.href=this.selectedOptions[0].value"><option value=https://Yin123-ybh.github.io/ selected>English</option><option value=https://Yin123-ybh.github.io/zh-cn/>简体中文</option><option value=https://Yin123-ybh.github.io/ar/>عربي</option></select></li><li id=dark-mode-toggle><svg class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
 <svg class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
-<span>Dark Mode</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#目录>目录</a></li><li><a href=#消息队列架构设计>消息队列架构设计</a><ol><li><a href=#1-消息队列作用>1. 消息队列作用</a></li><li><a href=#2-消息流向图>2. 消息流向图</a></li></ol></li><li><a href=#rabbitmq配置>RabbitMQ配置</a><ol><li><a href=#1-添加项目依赖>1. 添加项目依赖</a></li><li><a href=#2-创建rabbitmq配置类>2. 创建RabbitMQ配置类</a></li></ol></li><li><a href=#消息实体类设计>消息实体类设计</a><ol><li><a href=#1-订单支付消息>1. 订单支付消息</a></li><li><a href=#2-积分获得消息>2. 积分获得消息</a></li><li><a href=#3-订单超时消息>3. 订单超时消息</a></li></ol></li><li><a href=#消息生产者服务>消息生产者服务</a><ol><li><a href=#1-创建消息生产者服务接口>1. 创建消息生产者服务接口</a></li><li><a href=#2-创建消息生产者服务实现类>2. 创建消息生产者服务实现类</a></li></ol></li><li><a href=#消息消费者服务>消息消费者服务</a><ol><li><a href=#1-创建消息消费者服务接口>1. 创建消息消费者服务接口</a></li><li><a href=#2-创建消息消费者服务实现类>2. 创建消息消费者服务实现类</a></li></ol></li><li><a href=#补充service接口方法>补充Service接口方法</a><ol><li><a href=#1-在userservice接口中添加方法>1. 在UserService接口中添加方法</a></li><li><a href=#2-在orderservice接口中添加方法>2. 在OrderService接口中添加方法</a></li><li><a href=#3-在userserviceimpl中添加实现>3. 在UserServiceImpl中添加实现</a></li><li><a href=#4-在orderserviceimpl中添加实现>4. 在OrderServiceImpl中添加实现</a></li><li><a href=#5-添加mapper方法>5. 添加Mapper方法</a></li></ol></li><li><a href=#api接口开发>API接口开发</a><ol><li><a href=#1-用户端秒杀控制器>1. 用户端秒杀控制器</a></li><li><a href=#2-用户端优惠券控制器>2. 用户端优惠券控制器</a></li><li><a href=#3-健康检查控制器>3. 健康检查控制器</a></li></ol></li><li><a href=#配置文件完善>配置文件完善</a><ol><li><a href=#1-更新applicationyml>1. 更新application.yml</a></li><li><a href=#2-创建redisson配置>2. 创建Redisson配置</a></li></ol></li><li><a href=#部署和测试>部署和测试</a><ol><li><a href=#1-启动顺序>1. 启动顺序</a></li><li><a href=#2-测试接口>2. 测试接口</a></li><li><a href=#3-消息队列测试>3. 消息队列测试</a></li></ol></li><li><a href=#核心特性总结>核心特性总结</a><ol><li><a href=#1-消息队列特性>1. 消息队列特性</a></li><li><a href=#2-api接口特性>2. API接口特性</a></li><li><a href=#3-配置管理>3. 配置管理</a></li></ol></li><li><a href=#总结>总结</a></li></ol></nav></div></section></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/p/hash%E5%92%96%E5%95%A1%E9%A1%B9%E7%9B%AE%E5%90%8E%E7%AB%AF%E6%94%B9%E9%80%A0%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8Capi%E6%8E%A5%E5%8F%A3/>Hash咖啡项目后端改造指南 - 第三部分：消息队列和API接口</a></h2><h3 class=article-subtitle>详细讲解RabbitMQ消息队列配置、消息实体设计、生产者消费者实现和完整的API接口开发</h3></div><footer class=article-time><div><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<span>Dark Mode</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#目录>目录</a></li><li><a href=#消息队列架构设计>消息队列架构设计</a><ol><li><a href=#1-消息队列作用>1. 消息队列作用</a></li><li><a href=#2-消息流向图>2. 消息流向图</a></li></ol></li><li><a href=#rabbitmq配置>RabbitMQ配置</a><ol><li><a href=#1-添加项目依赖>1. 添加项目依赖</a></li><li><a href=#2-创建rabbitmq配置类>2. 创建RabbitMQ配置类</a></li></ol></li><li><a href=#消息实体类设计>消息实体类设计</a><ol><li><a href=#1-订单支付消息>1. 订单支付消息</a></li><li><a href=#2-积分获得消息>2. 积分获得消息</a></li><li><a href=#3-订单超时消息>3. 订单超时消息</a></li></ol></li><li><a href=#消息生产者服务>消息生产者服务</a><ol><li><a href=#1-创建消息生产者服务接口>1. 创建消息生产者服务接口</a></li><li><a href=#2-创建消息生产者服务实现类>2. 创建消息生产者服务实现类</a></li></ol></li><li><a href=#消息消费者服务>消息消费者服务</a><ol><li><a href=#1-创建消息消费者服务接口>1. 创建消息消费者服务接口</a></li><li><a href=#2-创建消息消费者服务实现类>2. 创建消息消费者服务实现类</a></li></ol></li><li><a href=#补充service接口方法>补充Service接口方法</a><ol><li><a href=#1-在userservice接口中添加方法>1. 在UserService接口中添加方法</a></li><li><a href=#2-在orderservice接口中添加方法>2. 在OrderService接口中添加方法</a></li><li><a href=#3-在userserviceimpl中添加实现>3. 在UserServiceImpl中添加实现</a></li><li><a href=#4-在orderserviceimpl中添加实现>4. 在OrderServiceImpl中添加实现</a></li><li><a href=#5-在coupontemplateservice接口中添加方法>5. 在CouponTemplateService接口中添加方法</a></li><li><a href=#6-在couponservice接口中添加方法>6. 在CouponService接口中添加方法</a></li><li><a href=#7-在coupontemplateserviceimpl中添加实现>7. 在CouponTemplateServiceImpl中添加实现</a></li><li><a href=#8-在couponserviceimpl中添加实现>8. 在CouponServiceImpl中添加实现</a></li><li><a href=#9-添加mapper方法>9. 添加Mapper方法</a></li></ol></li><li><a href=#api接口开发>API接口开发</a><ol><li><a href=#1-用户端秒杀控制器>1. 用户端秒杀控制器</a></li><li><a href=#2-用户端优惠券控制器>2. 用户端优惠券控制器</a></li><li><a href=#3-健康检查控制器>3. 健康检查控制器</a></li></ol></li><li><a href=#配置文件完善>配置文件完善</a><ol><li><a href=#1-更新applicationyml>1. 更新application.yml</a></li><li><a href=#2-创建redisson配置>2. 创建Redisson配置</a></li></ol></li><li><a href=#部署和测试>部署和测试</a><ol><li><a href=#1-启动顺序>1. 启动顺序</a></li><li><a href=#2-测试接口>2. 测试接口</a></li><li><a href=#3-消息队列测试>3. 消息队列测试</a></li></ol></li><li><a href=#核心特性总结>核心特性总结</a><ol><li><a href=#1-消息队列特性>1. 消息队列特性</a></li><li><a href=#2-api接口特性>2. API接口特性</a></li><li><a href=#3-配置管理>3. 配置管理</a></li></ol></li><li><a href=#总结>总结</a></li></ol></nav></div></section></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/p/hash%E5%92%96%E5%95%A1%E9%A1%B9%E7%9B%AE%E5%90%8E%E7%AB%AF%E6%94%B9%E9%80%A0%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%89%E9%83%A8%E5%88%86%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%92%8Capi%E6%8E%A5%E5%8F%A3/>Hash咖啡项目后端改造指南 - 第三部分：消息队列和API接口</a></h2><h3 class=article-subtitle>详细讲解RabbitMQ消息队列配置、消息实体设计、生产者消费者实现和完整的API接口开发</h3></div><footer class=article-time><div><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
 <time class=article-time--published>2025-01-14</time></div><div><svg class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-<time class=article-time--reading>15 minute read</time></div></footer></div></header><section class=article-content><h1 id=hash咖啡项目后端改造指南---第三部分消息队列和api接口>Hash咖啡项目后端改造指南 - 第三部分：消息队列和API接口</h1><h2 id=目录>目录</h2><ol><li><a class=link href=#%e6%b6%88%e6%81%af%e9%98%9f%e5%88%97%e6%9e%b6%e6%9e%84%e8%ae%be%e8%ae%a1>消息队列架构设计</a></li><li><a class=link href=#rabbitmq%e9%85%8d%e7%bd%ae>RabbitMQ配置</a></li><li><a class=link href=#%e6%b6%88%e6%81%af%e5%ae%9e%e4%bd%93%e7%b1%bb%e8%ae%be%e8%ae%a1>消息实体类设计</a></li><li><a class=link href=#%e6%b6%88%e6%81%af%e7%94%9f%e4%ba%a7%e8%80%85%e6%9c%8d%e5%8a%a1>消息生产者服务</a></li><li><a class=link href=#%e6%b6%88%e6%81%af%e6%b6%88%e8%b4%b9%e8%80%85%e6%9c%8d%e5%8a%a1>消息消费者服务</a></li><li><a class=link href=#api%e6%8e%a5%e5%8f%a3%e5%bc%80%e5%8f%91>API接口开发</a></li><li><a class=link href=#%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e5%ae%8c%e5%96%84>配置文件完善</a></li><li><a class=link href=#%e9%83%a8%e7%bd%b2%e5%92%8c%e6%b5%8b%e8%af%95>部署和测试</a></li></ol><hr><h2 id=消息队列架构设计>消息队列架构设计</h2><h3 id=1-消息队列作用>1. 消息队列作用</h3><p>在秒杀系统中，消息队列主要用于：</p><ul><li><strong>解耦服务</strong>：支付服务和积分服务解耦</li><li><strong>异步处理</strong>：订单支付后异步处理积分计算</li><li><strong>削峰填谷</strong>：应对高并发场景</li><li><strong>可靠性</strong>：消息持久化和重试机制</li></ul><h3 id=2-消息流向图>2. 消息流向图</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+<time class=article-time--reading>17 minute read</time></div></footer></div></header><section class=article-content><h1 id=hash咖啡项目后端改造指南---第三部分消息队列和api接口>Hash咖啡项目后端改造指南 - 第三部分：消息队列和API接口</h1><h2 id=目录>目录</h2><ol><li><a class=link href=#%e6%b6%88%e6%81%af%e9%98%9f%e5%88%97%e6%9e%b6%e6%9e%84%e8%ae%be%e8%ae%a1>消息队列架构设计</a></li><li><a class=link href=#rabbitmq%e9%85%8d%e7%bd%ae>RabbitMQ配置</a></li><li><a class=link href=#%e6%b6%88%e6%81%af%e5%ae%9e%e4%bd%93%e7%b1%bb%e8%ae%be%e8%ae%a1>消息实体类设计</a></li><li><a class=link href=#%e6%b6%88%e6%81%af%e7%94%9f%e4%ba%a7%e8%80%85%e6%9c%8d%e5%8a%a1>消息生产者服务</a></li><li><a class=link href=#%e6%b6%88%e6%81%af%e6%b6%88%e8%b4%b9%e8%80%85%e6%9c%8d%e5%8a%a1>消息消费者服务</a></li><li><a class=link href=#api%e6%8e%a5%e5%8f%a3%e5%bc%80%e5%8f%91>API接口开发</a></li><li><a class=link href=#%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6%e5%ae%8c%e5%96%84>配置文件完善</a></li><li><a class=link href=#%e9%83%a8%e7%bd%b2%e5%92%8c%e6%b5%8b%e8%af%95>部署和测试</a></li></ol><hr><h2 id=消息队列架构设计>消息队列架构设计</h2><h3 id=1-消息队列作用>1. 消息队列作用</h3><p>在秒杀系统中，消息队列主要用于：</p><ul><li><strong>解耦服务</strong>：支付服务和积分服务解耦</li><li><strong>异步处理</strong>：订单支付后异步处理积分计算</li><li><strong>削峰填谷</strong>：应对高并发场景</li><li><strong>可靠性</strong>：消息持久化和重试机制</li></ul><h3 id=2-消息流向图>2. 消息流向图</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -1446,7 +1446,171 @@
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;订单超时取消成功：orderId={}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>orderId</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
-</span></span></span></code></pre></td></tr></table></div></div><h3 id=5-添加mapper方法>5. 添加Mapper方法</h3><p><strong>在 <code>UserMapper.java</code> 中添加：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=5-在coupontemplateservice接口中添加方法>5. 在CouponTemplateService接口中添加方法</h3><p><strong>修改 <code>sky-server/src/main/java/com/sky/service/CouponTemplateService.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 在现有方法后添加以下方法</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * 获取可领取的优惠券模板
+</span></span></span><span class=line><span class=cl><span class=cm> * @return 可领取的优惠券模板列表
+</span></span></span><span class=line><span class=cl><span class=cm> */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>List</span><span class=o>&lt;</span><span class=n>CouponTemplate</span><span class=o>&gt;</span><span class=w> </span><span class=nf>getAvailableTemplates</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=6-在couponservice接口中添加方法>6. 在CouponService接口中添加方法</h3><p><strong>修改 <code>sky-server/src/main/java/com/sky/service/CouponService.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 在现有方法后添加以下方法</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * 领取优惠券
+</span></span></span><span class=line><span class=cl><span class=cm> * @param templateId 优惠券模板ID
+</span></span></span><span class=line><span class=cl><span class=cm> * @param userId 用户ID
+</span></span></span><span class=line><span class=cl><span class=cm> * @return 领取结果
+</span></span></span><span class=line><span class=cl><span class=cm> */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=nf>claimCoupon</span><span class=p>(</span><span class=n>Long</span><span class=w> </span><span class=n>templateId</span><span class=p>,</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * 获取用户优惠券
+</span></span></span><span class=line><span class=cl><span class=cm> * @param userId 用户ID
+</span></span></span><span class=line><span class=cl><span class=cm> * @return 用户优惠券列表
+</span></span></span><span class=line><span class=cl><span class=cm> */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>List</span><span class=o>&lt;</span><span class=n>Coupon</span><span class=o>&gt;</span><span class=w> </span><span class=nf>getUserCoupons</span><span class=p>(</span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>);</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=7-在coupontemplateserviceimpl中添加实现>7. 在CouponTemplateServiceImpl中添加实现</h3><p><strong>修改 <code>sky-server/src/main/java/com/sky/service/impl/CouponTemplateServiceImpl.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 在现有方法后添加以下方法</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * 获取可领取的优惠券模板
+</span></span></span><span class=line><span class=cl><span class=cm> * @return 可领取的优惠券模板列表
+</span></span></span><span class=line><span class=cl><span class=cm> */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=n>List</span><span class=o>&lt;</span><span class=n>CouponTemplate</span><span class=o>&gt;</span><span class=w> </span><span class=nf>getAvailableTemplates</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 查询状态为启用且未过期的优惠券模板</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=n>couponTemplateMapper</span><span class=p>.</span><span class=na>getAvailableTemplates</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=8-在couponserviceimpl中添加实现>8. 在CouponServiceImpl中添加实现</h3><p><strong>修改 <code>sky-server/src/main/java/com/sky/service/impl/CouponServiceImpl.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 在现有方法后添加以下方法</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * 领取优惠券
+</span></span></span><span class=line><span class=cl><span class=cm> * @param templateId 优惠券模板ID
+</span></span></span><span class=line><span class=cl><span class=cm> * @param userId 用户ID
+</span></span></span><span class=line><span class=cl><span class=cm> * @return 领取结果
+</span></span></span><span class=line><span class=cl><span class=cm> */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=nf>claimCoupon</span><span class=p>(</span><span class=n>Long</span><span class=w> </span><span class=n>templateId</span><span class=p>,</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 检查用户是否已领取该模板的优惠券</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>hasReceived</span><span class=p>(</span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>templateId</span><span class=p>))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=s>&#34;您已经领取过该优惠券了&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 检查优惠券模板是否存在且可用</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>CouponTemplate</span><span class=w> </span><span class=n>template</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>couponTemplateService</span><span class=p>.</span><span class=na>getById</span><span class=p>(</span><span class=n>templateId</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>template</span><span class=w> </span><span class=o>==</span><span class=w> </span><span class=kc>null</span><span class=w> </span><span class=o>||</span><span class=w> </span><span class=n>template</span><span class=p>.</span><span class=na>getStatus</span><span class=p>()</span><span class=w> </span><span class=o>!=</span><span class=w> </span><span class=n>1</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=s>&#34;优惠券模板不存在或已禁用&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 检查是否在有效期内</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>template</span><span class=p>.</span><span class=na>getEndTime</span><span class=p>().</span><span class=na>isBefore</span><span class=p>(</span><span class=n>LocalDateTime</span><span class=p>.</span><span class=na>now</span><span class=p>()))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=s>&#34;优惠券已过期&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 创建优惠券</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>Coupon</span><span class=w> </span><span class=n>coupon</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>Coupon</span><span class=p>.</span><span class=na>builder</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>templateId</span><span class=p>(</span><span class=n>templateId</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>userId</span><span class=p>(</span><span class=n>userId</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>status</span><span class=p>(</span><span class=n>0</span><span class=p>)</span><span class=w> </span><span class=c1>// 0-未使用</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>createTime</span><span class=p>(</span><span class=n>LocalDateTime</span><span class=p>.</span><span class=na>now</span><span class=p>())</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>expireTime</span><span class=p>(</span><span class=n>template</span><span class=p>.</span><span class=na>getEndTime</span><span class=p>())</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>couponMapper</span><span class=p>.</span><span class=na>insert</span><span class=p>(</span><span class=n>coupon</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=s>&#34;优惠券领取成功&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * 获取用户优惠券
+</span></span></span><span class=line><span class=cl><span class=cm> * @param userId 用户ID
+</span></span></span><span class=line><span class=cl><span class=cm> * @return 用户优惠券列表
+</span></span></span><span class=line><span class=cl><span class=cm> */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=n>List</span><span class=o>&lt;</span><span class=n>Coupon</span><span class=o>&gt;</span><span class=w> </span><span class=nf>getUserCoupons</span><span class=p>(</span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=n>couponMapper</span><span class=p>.</span><span class=na>getByUserId</span><span class=p>(</span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=kc>null</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=9-添加mapper方法>9. 添加Mapper方法</h3><p><strong>在 <code>UserMapper.java</code> 中添加：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
 </span><span class=lnt>4
@@ -1464,6 +1628,30 @@
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-xml data-lang=xml><span class=line><span class=cl><span class=nt>&lt;update</span> <span class=na>id=</span><span class=s>&#34;updateUserPoints&#34;</span><span class=nt>&gt;</span>
 </span></span><span class=line><span class=cl>    UPDATE user SET points = #{points} WHERE id = #{userId}
 </span></span><span class=line><span class=cl><span class=nt>&lt;/update&gt;</span>
+</span></span></code></pre></td></tr></table></div></div><p><strong>在 <code>CouponTemplateMapper.java</code> 中添加：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm> * 获取可领取的优惠券模板
+</span></span></span><span class=line><span class=cl><span class=cm> * @return 可领取的优惠券模板列表
+</span></span></span><span class=line><span class=cl><span class=cm> */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>List</span><span class=o>&lt;</span><span class=n>CouponTemplate</span><span class=o>&gt;</span><span class=w> </span><span class=nf>getAvailableTemplates</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p><strong>在 <code>CouponTemplateMapper.xml</code> 中添加：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-xml data-lang=xml><span class=line><span class=cl><span class=nt>&lt;select</span> <span class=na>id=</span><span class=s>&#34;getAvailableTemplates&#34;</span> <span class=na>resultType=</span><span class=s>&#34;com.sky.entity.CouponTemplate&#34;</span><span class=nt>&gt;</span>
+</span></span><span class=line><span class=cl>    SELECT * FROM coupon_template 
+</span></span><span class=line><span class=cl>    WHERE status = 1 
+</span></span><span class=line><span class=cl>    AND start_time <span class=err>&lt;</span>= NOW() 
+</span></span><span class=line><span class=cl>    AND end_time &gt;= NOW()
+</span></span><span class=line><span class=cl>    ORDER BY create_time DESC
+</span></span><span class=line><span class=cl><span class=nt>&lt;/select&gt;</span>
 </span></span></code></pre></td></tr></table></div></div><hr><h2 id=api接口开发>API接口开发</h2><h3 id=1-用户端秒杀控制器>1. 用户端秒杀控制器</h3><p><strong>创建 <code>sky-server/src/main/java/com/sky/controller/user/SeckillActivityController.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
