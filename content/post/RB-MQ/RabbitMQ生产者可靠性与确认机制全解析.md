@@ -102,40 +102,62 @@ public class ReliableMessageProducer {
 
 ### 完整投递链路
 
-```mermaid
-graph TD
-    A[生产者] --> B[Channel]
-    B --> C[Broker]
-    C --> D[消息持久化]
-    D --> E[Exchange]
-    E --> F[路由检查]
-    F --> G[Queue]
-    G --> H[消费者]
-    
-    B --> I[deliveryTag生成]
-    I --> J[未确认消息Map]
-    J --> K[Confirm机制]
-    
-    D --> L[持久化成功]
-    L --> M[Ack返回]
-    M --> K
-    
-    D --> N[持久化失败]
-    N --> O[Nack返回]
-    O --> K
-    
-    F --> P[路由成功]
-    P --> Q[消息进入Queue]
-    
-    F --> R[路由失败]
-    R --> S[Return机制]
-    S --> T[ReturnCallback]
-    
-    H --> U[消费成功]
-    U --> V[Consumer Ack]
-    
-    H --> W[消费失败]
-    W --> X[Consumer Nack]
+```
+生产者 → Channel → Broker → 消息持久化 → Exchange → 路由检查 → Queue → 消费者
+   ↓         ↓         ↓           ↓           ↓         ↓        ↓        ↓
+deliveryTag  未确认消息Map  Confirm机制   持久化结果   路由结果   消息状态   消费结果
+   ↓         ↓         ↓           ↓           ↓         ↓        ↓        ↓
+生成唯一ID   记录待确认   处理Ack/Nack  成功→Ack    成功→进入Queue  等待消费  成功→Ack
+            消息信息     失败→Nack    失败→Return机制  失败→ReturnCallback  失败→Nack
+```
+
+#### 详细流程说明：
+
+**1. 生产者发送阶段**
+```
+生产者 → Channel
+├── 生成 deliveryTag（递增计数器）
+├── 加入未确认消息Map
+└── 发送消息到Broker
+```
+
+**2. Broker处理阶段**
+```
+Broker → 消息持久化
+├── 持久化成功 → 返回Ack → 触发Confirm机制
+└── 持久化失败 → 返回Nack → 触发Confirm机制
+```
+
+**3. 消息路由阶段**
+```
+Exchange → 路由检查
+├── 路由成功 → 消息进入Queue → 等待消费者
+└── 路由失败 → 触发Return机制 → 调用ReturnCallback
+```
+
+**4. 消费者处理阶段**
+```
+消费者 → 处理消息
+├── 消费成功 → 发送Consumer Ack
+└── 消费失败 → 发送Consumer Nack
+```
+
+#### 关键机制对比表：
+
+| 机制 | 触发时机 | 返回结果 | 作用范围 | 处理方式 |
+|------|----------|----------|----------|----------|
+| **Confirm机制** | 消息到达Broker后 | Ack/Nack | 生产者→Broker | 异步回调/同步等待 |
+| **Return机制** | 路由失败时 | Basic.Return | Exchange→Queue | ReturnCallback |
+| **Consumer Ack** | 消费完成后 | Consumer Ack/Nack | Queue→消费者 | 手动确认/自动确认 |
+
+#### 消息状态流转：
+
+```
+消息状态: 发送中 → 已持久化 → 已路由 → 已消费
+         ↓        ↓        ↓        ↓
+确认机制: 无      Confirm   Return   Consumer Ack
+         ↓        ↓        ↓        ↓
+处理结果: 等待    成功/失败  成功/失败  成功/失败
 ```
 
 ### 详细流程说明

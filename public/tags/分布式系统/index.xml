@@ -4755,77 +4755,130 @@
 &lt;h3 id="完整投递链路">完整投递链路
 &lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
-&lt;/span>&lt;span class="lnt"> 2
-&lt;/span>&lt;span class="lnt"> 3
-&lt;/span>&lt;span class="lnt"> 4
-&lt;/span>&lt;span class="lnt"> 5
-&lt;/span>&lt;span class="lnt"> 6
-&lt;/span>&lt;span class="lnt"> 7
-&lt;/span>&lt;span class="lnt"> 8
-&lt;/span>&lt;span class="lnt"> 9
-&lt;/span>&lt;span class="lnt">10
-&lt;/span>&lt;span class="lnt">11
-&lt;/span>&lt;span class="lnt">12
-&lt;/span>&lt;span class="lnt">13
-&lt;/span>&lt;span class="lnt">14
-&lt;/span>&lt;span class="lnt">15
-&lt;/span>&lt;span class="lnt">16
-&lt;/span>&lt;span class="lnt">17
-&lt;/span>&lt;span class="lnt">18
-&lt;/span>&lt;span class="lnt">19
-&lt;/span>&lt;span class="lnt">20
-&lt;/span>&lt;span class="lnt">21
-&lt;/span>&lt;span class="lnt">22
-&lt;/span>&lt;span class="lnt">23
-&lt;/span>&lt;span class="lnt">24
-&lt;/span>&lt;span class="lnt">25
-&lt;/span>&lt;span class="lnt">26
-&lt;/span>&lt;span class="lnt">27
-&lt;/span>&lt;span class="lnt">28
-&lt;/span>&lt;span class="lnt">29
-&lt;/span>&lt;span class="lnt">30
-&lt;/span>&lt;span class="lnt">31
-&lt;/span>&lt;span class="lnt">32
-&lt;/span>&lt;span class="lnt">33
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">graph TD
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> A[生产者] --&amp;gt; B[Channel]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B --&amp;gt; C[Broker]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C --&amp;gt; D[消息持久化]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; E[Exchange]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> E --&amp;gt; F[路由检查]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F --&amp;gt; G[Queue]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> G --&amp;gt; H[消费者]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B --&amp;gt; I[deliveryTag生成]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I --&amp;gt; J[未确认消息Map]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> J --&amp;gt; K[Confirm机制]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; L[持久化成功]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> L --&amp;gt; M[Ack返回]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> M --&amp;gt; K
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; N[持久化失败]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> N --&amp;gt; O[Nack返回]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> O --&amp;gt; K
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F --&amp;gt; P[路由成功]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> P --&amp;gt; Q[消息进入Queue]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F --&amp;gt; R[路由失败]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> R --&amp;gt; S[Return机制]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> S --&amp;gt; T[ReturnCallback]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H --&amp;gt; U[消费成功]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> U --&amp;gt; V[Consumer Ack]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H --&amp;gt; W[消费失败]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> W --&amp;gt; X[Consumer Nack]
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">生产者 → Channel → Broker → 消息持久化 → Exchange → 路由检查 → Queue → 消费者
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">deliveryTag 未确认消息Map Confirm机制 持久化结果 路由结果 消息状态 消费结果
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ↓ ↓ ↓ ↓ ↓ ↓ ↓ ↓
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">生成唯一ID 记录待确认 处理Ack/Nack 成功→Ack 成功→进入Queue 等待消费 成功→Ack
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> 消息信息 失败→Nack 失败→Return机制 失败→ReturnCallback 失败→Nack
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
-&lt;/div>&lt;h3 id="详细流程说明">详细流程说明
+&lt;/div>&lt;h4 id="详细流程说明">详细流程说明：
+&lt;/h4>&lt;p>&lt;strong>1. 生产者发送阶段&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">生产者 → Channel
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── 生成 deliveryTag（递增计数器）
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── 加入未确认消息Map
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└── 发送消息到Broker
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>2. Broker处理阶段&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">Broker → 消息持久化
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── 持久化成功 → 返回Ack → 触发Confirm机制
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└── 持久化失败 → 返回Nack → 触发Confirm机制
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>3. 消息路由阶段&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">Exchange → 路由检查
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── 路由成功 → 消息进入Queue → 等待消费者
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└── 路由失败 → 触发Return机制 → 调用ReturnCallback
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>4. 消费者处理阶段&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">消费者 → 处理消息
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">├── 消费成功 → 发送Consumer Ack
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└── 消费失败 → 发送Consumer Nack
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h4 id="关键机制对比表">关键机制对比表：
+&lt;/h4>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>机制&lt;/th>
+&lt;th>触发时机&lt;/th>
+&lt;th>返回结果&lt;/th>
+&lt;th>作用范围&lt;/th>
+&lt;th>处理方式&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;strong>Confirm机制&lt;/strong>&lt;/td>
+&lt;td>消息到达Broker后&lt;/td>
+&lt;td>Ack/Nack&lt;/td>
+&lt;td>生产者→Broker&lt;/td>
+&lt;td>异步回调/同步等待&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Return机制&lt;/strong>&lt;/td>
+&lt;td>路由失败时&lt;/td>
+&lt;td>Basic.Return&lt;/td>
+&lt;td>Exchange→Queue&lt;/td>
+&lt;td>ReturnCallback&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Consumer Ack&lt;/strong>&lt;/td>
+&lt;td>消费完成后&lt;/td>
+&lt;td>Consumer Ack/Nack&lt;/td>
+&lt;td>Queue→消费者&lt;/td>
+&lt;td>手动确认/自动确认&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h4 id="消息状态流转">消息状态流转：
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">消息状态: 发送中 → 已持久化 → 已路由 → 已消费
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ↓ ↓ ↓ ↓
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">确认机制: 无 Confirm Return Consumer Ack
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ↓ ↓ ↓ ↓
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">处理结果: 等待 成功/失败 成功/失败 成功/失败
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="详细流程说明-1">详细流程说明
 &lt;/h3>&lt;ol>
 &lt;li>
 &lt;p>&lt;strong>生产者调用 channel.basicPublish&lt;/strong>&lt;/p>
