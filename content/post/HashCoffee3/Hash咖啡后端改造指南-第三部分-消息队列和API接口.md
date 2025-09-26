@@ -623,7 +623,7 @@ public class MessageConsumerServiceImpl implements MessageConsumerService {
      */
     @RabbitListener(queues = "order.queue", containerFactory = "rabbitListenerContainerFactory")
     public void handleOrderPayMessage(OrderPayMessage message, Channel channel, 
-                                    @Header("amqp_deliveryTag") long deliveryTag) {
+                                    @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
             // 调用接口方法处理业务逻辑
             handleOrderPayMessage(message);
@@ -648,7 +648,7 @@ public class MessageConsumerServiceImpl implements MessageConsumerService {
      */
     @RabbitListener(queues = "points.queue", containerFactory = "rabbitListenerContainerFactory")
     public void handlePointsEarnMessage(PointsEarnMessage message, Channel channel, 
-                                      @Header("amqp_deliveryTag") long deliveryTag) {
+                                      @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
             // 调用接口方法处理业务逻辑
             handlePointsEarnMessage(message);
@@ -673,7 +673,7 @@ public class MessageConsumerServiceImpl implements MessageConsumerService {
      */
     @RabbitListener(queues = "order.dlx.queue", containerFactory = "rabbitListenerContainerFactory")
     public void handleOrderTimeoutMessage(OrderTimeoutMessage message, Channel channel, 
-                                        @Header("amqp_deliveryTag") long deliveryTag) {
+                                        @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
             // 调用接口方法处理业务逻辑
             handleOrderTimeoutMessage(message);
