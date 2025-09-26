@@ -409,7 +409,7 @@ public class OrderTimeoutMessage implements Serializable {
 
 ## 消息生产者服务
 
-### 1. 创建消息生产者服务
+### 1. 创建消息生产者服务接口
 
 **创建 `sky-server/src/main/java/com/sky/service/MessageProducerService.java`：**
 
@@ -419,6 +419,43 @@ package com.sky.service;
 import com.sky.entity.message.OrderPayMessage;
 import com.sky.entity.message.OrderTimeoutMessage;
 import com.sky.entity.message.PointsEarnMessage;
+
+/**
+ * 消息生产者服务接口
+ */
+public interface MessageProducerService {
+    
+    /**
+     * 发送订单支付消息
+     * @param message 订单支付消息
+     */
+    void sendOrderPayMessage(OrderPayMessage message);
+    
+    /**
+     * 发送积分获得消息
+     * @param message 积分获得消息
+     */
+    void sendPointsEarnMessage(PointsEarnMessage message);
+    
+    /**
+     * 发送订单超时消息
+     * @param message 订单超时消息
+     */
+    void sendOrderTimeoutMessage(OrderTimeoutMessage message);
+}
+```
+
+### 2. 创建消息生产者服务实现类
+
+**创建 `sky-server/src/main/java/com/sky/service/impl/MessageProducerServiceImpl.java`：**
+
+```java
+package com.sky.service.impl;
+
+import com.sky.entity.message.OrderPayMessage;
+import com.sky.entity.message.OrderTimeoutMessage;
+import com.sky.entity.message.PointsEarnMessage;
+import com.sky.service.MessageProducerService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -426,11 +463,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
- * 消息生产者服务
+ * 消息生产者服务实现类
  */
 @Service
 @Slf4j
-public class MessageProducerService {
+public class MessageProducerServiceImpl implements MessageProducerService {
     
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -438,6 +475,7 @@ public class MessageProducerService {
     /**
      * 发送订单支付消息
      */
+    @Override
     public void sendOrderPayMessage(OrderPayMessage message) {
         try {
             rabbitTemplate.convertAndSend(
@@ -458,6 +496,7 @@ public class MessageProducerService {
     /**
      * 发送积分获得消息
      */
+    @Override
     public void sendPointsEarnMessage(PointsEarnMessage message) {
         try {
             rabbitTemplate.convertAndSend(
@@ -478,6 +517,7 @@ public class MessageProducerService {
     /**
      * 发送订单超时消息
      */
+    @Override
     public void sendOrderTimeoutMessage(OrderTimeoutMessage message) {
         try {
             rabbitTemplate.convertAndSend(
@@ -502,17 +542,57 @@ public class MessageProducerService {
 
 ## 消息消费者服务
 
-### 1. 创建消息消费者服务
+### 1. 创建消息消费者服务接口
 
 **创建 `sky-server/src/main/java/com/sky/service/MessageConsumerService.java`：**
 
 ```java
 package com.sky.service;
 
+import com.sky.entity.message.OrderPayMessage;
+import com.sky.entity.message.OrderTimeoutMessage;
+import com.sky.entity.message.PointsEarnMessage;
+
+/**
+ * 消息消费者服务接口
+ */
+public interface MessageConsumerService {
+    
+    /**
+     * 处理订单支付消息
+     * @param message 订单支付消息
+     */
+    void handleOrderPayMessage(OrderPayMessage message);
+    
+    /**
+     * 处理积分获得消息
+     * @param message 积分获得消息
+     */
+    void handlePointsEarnMessage(PointsEarnMessage message);
+    
+    /**
+     * 处理订单超时消息
+     * @param message 订单超时消息
+     */
+    void handleOrderTimeoutMessage(OrderTimeoutMessage message);
+}
+```
+
+### 2. 创建消息消费者服务实现类
+
+**创建 `sky-server/src/main/java/com/sky/service/impl/MessageConsumerServiceImpl.java`：**
+
+```java
+package com.sky.service.impl;
+
 import com.rabbitmq.client.Channel;
 import com.sky.entity.message.OrderPayMessage;
 import com.sky.entity.message.OrderTimeoutMessage;
 import com.sky.entity.message.PointsEarnMessage;
+import com.sky.service.MessageConsumerService;
+import com.sky.service.MessageProducerService;
+import com.sky.service.OrderService;
+import com.sky.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
@@ -523,11 +603,11 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 
 /**
- * 消息消费者服务
+ * 消息消费者服务实现类
  */
 @Service
 @Slf4j
-public class MessageConsumerService {
+public class MessageConsumerServiceImpl implements MessageConsumerService {
     
     @Autowired
     private UserService userService;
@@ -542,6 +622,7 @@ public class MessageConsumerService {
      * 处理订单支付消息
      */
     @RabbitListener(queues = "order.queue", containerFactory = "rabbitListenerContainerFactory")
+    @Override
     public void handleOrderPayMessage(OrderPayMessage message, Channel channel, 
                                     @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
@@ -579,6 +660,7 @@ public class MessageConsumerService {
      * 处理积分获得消息
      */
     @RabbitListener(queues = "points.queue", containerFactory = "rabbitListenerContainerFactory")
+    @Override
     public void handlePointsEarnMessage(PointsEarnMessage message, Channel channel, 
                                       @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
@@ -606,6 +688,7 @@ public class MessageConsumerService {
      * 处理订单超时消息
      */
     @RabbitListener(queues = "order.dlx.queue", containerFactory = "rabbitListenerContainerFactory")
+    @Override
     public void handleOrderTimeoutMessage(OrderTimeoutMessage message, Channel channel, 
                                         @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
@@ -629,6 +712,153 @@ public class MessageConsumerService {
         }
     }
 }
+```
+
+---
+
+## 补充Service接口方法
+
+### 1. 在UserService接口中添加方法
+
+**修改 `sky-server/src/main/java/com/sky/service/UserService.java`：**
+
+```java
+package com.sky.service;
+
+import com.sky.dto.UserLoginDTO;
+import com.sky.entity.User;
+
+public interface UserService {
+
+    /**
+     * 微信登录
+     * @param userLoginDTO
+     * @return
+     */
+    User wxLogin(UserLoginDTO userLoginDTO);
+    
+    /**
+     * 添加用户积分
+     * @param userId 用户ID
+     * @param points 积分数量
+     * @param orderId 订单ID
+     */
+    void addUserPoints(Long userId, Integer points, Long orderId);
+}
+```
+
+### 2. 在OrderService接口中添加方法
+
+**修改 `sky-server/src/main/java/com/sky/service/OrderService.java`：**
+
+```java
+// 在现有方法后添加以下方法
+
+/**
+ * 处理订单支付
+ * @param orderId 订单ID
+ * @param amount 支付金额
+ */
+void processOrderPayment(Long orderId, BigDecimal amount);
+
+/**
+ * 取消超时订单
+ * @param orderId 订单ID
+ */
+void cancelTimeoutOrder(Long orderId);
+```
+
+### 3. 在UserServiceImpl中添加实现
+
+**修改 `sky-server/src/main/java/com/sky/service/impl/UserServiceImpl.java`：**
+
+```java
+// 在现有方法后添加以下方法
+
+/**
+ * 添加用户积分
+ * @param userId 用户ID
+ * @param points 积分数量
+ * @param orderId 订单ID
+ */
+@Override
+public void addUserPoints(Long userId, Integer points, Long orderId) {
+    // 查询用户当前积分
+    User user = userMapper.getById(userId);
+    if (user != null) {
+        // 更新用户积分
+        userMapper.updateUserPoints(userId, user.getPoints() + points);
+        log.info("用户积分增加成功：userId={}, points={}, orderId={}", userId, points, orderId);
+    }
+}
+```
+
+### 4. 在OrderServiceImpl中添加实现
+
+**修改 `sky-server/src/main/java/com/sky/service/impl/OrderServiceImpl.java`：**
+
+```java
+// 在现有方法后添加以下方法
+
+/**
+ * 处理订单支付
+ * @param orderId 订单ID
+ * @param amount 支付金额
+ */
+@Override
+public void processOrderPayment(Long orderId, BigDecimal amount) {
+    // 更新订单状态为已支付
+    Orders orders = Orders.builder()
+            .id(orderId)
+            .status(Orders.TO_BE_CONFIRMED)
+            .payStatus(Orders.PAID)
+            .checkoutTime(LocalDateTime.now())
+            .build();
+    
+    orderMapper.update(orders);
+    log.info("订单支付处理成功：orderId={}, amount={}", orderId, amount);
+}
+
+/**
+ * 取消超时订单
+ * @param orderId 订单ID
+ */
+@Override
+public void cancelTimeoutOrder(Long orderId) {
+    // 查询订单状态
+    Orders ordersDB = orderMapper.getById(orderId);
+    if (ordersDB != null && ordersDB.getStatus().equals(Orders.PENDING_PAYMENT)) {
+        // 更新订单状态为已取消
+        Orders orders = Orders.builder()
+                .id(orderId)
+                .status(Orders.CANCELLED)
+                .cancelReason("订单超时自动取消")
+                .cancelTime(LocalDateTime.now())
+                .build();
+        
+        orderMapper.update(orders);
+        log.info("订单超时取消成功：orderId={}", orderId);
+    }
+}
+```
+
+### 5. 添加Mapper方法
+
+**在 `UserMapper.java` 中添加：**
+```java
+/**
+ * 更新用户积分
+ * @param userId 用户ID
+ * @param points 新积分
+ */
+void updateUserPoints(@Param("userId") Long userId, @Param("points") Integer points);
+```
+
+**在 `UserMapper.xml` 中添加：**
+```xml
+<update id="updateUserPoints">
+    UPDATE user SET points = #{points} WHERE id = #{userId}
+</update>
 ```
 
 ---

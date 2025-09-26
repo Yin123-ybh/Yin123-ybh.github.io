@@ -6349,8 +6349,74 @@ data-flex-basis="463px"
 &lt;/div>
 &lt;/div>&lt;hr>
 &lt;h2 id="消息生产者服务">消息生产者服务
-&lt;/h2>&lt;h3 id="1-创建消息生产者服务">1. 创建消息生产者服务
+&lt;/h2>&lt;h3 id="1-创建消息生产者服务接口">1. 创建消息生产者服务接口
 &lt;/h3>&lt;p>&lt;strong>创建 &lt;code>sky-server/src/main/java/com/sky/service/MessageProducerService.java&lt;/code>：&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.OrderPayMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.OrderTimeoutMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.PointsEarnMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 消息生产者服务接口
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">interface&lt;/span> &lt;span class="nc">MessageProducerService&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 发送订单支付消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param message 订单支付消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">sendOrderPayMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">OrderPayMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 发送积分获得消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param message 积分获得消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">sendPointsEarnMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">PointsEarnMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 发送订单超时消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param message 订单超时消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">sendOrderTimeoutMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">OrderTimeoutMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="2-创建消息生产者服务实现类">2. 创建消息生产者服务实现类
+&lt;/h3>&lt;p>&lt;strong>创建 &lt;code>sky-server/src/main/java/com/sky/service/impl/MessageProducerServiceImpl.java&lt;/code>：&lt;/strong>&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
@@ -6435,13 +6501,18 @@ data-flex-basis="463px"
 &lt;/span>&lt;span class="lnt">80
 &lt;/span>&lt;span class="lnt">81
 &lt;/span>&lt;span class="lnt">82
+&lt;/span>&lt;span class="lnt">83
+&lt;/span>&lt;span class="lnt">84
+&lt;/span>&lt;span class="lnt">85
+&lt;/span>&lt;span class="lnt">86
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service.impl&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.OrderPayMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.OrderTimeoutMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.PointsEarnMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service.MessageProducerService&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">lombok.extern.slf4j.Slf4j&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">org.springframework.amqp.core.MessageDeliveryMode&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">org.springframework.amqp.rabbit.core.RabbitTemplate&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
@@ -6449,11 +6520,11 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">org.springframework.stereotype.Service&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 消息生产者服务
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 消息生产者服务实现类
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@Service&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@Slf4j&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">class&lt;/span> &lt;span class="nc">MessageProducerService&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">class&lt;/span> &lt;span class="nc">MessageProducerServiceImpl&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">implements&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MessageProducerService&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Autowired&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">private&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">RabbitTemplate&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">rabbitTemplate&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
@@ -6461,6 +6532,7 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 发送订单支付消息
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">sendOrderPayMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">OrderPayMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">rabbitTemplate&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">convertAndSend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="w">
@@ -6481,6 +6553,7 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 发送积分获得消息
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">sendPointsEarnMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">PointsEarnMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">rabbitTemplate&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">convertAndSend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="w">
@@ -6501,6 +6574,7 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 发送订单超时消息
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">sendOrderTimeoutMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">OrderTimeoutMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">rabbitTemplate&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">convertAndSend&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="w">
@@ -6523,8 +6597,74 @@ data-flex-basis="463px"
 &lt;/div>
 &lt;/div>&lt;hr>
 &lt;h2 id="消息消费者服务">消息消费者服务
-&lt;/h2>&lt;h3 id="1-创建消息消费者服务">1. 创建消息消费者服务
+&lt;/h2>&lt;h3 id="1-创建消息消费者服务接口">1. 创建消息消费者服务接口
 &lt;/h3>&lt;p>&lt;strong>创建 &lt;code>sky-server/src/main/java/com/sky/service/MessageConsumerService.java&lt;/code>：&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.OrderPayMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.OrderTimeoutMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.PointsEarnMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 消息消费者服务接口
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">interface&lt;/span> &lt;span class="nc">MessageConsumerService&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 处理订单支付消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param message 订单支付消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">handleOrderPayMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">OrderPayMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 处理积分获得消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param message 积分获得消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">handlePointsEarnMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">PointsEarnMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 处理订单超时消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param message 订单超时消息
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">handleOrderTimeoutMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">OrderTimeoutMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="2-创建消息消费者服务实现类">2. 创建消息消费者服务实现类
+&lt;/h3>&lt;p>&lt;strong>创建 &lt;code>sky-server/src/main/java/com/sky/service/impl/MessageConsumerServiceImpl.java&lt;/code>：&lt;/strong>&lt;/p>
 &lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
@@ -6649,14 +6789,25 @@ data-flex-basis="463px"
 &lt;/span>&lt;span class="lnt">120
 &lt;/span>&lt;span class="lnt">121
 &lt;/span>&lt;span class="lnt">122
+&lt;/span>&lt;span class="lnt">123
+&lt;/span>&lt;span class="lnt">124
+&lt;/span>&lt;span class="lnt">125
+&lt;/span>&lt;span class="lnt">126
+&lt;/span>&lt;span class="lnt">127
+&lt;/span>&lt;span class="lnt">128
+&lt;/span>&lt;span class="lnt">129
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service.impl&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.rabbitmq.client.Channel&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.OrderPayMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.OrderTimeoutMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.message.PointsEarnMessage&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service.MessageConsumerService&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service.MessageProducerService&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service.OrderService&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service.UserService&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">lombok.extern.slf4j.Slf4j&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">org.springframework.amqp.rabbit.annotation.RabbitListener&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">org.springframework.amqp.support.AmqpHeaders&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
@@ -6667,11 +6818,11 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">java.io.IOException&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 消息消费者服务
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 消息消费者服务实现类
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@Service&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@Slf4j&lt;/span>&lt;span class="w">
-&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">class&lt;/span> &lt;span class="nc">MessageConsumerService&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">class&lt;/span> &lt;span class="nc">MessageConsumerServiceImpl&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">implements&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">MessageConsumerService&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Autowired&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">private&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">UserService&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">userService&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
@@ -6686,6 +6837,7 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 处理订单支付消息
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@RabbitListener&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">queues&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34;order.queue&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">containerFactory&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34;rabbitListenerContainerFactory&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">handleOrderPayMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">OrderPayMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Channel&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">channel&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Header&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">AmqpHeaders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">DELIVERY_TAG&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">deliveryTag&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
@@ -6723,6 +6875,7 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 处理积分获得消息
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@RabbitListener&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">queues&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34;points.queue&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">containerFactory&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34;rabbitListenerContainerFactory&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">handlePointsEarnMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">PointsEarnMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Channel&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">channel&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Header&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">AmqpHeaders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">DELIVERY_TAG&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">deliveryTag&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
@@ -6750,6 +6903,7 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 处理订单超时消息
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@RabbitListener&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">queues&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34;order.dlx.queue&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">containerFactory&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="s">&amp;#34;rabbitListenerContainerFactory&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">handleOrderTimeoutMessage&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">OrderTimeoutMessage&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">message&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Channel&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">channel&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="nd">@Header&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">AmqpHeaders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">DELIVERY_TAG&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">deliveryTag&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">try&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
@@ -6774,6 +6928,265 @@ data-flex-basis="463px"
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
 &lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;hr>
+&lt;h2 id="补充service接口方法">补充Service接口方法
+&lt;/h2>&lt;h3 id="1-在userservice接口中添加方法">1. 在UserService接口中添加方法
+&lt;/h3>&lt;p>&lt;strong>修改 &lt;code>sky-server/src/main/java/com/sky/service/UserService.java&lt;/code>：&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="kn">package&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.service&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.dto.UserLoginDTO&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kn">import&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nn">com.sky.entity.User&lt;/span>&lt;span class="p">;&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kd">interface&lt;/span> &lt;span class="nc">UserService&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 微信登录
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param userLoginDTO
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @return
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">User&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">wxLogin&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">UserLoginDTO&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">userLoginDTO&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 添加用户积分
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param userId 用户ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param points 积分数量
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param orderId 订单ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">addUserPoints&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">userId&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Integer&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">points&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="2-在orderservice接口中添加方法">2. 在OrderService接口中添加方法
+&lt;/h3>&lt;p>&lt;strong>修改 &lt;code>sky-server/src/main/java/com/sky/service/OrderService.java&lt;/code>：&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 在现有方法后添加以下方法&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 处理订单支付
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param orderId 订单ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param amount 支付金额
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">processOrderPayment&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">BigDecimal&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">amount&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 取消超时订单
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param orderId 订单ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">cancelTimeoutOrder&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="3-在userserviceimpl中添加实现">3. 在UserServiceImpl中添加实现
+&lt;/h3>&lt;p>&lt;strong>修改 &lt;code>sky-server/src/main/java/com/sky/service/impl/UserServiceImpl.java&lt;/code>：&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 在现有方法后添加以下方法&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 添加用户积分
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param userId 用户ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param points 积分数量
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param orderId 订单ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">addUserPoints&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">userId&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Integer&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">points&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 查询用户当前积分&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">User&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">user&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">userMapper&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getById&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">userId&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">user&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">null&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 更新用户积分&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">userMapper&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">updateUserPoints&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">userId&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">user&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getPoints&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">+&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">points&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">log&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;用户积分增加成功：userId={}, points={}, orderId={}&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">userId&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">points&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="4-在orderserviceimpl中添加实现">4. 在OrderServiceImpl中添加实现
+&lt;/h3>&lt;p>&lt;strong>修改 &lt;code>sky-server/src/main/java/com/sky/service/impl/OrderServiceImpl.java&lt;/code>：&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
+&lt;/span>&lt;span class="lnt">38
+&lt;/span>&lt;span class="lnt">39
+&lt;/span>&lt;span class="lnt">40
+&lt;/span>&lt;span class="lnt">41
+&lt;/span>&lt;span class="lnt">42
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="c1">// 在现有方法后添加以下方法&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 处理订单支付
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param orderId 订单ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param amount 支付金额
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">processOrderPayment&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">BigDecimal&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">amount&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 更新订单状态为已支付&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orders&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">builder&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">id&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">TO_BE_CONFIRMED&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">payStatus&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">PAID&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">checkoutTime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">LocalDateTime&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">now&lt;/span>&lt;span class="p">())&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">build&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">orderMapper&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">update&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">orders&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">log&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;订单支付处理成功：orderId={}, amount={}&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">amount&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 取消超时订单
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param orderId 订单ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="nd">@Override&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kd">public&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">cancelTimeoutOrder&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 查询订单状态&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ordersDB&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderMapper&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getById&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="k">if&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">ordersDB&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">!=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="kc">null&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">&amp;amp;&amp;amp;&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">ordersDB&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">getStatus&lt;/span>&lt;span class="p">().&lt;/span>&lt;span class="na">equals&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">PENDING_PAYMENT&lt;/span>&lt;span class="p">))&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="p">{&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="c1">// 更新订单状态为已取消&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orders&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="o">=&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">builder&lt;/span>&lt;span class="p">()&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">id&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">status&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">Orders&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">CANCELLED&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">cancelReason&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;订单超时自动取消&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">cancelTime&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">LocalDateTime&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">now&lt;/span>&lt;span class="p">())&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">build&lt;/span>&lt;span class="p">();&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">orderMapper&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">update&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="n">orders&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="n">log&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="na">info&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;订单超时取消成功：orderId={}&amp;#34;&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">orderId&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w"> &lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="p">}&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="5-添加mapper方法">5. 添加Mapper方法
+&lt;/h3>&lt;p>&lt;strong>在 &lt;code>UserMapper.java&lt;/code> 中添加：&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;span class="lnt">4
+&lt;/span>&lt;span class="lnt">5
+&lt;/span>&lt;span class="lnt">6
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-java" data-lang="java">&lt;span class="line">&lt;span class="cl">&lt;span class="cm">/**
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * 更新用户积分
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param userId 用户ID
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> * @param points 新积分
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="cm"> */&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="w">&lt;/span>&lt;span class="kt">void&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nf">updateUserPoints&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="nd">@Param&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;userId&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Long&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">userId&lt;/span>&lt;span class="p">,&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="nd">@Param&lt;/span>&lt;span class="p">(&lt;/span>&lt;span class="s">&amp;#34;points&amp;#34;&lt;/span>&lt;span class="p">)&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">Integer&lt;/span>&lt;span class="w"> &lt;/span>&lt;span class="n">points&lt;/span>&lt;span class="p">);&lt;/span>&lt;span class="w">
+&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;p>&lt;strong>在 &lt;code>UserMapper.xml&lt;/code> 中添加：&lt;/strong>&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-xml" data-lang="xml">&lt;span class="line">&lt;span class="cl">&lt;span class="nt">&amp;lt;update&lt;/span> &lt;span class="na">id=&lt;/span>&lt;span class="s">&amp;#34;updateUserPoints&amp;#34;&lt;/span>&lt;span class="nt">&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> UPDATE user SET points = #{points} WHERE id = #{userId}
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="nt">&amp;lt;/update&amp;gt;&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;hr>
 &lt;h2 id="api接口开发">API接口开发
