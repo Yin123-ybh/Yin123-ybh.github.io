@@ -619,27 +619,14 @@ public class MessageConsumerServiceImpl implements MessageConsumerService {
     private MessageProducerService messageProducerService;
     
     /**
-     * 处理订单支付消息
+     * 处理订单支付消息（RabbitMQ监听器）
      */
     @RabbitListener(queues = "order.queue", containerFactory = "rabbitListenerContainerFactory")
-    @Override
     public void handleOrderPayMessage(OrderPayMessage message, Channel channel, 
                                     @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
-            log.info("开始处理订单支付消息：orderId={}, userId={}", message.getOrderId(), message.getUserId());
-            
-            // 处理订单支付逻辑
-            orderService.processOrderPayment(message.getOrderId(), message.getAmount());
-            
-            // 发送积分获得消息
-            PointsEarnMessage pointsMessage = PointsEarnMessage.builder()
-                    .userId(message.getUserId())
-                    .orderId(message.getOrderId())
-                    .points((int) (message.getAmount().doubleValue() * 0.01)) // 1%积分
-                    .earnTime(message.getPayTime())
-                    .build();
-            
-            messageProducerService.sendPointsEarnMessage(pointsMessage);
+            // 调用接口方法处理业务逻辑
+            handleOrderPayMessage(message);
             
             // 手动确认消息
             channel.basicAck(deliveryTag, false);
@@ -657,17 +644,14 @@ public class MessageConsumerServiceImpl implements MessageConsumerService {
     }
     
     /**
-     * 处理积分获得消息
+     * 处理积分获得消息（RabbitMQ监听器）
      */
     @RabbitListener(queues = "points.queue", containerFactory = "rabbitListenerContainerFactory")
-    @Override
     public void handlePointsEarnMessage(PointsEarnMessage message, Channel channel, 
                                       @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
-            log.info("开始处理积分获得消息：userId={}, points={}", message.getUserId(), message.getPoints());
-            
-            // 处理积分获得逻辑
-            userService.addUserPoints(message.getUserId(), message.getPoints(), message.getOrderId());
+            // 调用接口方法处理业务逻辑
+            handlePointsEarnMessage(message);
             
             // 手动确认消息
             channel.basicAck(deliveryTag, false);
@@ -685,17 +669,14 @@ public class MessageConsumerServiceImpl implements MessageConsumerService {
     }
     
     /**
-     * 处理订单超时消息
+     * 处理订单超时消息（RabbitMQ监听器）
      */
     @RabbitListener(queues = "order.dlx.queue", containerFactory = "rabbitListenerContainerFactory")
-    @Override
     public void handleOrderTimeoutMessage(OrderTimeoutMessage message, Channel channel, 
                                         @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
-            log.info("开始处理订单超时消息：orderId={}, userId={}", message.getOrderId(), message.getUserId());
-            
-            // 处理订单超时逻辑
-            orderService.cancelTimeoutOrder(message.getOrderId());
+            // 调用接口方法处理业务逻辑
+            handleOrderTimeoutMessage(message);
             
             // 手动确认消息
             channel.basicAck(deliveryTag, false);
@@ -710,6 +691,49 @@ public class MessageConsumerServiceImpl implements MessageConsumerService {
                 log.error("拒绝消息失败：{}", ioException.getMessage(), ioException);
             }
         }
+    }
+    
+    /**
+     * 处理订单支付消息（业务逻辑）
+     */
+    @Override
+    public void handleOrderPayMessage(OrderPayMessage message) {
+        log.info("开始处理订单支付消息：orderId={}, userId={}", message.getOrderId(), message.getUserId());
+        
+        // 处理订单支付逻辑
+        orderService.processOrderPayment(message.getOrderId(), message.getAmount());
+        
+        // 发送积分获得消息
+        PointsEarnMessage pointsMessage = PointsEarnMessage.builder()
+                .userId(message.getUserId())
+                .orderId(message.getOrderId())
+                .points((int) (message.getAmount().doubleValue() * 0.01)) // 1%积分
+                .earnTime(message.getPayTime())
+                .build();
+        
+        messageProducerService.sendPointsEarnMessage(pointsMessage);
+    }
+    
+    /**
+     * 处理积分获得消息（业务逻辑）
+     */
+    @Override
+    public void handlePointsEarnMessage(PointsEarnMessage message) {
+        log.info("开始处理积分获得消息：userId={}, points={}", message.getUserId(), message.getPoints());
+        
+        // 处理积分获得逻辑
+        userService.addUserPoints(message.getUserId(), message.getPoints(), message.getOrderId());
+    }
+    
+    /**
+     * 处理订单超时消息（业务逻辑）
+     */
+    @Override
+    public void handleOrderTimeoutMessage(OrderTimeoutMessage message) {
+        log.info("开始处理订单超时消息：orderId={}, userId={}", message.getOrderId(), message.getUserId());
+        
+        // 处理订单超时逻辑
+        orderService.cancelTimeoutOrder(message.getOrderId());
     }
 }
 ```

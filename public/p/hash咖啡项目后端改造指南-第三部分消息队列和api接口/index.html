@@ -1077,6 +1077,30 @@
 </span><span class=lnt>127
 </span><span class=lnt>128
 </span><span class=lnt>129
+</span><span class=lnt>130
+</span><span class=lnt>131
+</span><span class=lnt>132
+</span><span class=lnt>133
+</span><span class=lnt>134
+</span><span class=lnt>135
+</span><span class=lnt>136
+</span><span class=lnt>137
+</span><span class=lnt>138
+</span><span class=lnt>139
+</span><span class=lnt>140
+</span><span class=lnt>141
+</span><span class=lnt>142
+</span><span class=lnt>143
+</span><span class=lnt>144
+</span><span class=lnt>145
+</span><span class=lnt>146
+</span><span class=lnt>147
+</span><span class=lnt>148
+</span><span class=lnt>149
+</span><span class=lnt>150
+</span><span class=lnt>151
+</span><span class=lnt>152
+</span><span class=lnt>153
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kn>package</span><span class=w> </span><span class=nn>com.sky.service.impl</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=kn>import</span><span class=w> </span><span class=nn>com.rabbitmq.client.Channel</span><span class=p>;</span><span class=w>
@@ -1113,27 +1137,14 @@
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>MessageProducerService</span><span class=w> </span><span class=n>messageProducerService</span><span class=p>;</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
-</span></span></span><span class=line><span class=cl><span class=cm>     * 处理订单支付消息
+</span></span></span><span class=line><span class=cl><span class=cm>     * 处理订单支付消息（RabbitMQ监听器）
 </span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@RabbitListener</span><span class=p>(</span><span class=n>queues</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;order.queue&#34;</span><span class=p>,</span><span class=w> </span><span class=n>containerFactory</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;rabbitListenerContainerFactory&#34;</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>void</span><span class=w> </span><span class=nf>handleOrderPayMessage</span><span class=p>(</span><span class=n>OrderPayMessage</span><span class=w> </span><span class=n>message</span><span class=p>,</span><span class=w> </span><span class=n>Channel</span><span class=w> </span><span class=n>channel</span><span class=p>,</span><span class=w> 
 </span></span></span><span class=line><span class=cl><span class=w>                                    </span><span class=nd>@Header</span><span class=p>(</span><span class=n>AmqpHeaders</span><span class=p>.</span><span class=na>DELIVERY_TAG</span><span class=p>)</span><span class=w> </span><span class=kt>long</span><span class=w> </span><span class=n>deliveryTag</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;开始处理订单支付消息：orderId={}, userId={}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>());</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 处理订单支付逻辑</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>orderService</span><span class=p>.</span><span class=na>processOrderPayment</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getAmount</span><span class=p>());</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 发送积分获得消息</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>PointsEarnMessage</span><span class=w> </span><span class=n>pointsMessage</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>PointsEarnMessage</span><span class=p>.</span><span class=na>builder</span><span class=p>()</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>.</span><span class=na>userId</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>())</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>.</span><span class=na>orderId</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>())</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>.</span><span class=na>points</span><span class=p>((</span><span class=kt>int</span><span class=p>)</span><span class=w> </span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getAmount</span><span class=p>().</span><span class=na>doubleValue</span><span class=p>()</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=n>0</span><span class=p>.</span><span class=na>01</span><span class=p>))</span><span class=w> </span><span class=c1>// 1%积分</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>.</span><span class=na>earnTime</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getPayTime</span><span class=p>())</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>messageProducerService</span><span class=p>.</span><span class=na>sendPointsEarnMessage</span><span class=p>(</span><span class=n>pointsMessage</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 调用接口方法处理业务逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>handleOrderPayMessage</span><span class=p>(</span><span class=n>message</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 手动确认消息</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>channel</span><span class=p>.</span><span class=na>basicAck</span><span class=p>(</span><span class=n>deliveryTag</span><span class=p>,</span><span class=w> </span><span class=kc>false</span><span class=p>);</span><span class=w>
@@ -1151,17 +1162,14 @@
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
-</span></span></span><span class=line><span class=cl><span class=cm>     * 处理积分获得消息
+</span></span></span><span class=line><span class=cl><span class=cm>     * 处理积分获得消息（RabbitMQ监听器）
 </span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@RabbitListener</span><span class=p>(</span><span class=n>queues</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;points.queue&#34;</span><span class=p>,</span><span class=w> </span><span class=n>containerFactory</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;rabbitListenerContainerFactory&#34;</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>void</span><span class=w> </span><span class=nf>handlePointsEarnMessage</span><span class=p>(</span><span class=n>PointsEarnMessage</span><span class=w> </span><span class=n>message</span><span class=p>,</span><span class=w> </span><span class=n>Channel</span><span class=w> </span><span class=n>channel</span><span class=p>,</span><span class=w> 
 </span></span></span><span class=line><span class=cl><span class=w>                                      </span><span class=nd>@Header</span><span class=p>(</span><span class=n>AmqpHeaders</span><span class=p>.</span><span class=na>DELIVERY_TAG</span><span class=p>)</span><span class=w> </span><span class=kt>long</span><span class=w> </span><span class=n>deliveryTag</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;开始处理积分获得消息：userId={}, points={}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getPoints</span><span class=p>());</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 处理积分获得逻辑</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>userService</span><span class=p>.</span><span class=na>addUserPoints</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getPoints</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 调用接口方法处理业务逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>handlePointsEarnMessage</span><span class=p>(</span><span class=n>message</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 手动确认消息</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>channel</span><span class=p>.</span><span class=na>basicAck</span><span class=p>(</span><span class=n>deliveryTag</span><span class=p>,</span><span class=w> </span><span class=kc>false</span><span class=p>);</span><span class=w>
@@ -1179,17 +1187,14 @@
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
-</span></span></span><span class=line><span class=cl><span class=cm>     * 处理订单超时消息
+</span></span></span><span class=line><span class=cl><span class=cm>     * 处理订单超时消息（RabbitMQ监听器）
 </span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@RabbitListener</span><span class=p>(</span><span class=n>queues</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;order.dlx.queue&#34;</span><span class=p>,</span><span class=w> </span><span class=n>containerFactory</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;rabbitListenerContainerFactory&#34;</span><span class=p>)</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>void</span><span class=w> </span><span class=nf>handleOrderTimeoutMessage</span><span class=p>(</span><span class=n>OrderTimeoutMessage</span><span class=w> </span><span class=n>message</span><span class=p>,</span><span class=w> </span><span class=n>Channel</span><span class=w> </span><span class=n>channel</span><span class=p>,</span><span class=w> 
 </span></span></span><span class=line><span class=cl><span class=w>                                        </span><span class=nd>@Header</span><span class=p>(</span><span class=n>AmqpHeaders</span><span class=p>.</span><span class=na>DELIVERY_TAG</span><span class=p>)</span><span class=w> </span><span class=kt>long</span><span class=w> </span><span class=n>deliveryTag</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;开始处理订单超时消息：orderId={}, userId={}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>());</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 处理订单超时逻辑</span><span class=w>
-</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>orderService</span><span class=p>.</span><span class=na>cancelTimeoutOrder</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 调用接口方法处理业务逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>handleOrderTimeoutMessage</span><span class=p>(</span><span class=n>message</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=c1>// 手动确认消息</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>channel</span><span class=p>.</span><span class=na>basicAck</span><span class=p>(</span><span class=n>deliveryTag</span><span class=p>,</span><span class=w> </span><span class=kc>false</span><span class=p>);</span><span class=w>
@@ -1204,6 +1209,49 @@
 </span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>log</span><span class=p>.</span><span class=na>error</span><span class=p>(</span><span class=s>&#34;拒绝消息失败：{}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>ioException</span><span class=p>.</span><span class=na>getMessage</span><span class=p>(),</span><span class=w> </span><span class=n>ioException</span><span class=p>);</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm>     * 处理订单支付消息（业务逻辑）
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>void</span><span class=w> </span><span class=nf>handleOrderPayMessage</span><span class=p>(</span><span class=n>OrderPayMessage</span><span class=w> </span><span class=n>message</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;开始处理订单支付消息：orderId={}, userId={}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 处理订单支付逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>orderService</span><span class=p>.</span><span class=na>processOrderPayment</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getAmount</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 发送积分获得消息</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>PointsEarnMessage</span><span class=w> </span><span class=n>pointsMessage</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>PointsEarnMessage</span><span class=p>.</span><span class=na>builder</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>userId</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>())</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>orderId</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>())</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>points</span><span class=p>((</span><span class=kt>int</span><span class=p>)</span><span class=w> </span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getAmount</span><span class=p>().</span><span class=na>doubleValue</span><span class=p>()</span><span class=w> </span><span class=o>*</span><span class=w> </span><span class=n>0</span><span class=p>.</span><span class=na>01</span><span class=p>))</span><span class=w> </span><span class=c1>// 1%积分</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>earnTime</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getPayTime</span><span class=p>())</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>messageProducerService</span><span class=p>.</span><span class=na>sendPointsEarnMessage</span><span class=p>(</span><span class=n>pointsMessage</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm>     * 处理积分获得消息（业务逻辑）
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>void</span><span class=w> </span><span class=nf>handlePointsEarnMessage</span><span class=p>(</span><span class=n>PointsEarnMessage</span><span class=w> </span><span class=n>message</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;开始处理积分获得消息：userId={}, points={}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getPoints</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 处理积分获得逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>userService</span><span class=p>.</span><span class=na>addUserPoints</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getPoints</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=cm>/**
+</span></span></span><span class=line><span class=cl><span class=cm>     * 处理订单超时消息（业务逻辑）
+</span></span></span><span class=line><span class=cl><span class=cm>     */</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>void</span><span class=w> </span><span class=nf>handleOrderTimeoutMessage</span><span class=p>(</span><span class=n>OrderTimeoutMessage</span><span class=w> </span><span class=n>message</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;开始处理订单超时消息：orderId={}, userId={}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>(),</span><span class=w> </span><span class=n>message</span><span class=p>.</span><span class=na>getUserId</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 处理订单超时逻辑</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>orderService</span><span class=p>.</span><span class=na>cancelTimeoutOrder</span><span class=p>(</span><span class=n>message</span><span class=p>.</span><span class=na>getOrderId</span><span class=p>());</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
 </span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=补充service接口方法>补充Service接口方法</h2><h3 id=1-在userservice接口中添加方法>1. 在UserService接口中添加方法</h3><p><strong>修改 <code>sky-server/src/main/java/com/sky/service/UserService.java</code>：</strong></p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
