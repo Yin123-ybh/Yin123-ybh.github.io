@@ -1,6 +1,6 @@
 ---
 title: "RabbitMQ 生产者可靠性与确认机制全解析"
-date: 2025-08-14
+date: 2025-01-14
 draft: false
 tags: ["Java", "RabbitMQ", "消息队列", "可靠性", "生产者确认", "分布式系统"]
 categories: ["消息队列技术"]
@@ -106,21 +106,36 @@ public class ReliableMessageProducer {
 graph TD
     A[生产者] --> B[Channel]
     B --> C[Broker]
-    C --> D[Exchange]
-    D --> E[Queue]
-    E --> F[消费者]
+    C --> D[消息持久化]
+    D --> E[Exchange]
+    E --> F[路由检查]
+    F --> G[Queue]
+    G --> H[消费者]
     
-    B --> G[deliveryTag生成]
-    G --> H[未确认消息Map]
-    H --> I[Confirm机制]
+    B --> I[deliveryTag生成]
+    I --> J[未确认消息Map]
+    J --> K[Confirm机制]
     
-    C --> J[消息持久化]
-    J --> K[Ack/Nack返回]
-    K --> I
+    D --> L[持久化成功]
+    L --> M[Ack返回]
+    M --> K
     
-    D --> L[路由检查]
-    L --> M[Return机制]
-    M --> N[ReturnCallback]
+    D --> N[持久化失败]
+    N --> O[Nack返回]
+    O --> K
+    
+    F --> P[路由成功]
+    P --> Q[消息进入Queue]
+    
+    F --> R[路由失败]
+    R --> S[Return机制]
+    S --> T[ReturnCallback]
+    
+    H --> U[消费成功]
+    U --> V[Consumer Ack]
+    
+    H --> W[消费失败]
+    W --> X[Consumer Nack]
 ```
 
 ### 详细流程说明
@@ -130,25 +145,33 @@ graph TD
    - 同时，Channel 内部会为该消息生成一个 **递增的 deliveryTag**
    - 把它放到一个"未确认消息 Map"中（仅在开启 Confirm 模式时）
 
-2. **Broker 收到消息**
+2. **Broker 收到消息并立即持久化**
    - 根据 BasicProperties（包括持久化标志）尝试存储消息
-   - 将消息路由到对应的 Exchange → Queue
-   - 如果存储成功，Broker 会准备返回 Ack；如果失败，返回 Nack
+   - **持久化成功** → 准备返回 Ack
+   - **持久化失败** → 准备返回 Nack
 
-3. **Broker → 生产者**
-   - Broker 通过 AMQP 协议返回一条 Confirm 消息帧（包含 deliveryTag、ack/nack、multiple）
+3. **消息路由处理**
+   - 持久化成功后，将消息路由到对应的 Exchange
+   - Exchange 进行路由检查：
+     - **路由成功** → 消息进入目标 Queue
+     - **路由失败** → 触发 Return 机制（如果设置了 mandatory=true）
+
+4. **Confirm 机制处理**
+   - Broker 通过 AMQP 协议返回 Confirm 消息帧（包含 deliveryTag、ack/nack、multiple）
    - 生产者的 Channel 收到后，触发内部 Confirm 处理逻辑
+   - Channel 从"未确认 Map"中找到对应 deliveryTag 的消息，移除并触发回调
 
-4. **ConfirmListener 回调**
-   - Channel 从"未确认 Map"中找到对应 deliveryTag 的消息
-   - 移除它，并调用生产者注册的 Confirm 回调函数（异步模式）或让阻塞的同步方法返回
-
-5. **Return 机制（可选）**
-   - 如果 basicPublish 时指定了 mandatory=true，且消息未能路由到任何队列
-   - Broker 会返回 Basic.Return 消息帧
+5. **Return 机制处理（可选）**
+   - 如果路由失败且设置了 mandatory=true
+   - Broker 返回 Basic.Return 消息帧
    - 生产者通过 ReturnCallback 接收该事件，决定是否重试或丢弃
 
-这一过程确保了 **生产者可以明确知道消息是成功投递到 Broker 还是失败**，避免了"黑箱发送"。
+6. **消费者处理**
+   - 消费者从 Queue 获取消息
+   - **消费成功** → 发送 Consumer Ack
+   - **消费失败** → 发送 Consumer Nack
+
+这一过程确保了 **生产者可以明确知道消息的完整投递状态**，避免了"黑箱发送"，实现了端到端的消息可靠性保障。
 
 ---
 

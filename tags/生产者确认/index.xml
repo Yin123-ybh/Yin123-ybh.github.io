@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>生产者确认 on Cecilia-塞西莉娅</title><link>https://Yin123-ybh.github.io/tags/%E7%94%9F%E4%BA%A7%E8%80%85%E7%A1%AE%E8%AE%A4/</link><description>Recent content in 生产者确认 on Cecilia-塞西莉娅</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>Cecilia-塞西莉娅</copyright><lastBuildDate>Thu, 14 Aug 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://Yin123-ybh.github.io/tags/%E7%94%9F%E4%BA%A7%E8%80%85%E7%A1%AE%E8%AE%A4/index.xml" rel="self" type="application/rss+xml"/><item><title>RabbitMQ 生产者可靠性与确认机制全解析</title><link>https://Yin123-ybh.github.io/p/rabbitmq-%E7%94%9F%E4%BA%A7%E8%80%85%E5%8F%AF%E9%9D%A0%E6%80%A7%E4%B8%8E%E7%A1%AE%E8%AE%A4%E6%9C%BA%E5%88%B6%E5%85%A8%E8%A7%A3%E6%9E%90/</link><pubDate>Thu, 14 Aug 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/rabbitmq-%E7%94%9F%E4%BA%A7%E8%80%85%E5%8F%AF%E9%9D%A0%E6%80%A7%E4%B8%8E%E7%A1%AE%E8%AE%A4%E6%9C%BA%E5%88%B6%E5%85%A8%E8%A7%A3%E6%9E%90/</guid><description>&lt;h1 id="rabbitmq-生产者可靠性与确认机制全解析">RabbitMQ 生产者可靠性与确认机制全解析
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>生产者确认 on Cecilia-塞西莉娅</title><link>https://Yin123-ybh.github.io/tags/%E7%94%9F%E4%BA%A7%E8%80%85%E7%A1%AE%E8%AE%A4/</link><description>Recent content in 生产者确认 on Cecilia-塞西莉娅</description><generator>Hugo -- gohugo.io</generator><language>en</language><copyright>Cecilia-塞西莉娅</copyright><lastBuildDate>Tue, 14 Jan 2025 00:00:00 +0000</lastBuildDate><atom:link href="https://Yin123-ybh.github.io/tags/%E7%94%9F%E4%BA%A7%E8%80%85%E7%A1%AE%E8%AE%A4/index.xml" rel="self" type="application/rss+xml"/><item><title>RabbitMQ 生产者可靠性与确认机制全解析</title><link>https://Yin123-ybh.github.io/p/rabbitmq-%E7%94%9F%E4%BA%A7%E8%80%85%E5%8F%AF%E9%9D%A0%E6%80%A7%E4%B8%8E%E7%A1%AE%E8%AE%A4%E6%9C%BA%E5%88%B6%E5%85%A8%E8%A7%A3%E6%9E%90/</link><pubDate>Tue, 14 Jan 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/rabbitmq-%E7%94%9F%E4%BA%A7%E8%80%85%E5%8F%AF%E9%9D%A0%E6%80%A7%E4%B8%8E%E7%A1%AE%E8%AE%A4%E6%9C%BA%E5%88%B6%E5%85%A8%E8%A7%A3%E6%9E%90/</guid><description>&lt;h1 id="rabbitmq-生产者可靠性与确认机制全解析">RabbitMQ 生产者可靠性与确认机制全解析
 &lt;/h1>&lt;p>在分布式系统中，消息队列作为解耦和异步处理的核心组件，其可靠性至关重要。本文将从生产者角度深入解析RabbitMQ的确认机制，包括Confirm机制、Return机制、同步异步模式对比，以及完整的代码实现和最佳实践。&lt;/p>
 &lt;hr>
 &lt;h2 id="目录">目录
@@ -141,26 +141,56 @@
 &lt;/span>&lt;span class="lnt">16
 &lt;/span>&lt;span class="lnt">17
 &lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
+&lt;/span>&lt;span class="lnt">26
+&lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">graph TD
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> A[生产者] --&amp;gt; B[Channel]
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B --&amp;gt; C[Broker]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C --&amp;gt; D[Exchange]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; E[Queue]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> E --&amp;gt; F[消费者]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C --&amp;gt; D[消息持久化]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; E[Exchange]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> E --&amp;gt; F[路由检查]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F --&amp;gt; G[Queue]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> G --&amp;gt; H[消费者]
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B --&amp;gt; G[deliveryTag生成]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> G --&amp;gt; H[未确认消息Map]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H --&amp;gt; I[Confirm机制]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B --&amp;gt; I[deliveryTag生成]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I --&amp;gt; J[未确认消息Map]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> J --&amp;gt; K[Confirm机制]
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C --&amp;gt; J[消息持久化]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> J --&amp;gt; K[Ack/Nack返回]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> K --&amp;gt; I
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; L[持久化成功]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> L --&amp;gt; M[Ack返回]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> M --&amp;gt; K
 &lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; L[路由检查]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> L --&amp;gt; M[Return机制]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> M --&amp;gt; N[ReturnCallback]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; N[持久化失败]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> N --&amp;gt; O[Nack返回]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> O --&amp;gt; K
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F --&amp;gt; P[路由成功]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> P --&amp;gt; Q[消息进入Queue]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F --&amp;gt; R[路由失败]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> R --&amp;gt; S[Return机制]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> S --&amp;gt; T[ReturnCallback]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H --&amp;gt; U[消费成功]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> U --&amp;gt; V[Consumer Ack]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H --&amp;gt; W[消费失败]
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> W --&amp;gt; X[Consumer Nack]
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;h3 id="详细流程说明">详细流程说明
@@ -174,37 +204,51 @@
 &lt;/ul>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;strong>Broker 收到消息&lt;/strong>&lt;/p>
+&lt;p>&lt;strong>Broker 收到消息并立即持久化&lt;/strong>&lt;/p>
 &lt;ul>
 &lt;li>根据 BasicProperties（包括持久化标志）尝试存储消息&lt;/li>
-&lt;li>将消息路由到对应的 Exchange → Queue&lt;/li>
-&lt;li>如果存储成功，Broker 会准备返回 Ack；如果失败，返回 Nack&lt;/li>
+&lt;li>&lt;strong>持久化成功&lt;/strong> → 准备返回 Ack&lt;/li>
+&lt;li>&lt;strong>持久化失败&lt;/strong> → 准备返回 Nack&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;strong>Broker → 生产者&lt;/strong>&lt;/p>
+&lt;p>&lt;strong>消息路由处理&lt;/strong>&lt;/p>
 &lt;ul>
-&lt;li>Broker 通过 AMQP 协议返回一条 Confirm 消息帧（包含 deliveryTag、ack/nack、multiple）&lt;/li>
+&lt;li>持久化成功后，将消息路由到对应的 Exchange&lt;/li>
+&lt;li>Exchange 进行路由检查：
+&lt;ul>
+&lt;li>&lt;strong>路由成功&lt;/strong> → 消息进入目标 Queue&lt;/li>
+&lt;li>&lt;strong>路由失败&lt;/strong> → 触发 Return 机制（如果设置了 mandatory=true）&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Confirm 机制处理&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>Broker 通过 AMQP 协议返回 Confirm 消息帧（包含 deliveryTag、ack/nack、multiple）&lt;/li>
 &lt;li>生产者的 Channel 收到后，触发内部 Confirm 处理逻辑&lt;/li>
+&lt;li>Channel 从&amp;quot;未确认 Map&amp;quot;中找到对应 deliveryTag 的消息，移除并触发回调&lt;/li>
 &lt;/ul>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;strong>ConfirmListener 回调&lt;/strong>&lt;/p>
+&lt;p>&lt;strong>Return 机制处理（可选）&lt;/strong>&lt;/p>
 &lt;ul>
-&lt;li>Channel 从&amp;quot;未确认 Map&amp;quot;中找到对应 deliveryTag 的消息&lt;/li>
-&lt;li>移除它，并调用生产者注册的 Confirm 回调函数（异步模式）或让阻塞的同步方法返回&lt;/li>
-&lt;/ul>
-&lt;/li>
-&lt;li>
-&lt;p>&lt;strong>Return 机制（可选）&lt;/strong>&lt;/p>
-&lt;ul>
-&lt;li>如果 basicPublish 时指定了 mandatory=true，且消息未能路由到任何队列&lt;/li>
-&lt;li>Broker 会返回 Basic.Return 消息帧&lt;/li>
+&lt;li>如果路由失败且设置了 mandatory=true&lt;/li>
+&lt;li>Broker 返回 Basic.Return 消息帧&lt;/li>
 &lt;li>生产者通过 ReturnCallback 接收该事件，决定是否重试或丢弃&lt;/li>
 &lt;/ul>
 &lt;/li>
+&lt;li>
+&lt;p>&lt;strong>消费者处理&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>消费者从 Queue 获取消息&lt;/li>
+&lt;li>&lt;strong>消费成功&lt;/strong> → 发送 Consumer Ack&lt;/li>
+&lt;li>&lt;strong>消费失败&lt;/strong> → 发送 Consumer Nack&lt;/li>
+&lt;/ul>
+&lt;/li>
 &lt;/ol>
-&lt;p>这一过程确保了 &lt;strong>生产者可以明确知道消息是成功投递到 Broker 还是失败&lt;/strong>，避免了&amp;quot;黑箱发送&amp;quot;。&lt;/p>
+&lt;p>这一过程确保了 &lt;strong>生产者可以明确知道消息的完整投递状态&lt;/strong>，避免了&amp;quot;黑箱发送&amp;quot;，实现了端到端的消息可靠性保障。&lt;/p>
 &lt;hr>
 &lt;h2 id="核心概念详解">核心概念详解
 &lt;/h2>&lt;h3 id="1-broker">1. Broker
