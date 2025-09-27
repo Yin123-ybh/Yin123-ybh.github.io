@@ -8239,7 +8239,23 @@ data-flex-basis="463px"
 &lt;p>Websites built with Hugo are extremely fast, secure and can be deployed anywhere including, AWS, GitHub Pages, Heroku, Netlify and any other hosting provider.&lt;/p>
 &lt;p>Learn more and contribute on &lt;a class="link" href="https://github.com/gohugoio" target="_blank" rel="noopener"
 >GitHub&lt;/a>.&lt;/p></description></item><item><title/><link>https://Yin123-ybh.github.io/p/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/</guid><description>&lt;h1 id="hash咖啡后端改造指南-第二部分-实体类和分布式锁实现">Hash咖啡后端改造指南-第二部分-实体类和分布式锁实现
-&lt;/h1>&lt;h2 id="概述">概述
+&lt;/h1>&lt;h2 id="目录">目录
+&lt;/h2>&lt;ol>
+&lt;li>&lt;a class="link" href="#1-%e9%a1%b9%e7%9b%ae%e6%a6%82%e8%bf%b0" >项目概述&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#2-%e5%ae%9e%e4%bd%93%e7%b1%bb%e8%ae%be%e8%ae%a1" >实体类设计&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#3-%e5%88%86%e5%b8%83%e5%bc%8f%e9%94%81%e5%ae%9e%e7%8e%b0" >分布式锁实现&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#4-lua%e8%84%9a%e6%9c%ac%e4%bc%98%e5%8c%96" >Lua脚本优化&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#5-%e6%95%b0%e6%8d%ae%e5%ba%93%e6%93%8d%e4%bd%9c%e4%bc%98%e5%8c%96" >数据库操作优化&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#6-%e7%bc%93%e5%ad%98%e7%ad%96%e7%95%a5" >缓存策略&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#7-%e5%bc%82%e5%b8%b8%e5%a4%84%e7%90%86" >异常处理&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#8-%e6%80%a7%e8%83%bd%e7%9b%91%e6%8e%a7" >性能监控&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#9-%e4%b8%9a%e5%8a%a1%e6%b5%81%e7%a8%8b%e8%af%a6%e8%a7%a3" >业务流程详解&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#10-%e6%80%a7%e8%83%bd%e4%bc%98%e5%8c%96%e7%ad%96%e7%95%a5" >性能优化策略&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#11-%e7%9b%91%e6%8e%a7%e5%92%8c%e5%91%8a%e8%ad%a6" >监控和告警&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#12-%e6%b5%8b%e8%af%95%e7%ad%96%e7%95%a5" >测试策略&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#13-%e9%83%a8%e7%bd%b2%e5%92%8c%e8%bf%90%e7%bb%b4" >部署和运维&lt;/a>&lt;/li>
+&lt;/ol>
+&lt;h2 id="概述">概述
 &lt;/h2>&lt;p>本部分主要介绍Hash咖啡项目中秒杀和优惠券功能的实体类设计、分布式锁实现，以及相关的Service层扩展。通过Lua脚本与Redisson分布式锁防止优惠券超卖与重复获取，同时通过MySQL数据库的原子性操作保证库存扣减的线程安全。&lt;/p>
 &lt;h2 id="1-实体类扩展">1. 实体类扩展
 &lt;/h2>&lt;h3 id="11-用户实体类扩展">1.1 用户实体类扩展
@@ -10546,7 +10562,24 @@ data-flex-basis="463px"
 &lt;li>&lt;strong>恢复告警&lt;/strong>: 设置恢复情况告警&lt;/li>
 &lt;/ol>
 &lt;p>通过以上实现，我们建立了一个完整的分布式锁防超卖系统，确保了秒杀和优惠券功能的线程安全性和数据一致性。&lt;/p></description></item><item><title/><link>https://Yin123-ybh.github.io/p/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/</guid><description>&lt;h1 id="hash咖啡后端改造指南-第三部分-消息队列和api接口">Hash咖啡后端改造指南-第三部分-消息队列和API接口
-&lt;/h1>&lt;h2 id="概述">概述
+&lt;/h1>&lt;h2 id="目录">目录
+&lt;/h2>&lt;ol>
+&lt;li>&lt;a class="link" href="#1-%e9%a1%b9%e7%9b%ae%e6%a6%82%e8%bf%b0" >项目概述&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#2-%e6%b6%88%e6%81%af%e9%98%9f%e5%88%97%e9%85%8d%e7%bd%ae" >消息队列配置&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#3-%e6%b6%88%e6%81%af%e5%ae%9e%e4%bd%93%e7%b1%bb" >消息实体类&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#4-%e6%b6%88%e6%81%af%e7%94%9f%e4%ba%a7%e8%80%85%e6%9c%8d%e5%8a%a1" >消息生产者服务&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#5-%e6%b6%88%e6%81%af%e6%b6%88%e8%b4%b9%e8%80%85%e6%9c%8d%e5%8a%a1" >消息消费者服务&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#6-api%e6%8e%a5%e5%8f%a3%e5%ae%9e%e7%8e%b0" >API接口实现&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#7-nginx%e9%85%8d%e7%bd%ae" >Nginx配置&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#8-%e9%83%a8%e7%bd%b2%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9" >部署注意事项&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#9-%e6%b6%88%e6%81%af%e9%98%9f%e5%88%97%e9%ab%98%e7%ba%a7%e7%89%b9%e6%80%a7" >消息队列高级特性&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#10-%e6%b5%81%e6%8e%a7%e5%92%8c%e7%86%94%e6%96%ad" >流控和熔断&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#11-%e7%9b%91%e6%8e%a7%e5%92%8c%e5%91%8a%e8%ad%a6" >监控和告警&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#12-%e6%80%a7%e8%83%bd%e4%bc%98%e5%8c%96" >性能优化&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#13-%e5%ae%89%e5%85%a8%e9%98%b2%e6%8a%a4" >安全防护&lt;/a>&lt;/li>
+&lt;li>&lt;a class="link" href="#14-%e6%b5%8b%e8%af%95%e7%ad%96%e7%95%a5" >测试策略&lt;/a>&lt;/li>
+&lt;/ol>
+&lt;h2 id="概述">概述
 &lt;/h2>&lt;p>本部分主要介绍Hash咖啡项目中消息队列RabbitMQ的配置、消息生产者/消费者实现，以及用户端API接口的开发。通过消息队列解耦用户支付服务和积分服务，构建异步通信架构，同时实现延迟消息插件处理超时未支付订单的自动取消。&lt;/p>
 &lt;h2 id="1-rabbitmq配置">1. RabbitMQ配置
 &lt;/h2>&lt;h3 id="11-rabbitmq配置类">1.1 RabbitMQ配置类
