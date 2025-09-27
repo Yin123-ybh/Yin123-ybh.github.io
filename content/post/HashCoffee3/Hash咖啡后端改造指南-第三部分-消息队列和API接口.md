@@ -1,85 +1,14 @@
----
-title: "Hash咖啡项目后端改造指南 - 第三部分：消息队列和API接口"
-date: 2025-01-14
-draft: false
-tags: ["Java", "Spring Boot", "RabbitMQ", "消息队列", "API接口", "异步处理"]
-categories: ["后端开发"]
-description: "详细讲解RabbitMQ消息队列配置、消息实体设计、生产者消费者实现和完整的API接口开发"
----
+# Hash咖啡后端改造指南-第三部分-消息队列和API接口
 
-# Hash咖啡项目后端改造指南 - 第三部分：消息队列和API接口
+## 概述
 
-## 目录
-1. [消息队列架构设计](#消息队列架构设计)
-2. [RabbitMQ配置](#rabbitmq配置)
-3. [消息实体类设计](#消息实体类设计)
-4. [消息生产者服务](#消息生产者服务)
-5. [消息消费者服务](#消息消费者服务)
-6. [API接口开发](#api接口开发)
-7. [配置文件完善](#配置文件完善)
-8. [部署和测试](#部署和测试)
+本部分主要介绍Hash咖啡项目中消息队列RabbitMQ的配置、消息生产者/消费者实现，以及用户端API接口的开发。通过消息队列解耦用户支付服务和积分服务，构建异步通信架构，同时实现延迟消息插件处理超时未支付订单的自动取消。
 
----
+## 1. RabbitMQ配置
 
-## 消息队列架构设计
+### 1.1 RabbitMQ配置类
 
-### 1. 消息队列作用
-
-在秒杀系统中，消息队列主要用于：
-
-- **解耦服务**：支付服务和积分服务解耦
-- **异步处理**：订单支付后异步处理积分计算
-- **削峰填谷**：应对高并发场景
-- **可靠性**：消息持久化和重试机制
-
-### 2. 消息流向图
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   订单支付      │    │   积分计算      │    │   订单超时      │
-│   (同步)        │    │   (异步)        │    │   (延迟)        │
-└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
-          │                      │                      │
-          ▼                      ▼                      ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Order Pay      │    │  Points Earn    │    │  Order Timeout  │
-│  Message        │    │  Message        │    │  Message        │
-└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
-          │                      │                      │
-          └──────────────────────┼──────────────────────┘
-                                 │
-                    ┌─────────────┴─────────────┐
-                    │      RabbitMQ             │
-                    │   (消息队列)              │
-                    └─────────────┬─────────────┘
-                                 │
-                    ┌─────────────┴─────────────┐
-                    │    消息消费者              │
-                    │  (异步处理)               │
-                    └───────────────────────────┘
-```
-
----
-
-## RabbitMQ配置
-
-### 1. 添加项目依赖
-
-**修改 `sky-server/pom.xml`：**
-
-```xml
-<!-- 在现有依赖后添加以下内容 -->
-
-<!-- RabbitMQ 消息队列 -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-amqp</artifactId>
-</dependency>
-```
-
-### 2. 创建RabbitMQ配置类
-
-**创建 `sky-server/src/main/java/com/sky/config/RabbitMQConfig.java`：**
+**文件位置**: `sky-server/src/main/java/com/sky/config/RabbitMQConfig.java`
 
 ```java
 package com.sky.config;
@@ -95,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * RabbitMQ配置
+ * 配置消息队列、交换机、路由等，支持异步消息处理
  */
 @Configuration
 public class RabbitMQConfig {
@@ -117,112 +47,11 @@ public class RabbitMQConfig {
     // 死信队列
     public static final String ORDER_DLX_QUEUE = "order.dlx.queue";
     public static final String ORDER_DLX_EXCHANGE = "order.dlx.exchange";
+    public static final String ORDER_DLX_ROUTING_KEY = "order.dlx";
     
     /**
-     * 订单交换机
-     */
-    @Bean
-    public DirectExchange orderExchange() {
-        return new DirectExchange(ORDER_EXCHANGE, true, false);
-    }
-    
-    /**
-     * 订单队列
-     */
-    @Bean
-    public Queue orderQueue() {
-        return QueueBuilder.durable(ORDER_QUEUE)
-                .withArgument("x-dead-letter-exchange", ORDER_DLX_EXCHANGE)
-                .withArgument("x-dead-letter-routing-key", "order.dlx")
-                .build();
-    }
-    
-    /**
-     * 订单队列绑定
-     */
-    @Bean
-    public Binding orderBinding() {
-        return BindingBuilder.bind(orderQueue()).to(orderExchange()).with(ORDER_ROUTING_KEY);
-    }
-    
-    /**
-     * 积分交换机
-     */
-    @Bean
-    public DirectExchange pointsExchange() {
-        return new DirectExchange(POINTS_EXCHANGE, true, false);
-    }
-    
-    /**
-     * 积分队列
-     */
-    @Bean
-    public Queue pointsQueue() {
-        return QueueBuilder.durable(POINTS_QUEUE).build();
-    }
-    
-    /**
-     * 积分队列绑定
-     */
-    @Bean
-    public Binding pointsBinding() {
-        return BindingBuilder.bind(pointsQueue()).to(pointsExchange()).with(POINTS_ROUTING_KEY);
-    }
-    
-    /**
-     * 订单超时交换机
-     */
-    @Bean
-    public DirectExchange orderTimeoutExchange() {
-        return new DirectExchange(ORDER_TIMEOUT_EXCHANGE, true, false);
-    }
-    
-    /**
-     * 订单超时队列
-     */
-    @Bean
-    public Queue orderTimeoutQueue() {
-        return QueueBuilder.durable(ORDER_TIMEOUT_QUEUE)
-                .withArgument("x-message-ttl", 15 * 60 * 1000) // 15分钟TTL
-                .withArgument("x-dead-letter-exchange", ORDER_DLX_EXCHANGE)
-                .withArgument("x-dead-letter-routing-key", "order.timeout")
-                .build();
-    }
-    
-    /**
-     * 订单超时队列绑定
-     */
-    @Bean
-    public Binding orderTimeoutBinding() {
-        return BindingBuilder.bind(orderTimeoutQueue()).to(orderTimeoutExchange()).with(ORDER_TIMEOUT_ROUTING_KEY);
-    }
-    
-    /**
-     * 死信交换机
-     */
-    @Bean
-    public DirectExchange orderDlxExchange() {
-        return new DirectExchange(ORDER_DLX_EXCHANGE, true, false);
-    }
-    
-    /**
-     * 死信队列
-     */
-    @Bean
-    public Queue orderDlxQueue() {
-        return QueueBuilder.durable(ORDER_DLX_QUEUE).build();
-    }
-    
-    /**
-     * 死信队列绑定
-     */
-    @Bean
-    public Binding orderDlxBinding() {
-        return BindingBuilder.bind(orderDlxQueue()).to(orderDlxExchange()).with("order.dlx");
-    }
-    
-    /**
-     * JSON消息转换器
+     * 消息转换器
+     * 使用Jackson2JsonMessageConverter进行JSON序列化
      */
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
@@ -231,187 +60,239 @@ public class RabbitMQConfig {
     
     /**
      * RabbitTemplate配置
+     * 配置消息发送模板，支持消息确认和返回机制
      */
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
         RabbitTemplate template = new RabbitTemplate(connectionFactory);
         template.setMessageConverter(messageConverter());
+        template.setMandatory(true);
+        template.setReturnCallback((message, replyCode, replyText, exchange, routingKey) -> {
+            System.out.println("消息发送失败: " + message + ", 原因: " + replyText);
+        });
         return template;
     }
     
     /**
      * 消费者容器工厂配置
+     * 配置消费者参数，支持手动确认和限流
      */
     @Bean
     public RabbitListenerContainerFactory<?> rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
         SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
         factory.setConnectionFactory(connectionFactory);
-        
-        // 设置并发消费者数量
+        factory.setMessageConverter(messageConverter());
+        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         factory.setConcurrentConsumers(3);
         factory.setMaxConcurrentConsumers(10);
-        
-        // 设置预取数量
         factory.setPrefetchCount(1);
-        
-        // 设置手动确认
-        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
-        
         return factory;
+    }
+    
+    // ========== 订单相关配置 ==========
+    
+    /**
+     * 订单交换机
+     * 使用DirectExchange，支持精确路由
+     */
+    @Bean
+    public DirectExchange orderExchange() {
+        return new DirectExchange(ORDER_EXCHANGE, true, false);
+    }
+    
+    /**
+     * 订单队列
+     * 持久化队列，支持消息持久化
+     */
+    @Bean
+    public Queue orderQueue() {
+        return QueueBuilder.durable(ORDER_QUEUE).build();
+    }
+    
+    /**
+     * 订单队列绑定
+     * 绑定队列到交换机，设置路由键
+     */
+    @Bean
+    public Binding orderBinding() {
+        return BindingBuilder.bind(orderQueue()).to(orderExchange()).with(ORDER_ROUTING_KEY);
+    }
+    
+    // ========== 积分相关配置 ==========
+    
+    /**
+     * 积分交换机
+     * 使用DirectExchange，支持精确路由
+     */
+    @Bean
+    public DirectExchange pointsExchange() {
+        return new DirectExchange(POINTS_EXCHANGE, true, false);
+    }
+    
+    /**
+     * 积分队列
+     * 持久化队列，支持消息持久化
+     */
+    @Bean
+    public Queue pointsQueue() {
+        return QueueBuilder.durable(POINTS_QUEUE).build();
+    }
+    
+    /**
+     * 积分队列绑定
+     * 绑定队列到交换机，设置路由键
+     */
+    @Bean
+    public Binding pointsBinding() {
+        return BindingBuilder.bind(pointsQueue()).to(pointsExchange()).with(POINTS_ROUTING_KEY);
+    }
+    
+    // ========== 订单超时相关配置 ==========
+    
+    /**
+     * 订单超时交换机
+     * 使用DirectExchange，支持精确路由
+     */
+    @Bean
+    public DirectExchange orderTimeoutExchange() {
+        return new DirectExchange(ORDER_TIMEOUT_EXCHANGE, true, false);
+    }
+    
+    /**
+     * 订单超时队列
+     * 持久化队列，支持消息持久化
+     */
+    @Bean
+    public Queue orderTimeoutQueue() {
+        return QueueBuilder.durable(ORDER_TIMEOUT_QUEUE).build();
+    }
+    
+    /**
+     * 订单超时队列绑定
+     * 绑定队列到交换机，设置路由键
+     */
+    @Bean
+    public Binding orderTimeoutBinding() {
+        return BindingBuilder.bind(orderTimeoutQueue()).to(orderTimeoutExchange()).with(ORDER_TIMEOUT_ROUTING_KEY);
+    }
+    
+    // ========== 死信队列配置 ==========
+    
+    /**
+     * 死信交换机
+     * 使用DirectExchange，支持精确路由
+     */
+    @Bean
+    public DirectExchange orderDlxExchange() {
+        return new DirectExchange(ORDER_DLX_EXCHANGE, true, false);
+    }
+    
+    /**
+     * 死信队列
+     * 持久化队列，支持消息持久化
+     */
+    @Bean
+    public Queue orderDlxQueue() {
+        return QueueBuilder.durable(ORDER_DLX_QUEUE).build();
+    }
+    
+    /**
+     * 死信队列绑定
+     * 绑定队列到交换机，设置路由键
+     */
+    @Bean
+    public Binding orderDlxBinding() {
+        return BindingBuilder.bind(orderDlxQueue()).to(orderDlxExchange()).with(ORDER_DLX_ROUTING_KEY);
     }
 }
 ```
 
----
+**配置特点**:
+1. **消息持久化**: 确保消息不丢失
+2. **手动确认**: 提高消息处理可靠性
+3. **限流配置**: 防止消费者过载
+4. **死信队列**: 处理失败消息
 
-## 消息实体类设计
+### 1.2 配置文件更新
 
-### 1. 订单支付消息
+**文件位置**: `sky-server/src/main/resources/application.yml`
 
-**创建 `sky-pojo/src/main/java/com/sky/entity/message/OrderPayMessage.java`：**
+```yaml
+# 在现有配置基础上添加以下配置
 
-```java
-package com.sky.entity.message;
+spring:
+  # RabbitMQ配置
+  rabbitmq:
+    host: ${sky.rabbitmq.host:localhost}
+    port: ${sky.rabbitmq.port:5672}
+    username: ${sky.rabbitmq.username:guest}
+    password: ${sky.rabbitmq.password:guest}
+    virtual-host: ${sky.rabbitmq.virtual-host:/}
+    connection-timeout: 15000
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    listener:
+      simple:
+        acknowledge-mode: manual
+        retry:
+          enabled: true
+          max-attempts: 3
+          initial-interval: 1000
+          max-interval: 10000
+          multiplier: 2
+        concurrency: 3
+        max-concurrency: 10
+        prefetch: 1
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+  # Redis配置
+  redis:
+    host: ${sky.redis.host}
+    port: ${sky.redis.port}
+    database: ${sky.redis.database}
+    password: ${sky.redis.password}
+    timeout: 5000ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: -1ms
+        max-idle: 8
+        min-idle: 0
 
-/**
- * 订单支付消息
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class OrderPayMessage implements Serializable {
-    private static final long serialVersionUID = 1L;
-    
-    /**
-     * 订单ID
-     */
-    private Long orderId;
-    
-    /**
-     * 用户ID
-     */
-    private Long userId;
-    
-    /**
-     * 支付金额
-     */
-    private BigDecimal amount;
-    
-    /**
-     * 支付时间
-     */
-    private LocalDateTime payTime;
-    
-    /**
-     * 支付方式
-     */
-    private Integer payMethod;
-}
+# 日志配置
+logging:
+  level:
+    com:
+      sky:
+        mapper: debug
+        service: info
+        controller: info
+    org.springframework.amqp: debug
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss}){faint} %clr([%thread]){faint} %clr(%-5level) %clr(%logger{36}){cyan} %clr(-){faint} %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/sky-server.log
+    max-size: 100MB
+    max-history: 30
+
+# 自定义配置
+sky:
+  redis:
+    seckill:
+      prefix: "seckill:"
 ```
 
-### 2. 积分获得消息
+**配置说明**:
+- **连接配置**: 支持环境变量配置
+- **确认机制**: 支持消息确认和返回
+- **重试机制**: 支持消息重试
+- **限流配置**: 支持消费者限流
 
-**创建 `sky-pojo/src/main/java/com/sky/entity/message/PointsEarnMessage.java`：**
+## 2. 消息生产者服务
 
-```java
-package com.sky.entity.message;
+### 2.1 消息生产者接口
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-/**
- * 积分获得消息
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class PointsEarnMessage implements Serializable {
-    private static final long serialVersionUID = 1L;
-    
-    /**
-     * 用户ID
-     */
-    private Long userId;
-    
-    /**
-     * 订单ID
-     */
-    private Long orderId;
-    
-    /**
-     * 获得积分
-     */
-    private Integer points;
-    
-    /**
-     * 获得时间
-     */
-    private LocalDateTime earnTime;
-}
-```
-
-### 3. 订单超时消息
-
-**创建 `sky-pojo/src/main/java/com/sky/entity/message/OrderTimeoutMessage.java`：**
-
-```java
-package com.sky.entity.message;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-/**
- * 订单超时消息
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class OrderTimeoutMessage implements Serializable {
-    private static final long serialVersionUID = 1L;
-    
-    /**
-     * 订单ID
-     */
-    private Long orderId;
-    
-    /**
-     * 用户ID
-     */
-    private Long userId;
-    
-    /**
-     * 超时时间
-     */
-    private LocalDateTime timeoutTime;
-}
-```
-
----
-
-## 消息生产者服务
-
-### 1. 创建消息生产者服务接口
-
-**创建 `sky-server/src/main/java/com/sky/service/MessageProducerService.java`：**
+**文件位置**: `sky-server/src/main/java/com/sky/service/MessageProducerService.java`
 
 ```java
 package com.sky.service;
@@ -422,6 +303,7 @@ import com.sky.entity.message.PointsEarnMessage;
 
 /**
  * 消息生产者服务接口
+ * 定义消息发送的接口规范
  */
 public interface MessageProducerService {
     
@@ -445,9 +327,9 @@ public interface MessageProducerService {
 }
 ```
 
-### 2. 创建消息生产者服务实现类
+### 2.2 消息生产者实现
 
-**创建 `sky-server/src/main/java/com/sky/service/impl/MessageProducerServiceImpl.java`：**
+**文件位置**: `sky-server/src/main/java/com/sky/service/impl/MessageProducerServiceImpl.java`
 
 ```java
 package com.sky.service.impl;
@@ -464,6 +346,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * 消息生产者服务实现类
+ * 实现消息发送的具体逻辑
  */
 @Service
 @Slf4j
@@ -474,6 +357,7 @@ public class MessageProducerServiceImpl implements MessageProducerService {
     
     /**
      * 发送订单支付消息
+     * 用于异步处理订单支付后的业务逻辑
      */
     @Override
     public void sendOrderPayMessage(OrderPayMessage message) {
@@ -487,14 +371,16 @@ public class MessageProducerServiceImpl implements MessageProducerService {
                     return msg;
                 }
             );
-            log.info("订单支付消息发送成功：orderId={}, userId={}", message.getOrderId(), message.getUserId());
+            log.info("订单支付消息发送成功: {}", message);
         } catch (Exception e) {
-            log.error("发送订单支付消息失败：{}", e.getMessage(), e);
+            log.error("订单支付消息发送失败: {}", message, e);
+            throw new RuntimeException("消息发送失败", e);
         }
     }
     
     /**
      * 发送积分获得消息
+     * 用于异步处理用户积分增加
      */
     @Override
     public void sendPointsEarnMessage(PointsEarnMessage message) {
@@ -508,14 +394,16 @@ public class MessageProducerServiceImpl implements MessageProducerService {
                     return msg;
                 }
             );
-            log.info("积分获得消息发送成功：userId={}, points={}", message.getUserId(), message.getPoints());
+            log.info("积分获得消息发送成功: {}", message);
         } catch (Exception e) {
-            log.error("发送积分获得消息失败：{}", e.getMessage(), e);
+            log.error("积分获得消息发送失败: {}", message, e);
+            throw new RuntimeException("消息发送失败", e);
         }
     }
     
     /**
      * 发送订单超时消息
+     * 用于异步处理订单超时取消
      */
     @Override
     public void sendOrderTimeoutMessage(OrderTimeoutMessage message) {
@@ -526,25 +414,29 @@ public class MessageProducerServiceImpl implements MessageProducerService {
                 message,
                 msg -> {
                     msg.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
-                    msg.getMessageProperties().setExpiration("900000"); // 15分钟
                     return msg;
                 }
             );
-            log.info("订单超时消息发送成功：orderId={}, userId={}", message.getOrderId(), message.getUserId());
+            log.info("订单超时消息发送成功: {}", message);
         } catch (Exception e) {
-            log.error("发送订单超时消息失败：{}", e.getMessage(), e);
+            log.error("订单超时消息发送失败: {}", message, e);
+            throw new RuntimeException("消息发送失败", e);
         }
     }
 }
 ```
 
----
+**设计特点**:
+1. **消息持久化**: 确保消息不丢失
+2. **异常处理**: 完善的异常处理机制
+3. **日志记录**: 详细的操作日志
+4. **异步处理**: 提高系统响应速度
 
-## 消息消费者服务
+## 3. 消息消费者服务
 
-### 1. 创建消息消费者服务接口
+### 3.1 消息消费者接口
 
-**创建 `sky-server/src/main/java/com/sky/service/MessageConsumerService.java`：**
+**文件位置**: `sky-server/src/main/java/com/sky/service/MessageConsumerService.java`
 
 ```java
 package com.sky.service;
@@ -555,6 +447,7 @@ import com.sky.entity.message.PointsEarnMessage;
 
 /**
  * 消息消费者服务接口
+ * 定义消息消费的接口规范
  */
 public interface MessageConsumerService {
     
@@ -578,9 +471,9 @@ public interface MessageConsumerService {
 }
 ```
 
-### 2. 创建消息消费者服务实现类
+### 3.2 消息消费者实现
 
-**创建 `sky-server/src/main/java/com/sky/service/impl/MessageConsumerServiceImpl.java`：**
+**文件位置**: `sky-server/src/main/java/com/sky/service/impl/MessageConsumerServiceImpl.java`
 
 ```java
 package com.sky.service.impl;
@@ -604,424 +497,137 @@ import java.io.IOException;
 
 /**
  * 消息消费者服务实现类
+ * 实现消息消费的具体逻辑
  */
 @Service
 @Slf4j
 public class MessageConsumerServiceImpl implements MessageConsumerService {
     
     @Autowired
-    private UserService userService;
+    private OrderService orderService;
     
     @Autowired
-    private OrderService orderService;
+    private UserService userService;
     
     @Autowired
     private MessageProducerService messageProducerService;
     
     /**
-     * 处理订单支付消息（RabbitMQ监听器）
+     * 处理订单支付消息
+     * 异步处理订单支付后的业务逻辑
      */
-    @RabbitListener(queues = "order.queue", containerFactory = "rabbitListenerContainerFactory")
+    @RabbitListener(queues = "order.queue")
     public void handleOrderPayMessage(OrderPayMessage message, Channel channel, 
                                     @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
-            // 调用接口方法处理业务逻辑
-            handleOrderPayMessage(message);
+            log.info("收到订单支付消息: {}", message);
+            
+            // 处理订单支付
+            orderService.processOrderPayment(message.getOrderId(), message.getAmount());
+            
+            // 发送积分获得消息
+            PointsEarnMessage pointsMessage = PointsEarnMessage.builder()
+                    .userId(message.getUserId())
+                    .orderId(message.getOrderId())
+                    .points(calculatePoints(message.getAmount()))
+                    .earnTime(message.getPayTime())
+                    .build();
+            
+            messageProducerService.sendPointsEarnMessage(pointsMessage);
             
             // 手动确认消息
             channel.basicAck(deliveryTag, false);
-            log.info("订单支付消息处理成功：orderId={}", message.getOrderId());
+            log.info("订单支付消息处理成功: {}", message);
             
         } catch (Exception e) {
-            log.error("处理订单支付消息失败：orderId={}, error={}", message.getOrderId(), e.getMessage(), e);
+            log.error("订单支付消息处理失败: {}", message, e);
             try {
-                // 拒绝消息并重新入队
-                channel.basicNack(deliveryTag, false, true);
+                // 拒绝消息，不重新入队
+                channel.basicNack(deliveryTag, false, false);
             } catch (IOException ioException) {
-                log.error("拒绝消息失败：{}", ioException.getMessage(), ioException);
+                log.error("消息拒绝失败", ioException);
             }
         }
     }
     
     /**
-     * 处理积分获得消息（RabbitMQ监听器）
+     * 处理积分获得消息
+     * 异步处理用户积分增加
      */
-    @RabbitListener(queues = "points.queue", containerFactory = "rabbitListenerContainerFactory")
+    @RabbitListener(queues = "points.queue")
     public void handlePointsEarnMessage(PointsEarnMessage message, Channel channel, 
                                       @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
-            // 调用接口方法处理业务逻辑
-            handlePointsEarnMessage(message);
+            log.info("收到积分获得消息: {}", message);
+            
+            // 添加用户积分
+            userService.addUserPoints(message.getUserId(), message.getPoints(), message.getOrderId());
             
             // 手动确认消息
             channel.basicAck(deliveryTag, false);
-            log.info("积分获得消息处理成功：userId={}, points={}", message.getUserId(), message.getPoints());
+            log.info("积分获得消息处理成功: {}", message);
             
         } catch (Exception e) {
-            log.error("处理积分获得消息失败：userId={}, error={}", message.getUserId(), e.getMessage(), e);
+            log.error("积分获得消息处理失败: {}", message, e);
             try {
-                // 拒绝消息并重新入队
-                channel.basicNack(deliveryTag, false, true);
+                // 拒绝消息，不重新入队
+                channel.basicNack(deliveryTag, false, false);
             } catch (IOException ioException) {
-                log.error("拒绝消息失败：{}", ioException.getMessage(), ioException);
+                log.error("消息拒绝失败", ioException);
             }
         }
     }
     
     /**
-     * 处理订单超时消息（RabbitMQ监听器）
+     * 处理订单超时消息
+     * 异步处理订单超时取消
      */
-    @RabbitListener(queues = "order.dlx.queue", containerFactory = "rabbitListenerContainerFactory")
+    @RabbitListener(queues = "order.timeout.queue")
     public void handleOrderTimeoutMessage(OrderTimeoutMessage message, Channel channel, 
                                         @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
         try {
-            // 调用接口方法处理业务逻辑
-            handleOrderTimeoutMessage(message);
+            log.info("收到订单超时消息: {}", message);
+            
+            // 取消超时订单
+            orderService.cancelTimeoutOrder(message.getOrderId());
             
             // 手动确认消息
             channel.basicAck(deliveryTag, false);
-            log.info("订单超时消息处理成功：orderId={}", message.getOrderId());
+            log.info("订单超时消息处理成功: {}", message);
             
         } catch (Exception e) {
-            log.error("处理订单超时消息失败：orderId={}, error={}", message.getOrderId(), e.getMessage(), e);
+            log.error("订单超时消息处理失败: {}", message, e);
             try {
-                // 拒绝消息并重新入队
-                channel.basicNack(deliveryTag, false, true);
+                // 拒绝消息，不重新入队
+                channel.basicNack(deliveryTag, false, false);
             } catch (IOException ioException) {
-                log.error("拒绝消息失败：{}", ioException.getMessage(), ioException);
+                log.error("消息拒绝失败", ioException);
             }
         }
     }
     
     /**
-     * 处理订单支付消息（业务逻辑）
+     * 计算积分
+     * 根据订单金额计算用户获得的积分
      */
-    @Override
-    public void handleOrderPayMessage(OrderPayMessage message) {
-        log.info("开始处理订单支付消息：orderId={}, userId={}", message.getOrderId(), message.getUserId());
-        
-        // 处理订单支付逻辑
-        orderService.processOrderPayment(message.getOrderId(), message.getAmount());
-        
-        // 发送积分获得消息
-        PointsEarnMessage pointsMessage = PointsEarnMessage.builder()
-                .userId(message.getUserId())
-                .orderId(message.getOrderId())
-                .points((int) (message.getAmount().doubleValue() * 0.01)) // 1%积分
-                .earnTime(message.getPayTime())
-                .build();
-        
-        messageProducerService.sendPointsEarnMessage(pointsMessage);
-    }
-    
-    /**
-     * 处理积分获得消息（业务逻辑）
-     */
-    @Override
-    public void handlePointsEarnMessage(PointsEarnMessage message) {
-        log.info("开始处理积分获得消息：userId={}, points={}", message.getUserId(), message.getPoints());
-        
-        // 处理积分获得逻辑
-        userService.addUserPoints(message.getUserId(), message.getPoints(), message.getOrderId());
-    }
-    
-    /**
-     * 处理订单超时消息（业务逻辑）
-     */
-    @Override
-    public void handleOrderTimeoutMessage(OrderTimeoutMessage message) {
-        log.info("开始处理订单超时消息：orderId={}, userId={}", message.getOrderId(), message.getUserId());
-        
-        // 处理订单超时逻辑
-        orderService.cancelTimeoutOrder(message.getOrderId());
+    private Integer calculatePoints(java.math.BigDecimal amount) {
+        // 每消费1元获得1积分
+        return amount.intValue();
     }
 }
 ```
 
----
+**设计特点**:
+1. **手动确认**: 确保消息处理成功后才确认
+2. **异常处理**: 完善的异常处理机制
+3. **业务解耦**: 通过消息队列解耦业务逻辑
+4. **异步处理**: 提高系统响应速度
 
-## 补充Service接口方法
+## 4. 用户端API接口
 
-### 1. 在UserService接口中添加方法
+### 4.1 用户端秒杀活动控制器
 
-**修改 `sky-server/src/main/java/com/sky/service/UserService.java`：**
-
-```java
-package com.sky.service;
-
-import com.sky.dto.UserLoginDTO;
-import com.sky.entity.User;
-
-public interface UserService {
-
-    /**
-     * 微信登录
-     * @param userLoginDTO
-     * @return
-     */
-    User wxLogin(UserLoginDTO userLoginDTO);
-    
-    /**
-     * 添加用户积分
-     * @param userId 用户ID
-     * @param points 积分数量
-     * @param orderId 订单ID
-     */
-    void addUserPoints(Long userId, Integer points, Long orderId);
-}
-```
-
-### 2. 在OrderService接口中添加方法
-
-**修改 `sky-server/src/main/java/com/sky/service/OrderService.java`：**
-
-```java
-// 在现有方法后添加以下方法
-
-/**
- * 处理订单支付
- * @param orderId 订单ID
- * @param amount 支付金额
- */
-void processOrderPayment(Long orderId, BigDecimal amount);
-
-/**
- * 取消超时订单
- * @param orderId 订单ID
- */
-void cancelTimeoutOrder(Long orderId);
-```
-
-### 3. 在UserServiceImpl中添加实现
-
-**修改 `sky-server/src/main/java/com/sky/service/impl/UserServiceImpl.java`：**
-
-```java
-// 在现有方法后添加以下方法
-
-/**
- * 添加用户积分
- * @param userId 用户ID
- * @param points 积分数量
- * @param orderId 订单ID
- */
-@Override
-public void addUserPoints(Long userId, Integer points, Long orderId) {
-    // 查询用户当前积分
-    User user = userMapper.getById(userId);
-    if (user != null) {
-        // 更新用户积分
-        userMapper.updateUserPoints(userId, user.getPoints() + points);
-        log.info("用户积分增加成功：userId={}, points={}, orderId={}", userId, points, orderId);
-    }
-}
-```
-
-### 4. 在OrderServiceImpl中添加实现
-
-**修改 `sky-server/src/main/java/com/sky/service/impl/OrderServiceImpl.java`：**
-
-```java
-// 在现有方法后添加以下方法
-
-/**
- * 处理订单支付
- * @param orderId 订单ID
- * @param amount 支付金额
- */
-@Override
-public void processOrderPayment(Long orderId, BigDecimal amount) {
-    // 更新订单状态为已支付
-    Orders orders = Orders.builder()
-            .id(orderId)
-            .status(Orders.TO_BE_CONFIRMED)
-            .payStatus(Orders.PAID)
-            .checkoutTime(LocalDateTime.now())
-            .build();
-    
-    orderMapper.update(orders);
-    log.info("订单支付处理成功：orderId={}, amount={}", orderId, amount);
-}
-
-/**
- * 取消超时订单
- * @param orderId 订单ID
- */
-@Override
-public void cancelTimeoutOrder(Long orderId) {
-    // 查询订单状态
-    Orders ordersDB = orderMapper.getById(orderId);
-    if (ordersDB != null && ordersDB.getStatus().equals(Orders.PENDING_PAYMENT)) {
-        // 更新订单状态为已取消
-        Orders orders = Orders.builder()
-                .id(orderId)
-                .status(Orders.CANCELLED)
-                .cancelReason("订单超时自动取消")
-                .cancelTime(LocalDateTime.now())
-                .build();
-        
-        orderMapper.update(orders);
-        log.info("订单超时取消成功：orderId={}", orderId);
-    }
-}
-```
-
-### 5. 在CouponTemplateService接口中添加方法
-
-**修改 `sky-server/src/main/java/com/sky/service/CouponTemplateService.java`：**
-
-```java
-// 在现有方法后添加以下方法
-
-/**
- * 获取可领取的优惠券模板
- * @return 可领取的优惠券模板列表
- */
-List<CouponTemplate> getAvailableTemplates();
-```
-
-### 6. 在CouponService接口中添加方法
-
-**修改 `sky-server/src/main/java/com/sky/service/CouponService.java`：**
-
-```java
-// 在现有方法后添加以下方法
-
-/**
- * 领取优惠券
- * @param templateId 优惠券模板ID
- * @param userId 用户ID
- * @return 领取结果
- */
-String claimCoupon(Long templateId, Long userId);
-
-/**
- * 获取用户优惠券
- * @param userId 用户ID
- * @return 用户优惠券列表
- */
-List<Coupon> getUserCoupons(Long userId);
-```
-
-### 7. 在CouponTemplateServiceImpl中添加实现
-
-**修改 `sky-server/src/main/java/com/sky/service/impl/CouponTemplateServiceImpl.java`：**
-
-```java
-// 在现有方法后添加以下方法
-
-/**
- * 获取可领取的优惠券模板
- * @return 可领取的优惠券模板列表
- */
-@Override
-public List<CouponTemplate> getAvailableTemplates() {
-    // 查询状态为启用且未过期的优惠券模板
-    return couponTemplateMapper.getAvailableTemplates();
-}
-```
-
-### 8. 在CouponServiceImpl中添加实现
-
-**修改 `sky-server/src/main/java/com/sky/service/impl/CouponServiceImpl.java`：**
-
-```java
-// 在现有方法后添加以下方法
-
-/**
- * 领取优惠券
- * @param templateId 优惠券模板ID
- * @param userId 用户ID
- * @return 领取结果
- */
-@Override
-public String claimCoupon(Long templateId, Long userId) {
-    // 检查用户是否已领取该模板的优惠券
-    if (hasReceived(userId, templateId)) {
-        return "您已经领取过该优惠券了";
-    }
-    
-    // 检查优惠券模板是否存在且可用
-    CouponTemplate template = couponTemplateService.getById(templateId);
-    if (template == null || template.getStatus() != 1) {
-        return "优惠券模板不存在或已禁用";
-    }
-    
-    // 检查是否在有效期内
-    if (template.getEndTime().isBefore(LocalDateTime.now())) {
-        return "优惠券已过期";
-    }
-    
-    // 创建优惠券
-    Coupon coupon = Coupon.builder()
-            .templateId(templateId)
-            .userId(userId)
-            .status(0) // 0-未使用
-            .createTime(LocalDateTime.now())
-            .expireTime(template.getEndTime())
-            .build();
-    
-    couponMapper.insert(coupon);
-    return "优惠券领取成功";
-}
-
-/**
- * 获取用户优惠券
- * @param userId 用户ID
- * @return 用户优惠券列表
- */
-@Override
-public List<Coupon> getUserCoupons(Long userId) {
-    return couponMapper.getByUserId(userId, null);
-}
-```
-
-### 9. 添加Mapper方法
-
-**在 `UserMapper.java` 中添加：**
-```java
-/**
- * 更新用户积分
- * @param userId 用户ID
- * @param points 新积分
- */
-void updateUserPoints(@Param("userId") Long userId, @Param("points") Integer points);
-```
-
-**在 `UserMapper.xml` 中添加：**
-```xml
-<update id="updateUserPoints">
-    UPDATE user SET points = #{points} WHERE id = #{userId}
-</update>
-```
-
-**在 `CouponTemplateMapper.java` 中添加：**
-```java
-/**
- * 获取可领取的优惠券模板
- * @return 可领取的优惠券模板列表
- */
-List<CouponTemplate> getAvailableTemplates();
-```
-
-**在 `CouponTemplateMapper.xml` 中添加：**
-```xml
-<select id="getAvailableTemplates" resultType="com.sky.entity.CouponTemplate">
-    SELECT * FROM coupon_template 
-    WHERE status = 1 
-    AND start_time <= NOW() 
-    AND end_time >= NOW()
-    ORDER BY create_time DESC
-</select>
-```
-
----
-
-## API接口开发
-
-### 1. 用户端秒杀控制器
-
-**创建 `sky-server/src/main/java/com/sky/controller/user/SeckillActivityController.java`：**
+**文件位置**: `sky-server/src/main/java/com/sky/controller/user/UserSeckillActivityController.java`
 
 ```java
 package com.sky.controller.user;
@@ -1039,12 +645,13 @@ import java.util.List;
 
 /**
  * 用户端秒杀活动控制器
+ * 提供秒杀活动相关的用户端接口
  */
 @RestController
 @RequestMapping("/user/seckill/activity")
 @Api(tags = "用户端秒杀活动")
 @Slf4j
-public class SeckillActivityController {
+public class UserSeckillActivityController {
 
     @Autowired
     private SeckillActivityService seckillActivityService;
@@ -1077,9 +684,14 @@ public class SeckillActivityController {
 }
 ```
 
-### 2. 用户端优惠券控制器
+**接口说明**:
+1. **获取活动列表**: 获取当前可参与的秒杀活动
+2. **活动详情**: 获取指定活动的详细信息
+3. **参与秒杀**: 用户参与秒杀活动
 
-**创建 `sky-server/src/main/java/com/sky/controller/user/CouponController.java`：**
+### 4.2 用户端优惠券控制器
+
+**文件位置**: `sky-server/src/main/java/com/sky/controller/user/UserCouponController.java`
 
 ```java
 package com.sky.controller.user;
@@ -1095,16 +707,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
  * 用户端优惠券控制器
+ * 提供优惠券相关的用户端接口
  */
 @RestController
 @RequestMapping("/user/coupon")
 @Api(tags = "用户端优惠券")
 @Slf4j
-public class CouponController {
+public class UserCouponController {
 
     @Autowired
     private CouponTemplateService couponTemplateService;
@@ -1133,15 +747,31 @@ public class CouponController {
     @ApiOperation("获取我的优惠券")
     public Result<List<Coupon>> getMyCoupons(@RequestHeader("userId") Long userId) {
         log.info("获取用户优惠券：userId={}", userId);
-        List<Coupon> coupons = couponService.getUserCoupons(userId);
+        List<Coupon> coupons = couponService.getUserAvailableCoupons(userId);
         return Result.success(coupons);
+    }
+
+    @PostMapping("/check")
+    @ApiOperation("检查优惠券是否可用")
+    public Result<String> checkCouponAvailable(@RequestParam Long couponId,
+                                             @RequestParam BigDecimal orderAmount,
+                                             @RequestHeader("userId") Long userId) {
+        log.info("检查优惠券是否可用：couponId={}, orderAmount={}, userId={}", couponId, orderAmount, userId);
+        String result = couponService.checkCouponAvailable(couponId, userId, orderAmount);
+        return Result.success(result);
     }
 }
 ```
 
-### 3. 健康检查控制器
+**接口说明**:
+1. **获取优惠券模板**: 获取可领取的优惠券模板
+2. **领取优惠券**: 用户领取优惠券
+3. **我的优惠券**: 获取用户的优惠券列表
+4. **检查优惠券**: 检查优惠券是否可用
 
-**创建 `sky-server/src/main/java/com/sky/controller/HealthController.java`：**
+### 4.3 健康检查控制器
+
+**文件位置**: `sky-server/src/main/java/com/sky/controller/HealthController.java`
 
 ```java
 package com.sky.controller;
@@ -1157,6 +787,7 @@ import java.util.Map;
 
 /**
  * 健康检查控制器
+ * 提供系统健康状态检查接口
  */
 @RestController
 @RequestMapping("/health")
@@ -1177,7 +808,8 @@ public class HealthController {
             result.put("redis", "DOWN");
         }
         
-        result.put("status", "UP");
+        // 检查应用状态
+        result.put("application", "UP");
         result.put("timestamp", System.currentTimeMillis());
         
         return result;
@@ -1185,54 +817,145 @@ public class HealthController {
 }
 ```
 
----
+**功能说明**:
+1. **Redis检查**: 检查Redis连接状态
+2. **应用状态**: 检查应用运行状态
+3. **时间戳**: 返回检查时间
 
-## 配置文件完善
+## 5. Nginx配置更新
 
-### 1. 更新application.yml
+**文件位置**: `nginx-conf/New file.txt`
 
-**修改 `sky-server/src/main/resources/application.yml`：**
+```nginx
+# 在现有配置基础上添加以下配置
 
+    # 秒杀活动相关接口
+    location /seckill/ {
+        proxy_pass   http://localhost:8084/user/seckill/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # 优惠券相关接口
+    location /coupon/ {
+        proxy_pass   http://localhost:8084/user/coupon/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # 健康检查接口
+    location /health/ {
+        proxy_pass   http://localhost:8084/health/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+```
+
+**配置说明**:
+- **反向代理**: 将请求转发到后端服务
+- **请求头设置**: 保持原始请求信息
+- **负载均衡**: 支持多实例部署
+
+## 6. 关键特性
+
+### 6.1 消息队列解耦
+- 支付服务和积分服务完全解耦
+- 异步处理提高系统性能
+- 消息持久化保证可靠性
+
+### 6.2 削峰填谷
+- 消费者容器工厂限流配置
+- 手动ACK机制
+- 消息重试机制
+
+### 6.3 延迟消息处理
+- 订单超时自动取消
+- 死信队列处理失败消息
+- 消息TTL设置
+
+### 6.4 服务监控
+- 健康检查接口
+- 日志彩色输出
+- 性能监控
+
+## 7. 测试建议
+
+### 7.1 消息队列测试
+1. **消息发送测试**: 测试各种消息的发送
+2. **消息消费测试**: 测试消息的消费处理
+3. **异常处理测试**: 测试消息处理异常情况
+4. **性能测试**: 测试高并发消息处理
+
+### 7.2 API接口测试
+1. **秒杀接口测试**: 测试秒杀活动的参与
+2. **优惠券接口测试**: 测试优惠券的领取和使用
+3. **健康检查测试**: 测试系统健康状态
+4. **并发测试**: 测试高并发场景
+
+## 8. 部署注意事项
+
+1. **RabbitMQ配置**: 确保RabbitMQ服务正常运行
+2. **Redis配置**: 确保Redis连接配置正确
+3. **日志配置**: 确保日志文件路径存在
+4. **Nginx配置**: 确保反向代理配置正确
+
+## 9. 消息队列高级特性
+
+### 9.1 消息可靠性保证
+
+#### 9.1.1 生产者确认机制
+
+**确认模式配置**:
 ```yaml
-server:
-  port: 8084
-
 spring:
-  application:
-    name: sky-server
-  
-  # 数据库配置
-  datasource:
-    druid:
-      driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://localhost:3306/pet-cafe-shop?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=GMT%2B8
-      username: root
-      password: 123456
-
-  # Redis配置
-  redis:
-    host: localhost
-    port: 6379
-    password: 
-    database: 0
-    timeout: 5000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-wait: -1ms
-        max-idle: 8
-        min-idle: 0
-
-  # RabbitMQ配置
   rabbitmq:
-    host: localhost
-    port: 5672
-    username: guest
-    password: guest
-    virtual-host: /
-    connection-timeout: 15000
     publisher-confirm-type: correlated
     publisher-returns: true
+    template:
+      mandatory: true
+```
+
+**确认回调处理**:
+```java
+@Configuration
+public class RabbitMQConfirmConfig {
+    
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate template = new RabbitTemplate(connectionFactory);
+        
+        // 设置确认回调
+        template.setConfirmCallback((correlationData, ack, cause) -> {
+            if (ack) {
+                log.info("消息发送成功: {}", correlationData.getId());
+            } else {
+                log.error("消息发送失败: {}, 原因: {}", correlationData.getId(), cause);
+            }
+        });
+        
+        // 设置返回回调
+        template.setReturnsCallback(returned -> {
+            log.error("消息路由失败: {}, 回复码: {}, 回复文本: {}", 
+                returned.getMessage(), returned.getReplyCode(), returned.getReplyText());
+        });
+        
+        return template;
+    }
+}
+```
+
+#### 9.1.2 消费者确认机制
+
+**手动确认配置**:
+```yaml
+spring:
+  rabbitmq:
     listener:
       simple:
         acknowledge-mode: manual
@@ -1240,196 +963,1011 @@ spring:
           enabled: true
           max-attempts: 3
           initial-interval: 1000
-          max-interval: 10000
-          multiplier: 2
-
-# MyBatis配置
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.sky.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
-# 日志配置
-logging:
-  level:
-    com.sky: debug
-    org.springframework.amqp: debug
-  pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-  file:
-    name: logs/sky-server.log
-    max-size: 100MB
-    max-history: 30
 ```
 
-### 2. 创建Redisson配置
-
-**创建 `sky-server/src/main/java/com/sky/config/RedissonConfig.java`：**
-
+**消息处理示例**:
 ```java
-package com.sky.config;
-
-import org.redisson.Redisson;
-import org.redisson.api.RedissonClient;
-import org.redisson.config.Config;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
-/**
- * Redisson配置
- */
-@Configuration
-public class RedissonConfig {
-    
-    @Value("${spring.redis.host}")
-    private String host;
-    
-    @Value("${spring.redis.port}")
-    private int port;
-    
-    @Value("${spring.redis.password:}")
-    private String password;
-    
-    @Value("${spring.redis.database:0}")
-    private int database;
-    
-    @Bean
-    public RedissonClient redissonClient() {
-        Config config = new Config();
-        String address = "redis://" + host + ":" + port;
+@RabbitListener(queues = "order.pay.queue")
+public void handleOrderPay(OrderPayMessage message, Channel channel, 
+                          @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
+    try {
+        // 处理业务逻辑
+        processOrderPayment(message);
         
-        config.useSingleServer()
-                .setAddress(address)
-                .setPassword(password.isEmpty() ? null : password)
-                .setDatabase(database)
-                .setConnectionPoolSize(64)
-                .setConnectionMinimumIdleSize(10)
-                .setIdleConnectionTimeout(10000)
-                .setConnectTimeout(10000)
-                .setTimeout(3000)
-                .setRetryAttempts(3)
-                .setRetryInterval(1500);
-        
-        return Redisson.create(config);
+        // 手动确认消息
+        channel.basicAck(deliveryTag, false);
+        log.info("订单支付消息处理成功: {}", message.getOrderId());
+    } catch (Exception e) {
+        try {
+            // 拒绝消息并重新入队
+            channel.basicNack(deliveryTag, false, true);
+            log.error("订单支付消息处理失败: {}", message.getOrderId(), e);
+        } catch (IOException ioException) {
+            log.error("消息确认失败", ioException);
+        }
     }
 }
 ```
 
----
+### 9.2 消息持久化
 
-## 部署和测试
+#### 9.2.1 队列持久化
 
-### 1. 启动顺序
-
-1. **启动基础服务**：
-   ```bash
-   # 启动MySQL
-   docker run -d --name mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:8.0
-   
-   # 启动Redis
-   docker run -d --name redis -p 6379:6379 redis:6.2-alpine
-   
-   # 启动RabbitMQ
-   docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3.9-management-alpine
-   ```
-
-2. **导入数据库**：
-   ```bash
-   mysql -u root -p123456 pet-cafe-shop < script3.sql
-   ```
-
-3. **启动后端服务**：
-   ```bash
-   cd sky-server
-   mvn spring-boot:run
-   ```
-
-### 2. 测试接口
-
-**测试秒杀活动接口**：
-```bash
-# 获取当前秒杀活动
-curl -X GET "http://localhost:8084/user/seckill/activity/current"
-
-# 参与秒杀活动
-curl -X POST "http://localhost:8084/user/seckill/activity/participate/1?quantity=1" \
-     -H "userId: 1"
+**队列配置**:
+```java
+@Bean
+public Queue orderPayQueue() {
+    return QueueBuilder.durable("order.pay.queue")
+        .withArgument("x-message-ttl", 300000) // 消息TTL 5分钟
+        .withArgument("x-max-length", 10000)  // 最大长度
+        .build();
+}
 ```
 
-**测试优惠券接口**：
-```bash
-# 获取可领取的优惠券
-curl -X GET "http://localhost:8084/user/coupon/templates/available"
-
-# 领取优惠券
-curl -X POST "http://localhost:8084/user/coupon/claim?templateId=1" \
-     -H "userId: 1"
+**交换机持久化**:
+```java
+@Bean
+public TopicExchange orderExchange() {
+    return ExchangeBuilder.topicExchange("order.exchange")
+        .durable(true)
+        .build();
+}
 ```
 
-**测试健康检查**：
-```bash
-# 健康检查
-curl -X GET "http://localhost:8084/health/check"
+#### 9.2.2 消息持久化
+
+**消息属性设置**:
+```java
+public void sendOrderPayMessage(OrderPayMessage message) {
+    MessageProperties properties = new MessageProperties();
+    properties.setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+    properties.setPriority(5);
+    properties.setExpiration("300000"); // 5分钟过期
+    
+    Message msg = new Message(JSON.toJSONBytes(message), properties);
+    
+    rabbitTemplate.convertAndSend("order.exchange", "order.pay", msg);
+}
 ```
 
-### 3. 消息队列测试
+### 9.3 死信队列
 
-**访问RabbitMQ管理界面**：
-- 地址：http://localhost:15672
-- 用户名：guest
-- 密码：guest
+#### 9.3.1 死信队列配置
 
-在管理界面中可以查看：
-- 队列状态
-- 消息数量
-- 消费者连接
-- 消息路由情况
+**死信交换机配置**:
+```java
+@Bean
+public TopicExchange deadLetterExchange() {
+    return ExchangeBuilder.topicExchange("dead.letter.exchange")
+        .durable(true)
+        .build();
+}
 
----
+@Bean
+public Queue deadLetterQueue() {
+    return QueueBuilder.durable("dead.letter.queue").build();
+}
 
-## 核心特性总结
+@Bean
+public Binding deadLetterBinding() {
+    return BindingBuilder.bind(deadLetterQueue())
+        .to(deadLetterExchange())
+        .with("dead.letter.#");
+}
+```
 
-### 1. 消息队列特性
+**业务队列配置**:
+```java
+@Bean
+public Queue orderPayQueue() {
+    return QueueBuilder.durable("order.pay.queue")
+        .withArgument("x-dead-letter-exchange", "dead.letter.exchange")
+        .withArgument("x-dead-letter-routing-key", "dead.letter.order.pay")
+        .withArgument("x-message-ttl", 300000)
+        .build();
+}
+```
 
-- **可靠性**：消息持久化，确保消息不丢失
-- **解耦性**：支付服务和积分服务完全解耦
-- **异步性**：提高系统响应速度
-- **削峰填谷**：应对高并发场景
+#### 9.3.2 死信处理
 
-### 2. API接口特性
+**死信消息处理**:
+```java
+@RabbitListener(queues = "dead.letter.queue")
+public void handleDeadLetter(String message, @Header("x-dead-letter-reason") String reason) {
+    log.warn("收到死信消息: {}, 原因: {}", message, reason);
+    
+    // 根据死信原因进行不同处理
+    if ("expired".equals(reason)) {
+        // 处理过期消息
+        handleExpiredMessage(message);
+    } else if ("rejected".equals(reason)) {
+        // 处理被拒绝的消息
+        handleRejectedMessage(message);
+    }
+}
+```
 
-- **RESTful设计**：符合REST规范
-- **统一响应格式**：使用Result统一封装
-- **Swagger文档**：自动生成API文档
-- **健康检查**：系统状态监控
+### 9.4 消息幂等性
 
-### 3. 配置管理
+#### 9.4.1 幂等性保证
 
-- **环境隔离**：支持多环境配置
-- **外部化配置**：配置与代码分离
-- **热更新**：支持配置动态更新
+**消息去重**:
+```java
+@Service
+public class MessageIdempotencyService {
+    
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    
+    private static final String MESSAGE_PROCESSED_KEY = "message:processed:";
+    private static final int EXPIRE_TIME = 3600; // 1小时
+    
+    public boolean isMessageProcessed(String messageId) {
+        String key = MESSAGE_PROCESSED_KEY + messageId;
+        return redisTemplate.hasKey(key);
+    }
+    
+    public void markMessageProcessed(String messageId) {
+        String key = MESSAGE_PROCESSED_KEY + messageId;
+        redisTemplate.opsForValue().set(key, "1", EXPIRE_TIME, TimeUnit.SECONDS);
+    }
+}
+```
 
----
+**幂等性处理**:
+```java
+@RabbitListener(queues = "order.pay.queue")
+public void handleOrderPay(OrderPayMessage message, Channel channel, 
+                          @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
+    String messageId = message.getMessageId();
+    
+    // 检查消息是否已处理
+    if (messageIdempotencyService.isMessageProcessed(messageId)) {
+        log.info("消息已处理，跳过: {}", messageId);
+        channel.basicAck(deliveryTag, false);
+        return;
+    }
+    
+    try {
+        // 处理业务逻辑
+        processOrderPayment(message);
+        
+        // 标记消息已处理
+        messageIdempotencyService.markMessageProcessed(messageId);
+        
+        // 确认消息
+        channel.basicAck(deliveryTag, false);
+    } catch (Exception e) {
+        log.error("消息处理失败: {}", messageId, e);
+        // 拒绝消息
+        channel.basicNack(deliveryTag, false, false);
+    }
+}
+```
 
-## 总结
+## 10. 流控和熔断
 
-第三部分完成了消息队列架构和API接口的开发，包括：
+### 10.1 Sentinel流控
 
-✅ **RabbitMQ配置** - 完整的消息队列配置
-✅ **消息实体设计** - 订单支付、积分获得、订单超时消息
-✅ **生产者消费者** - 消息发送和接收处理
-✅ **API接口开发** - 用户端秒杀和优惠券接口
-✅ **配置文件完善** - 完整的应用配置
-✅ **部署测试** - 启动和测试方案
+#### 10.1.1 流控规则配置
 
-整个后端改造指南的三个部分已经完成，涵盖了从数据库设计到API接口的完整开发流程。你可以按照这个指南逐步实现一个完整的分布式秒杀系统。
+**流控规则定义**:
+```java
+@Component
+public class SentinelFlowControlConfig {
+    
+    @PostConstruct
+    public void initFlowRules() {
+        List<FlowRule> rules = new ArrayList<>();
+        
+        // 秒杀接口流控
+        FlowRule seckillRule = new FlowRule();
+        seckillRule.setResource("seckill:participate");
+        seckillRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        seckillRule.setCount(100); // 每秒100个请求
+        seckillRule.setControlBehavior(RuleConstant.CONTROL_BEHAVIOR_RATE_LIMITER);
+        rules.add(seckillRule);
+        
+        // 优惠券接口流控
+        FlowRule couponRule = new FlowRule();
+        couponRule.setResource("coupon:claim");
+        couponRule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+        couponRule.setCount(50); // 每秒50个请求
+        couponRule.setControlBehavior(RuleConstant.CONTROL_BEHAVIOR_RATE_LIMITER);
+        rules.add(couponRule);
+        
+        FlowRuleManager.loadRules(rules);
+    }
+}
+```
 
----
+#### 10.1.2 流控处理
 
-*相关阅读：*
-- [Hash咖啡后端改造指南 - 第一部分：项目概述和数据库设计](./Hash咖啡后端改造指南-第一部分-项目概述和数据库设计.md)
-- [Hash咖啡后端改造指南 - 第二部分：实体类和分布式锁实现](./Hash咖啡后端改造指南-第二部分-实体类和分布式锁实现.md)
+**流控异常处理**:
+```java
+@RestController
+public class SeckillController {
+    
+    @SentinelResource(value = "seckill:participate", 
+                     blockHandler = "handleSeckillBlock",
+                     fallback = "handleSeckillFallback")
+    @PostMapping("/seckill/participate")
+    public Result participateSeckill(@RequestBody SeckillParticipateDTO dto) {
+        return seckillService.participateSeckill(dto);
+    }
+    
+    public Result handleSeckillBlock(SeckillParticipateDTO dto, BlockException ex) {
+        log.warn("秒杀接口被流控: {}", ex.getMessage());
+        return Result.error("系统繁忙，请稍后重试");
+    }
+    
+    public Result handleSeckillFallback(SeckillParticipateDTO dto, Throwable ex) {
+        log.error("秒杀接口异常: {}", ex.getMessage());
+        return Result.error("系统异常，请稍后重试");
+    }
+}
+```
+
+### 10.2 熔断降级
+
+#### 10.2.1 熔断规则配置
+
+**熔断规则定义**:
+```java
+@Component
+public class SentinelCircuitBreakerConfig {
+    
+    @PostConstruct
+    public void initCircuitBreakerRules() {
+        List<CircuitBreakerRule> rules = new ArrayList<>();
+        
+        // 数据库熔断规则
+        CircuitBreakerRule dbRule = new CircuitBreakerRule();
+        dbRule.setResource("database:query");
+        dbRule.setGrade(RuleConstant.DEGRADE_GRADE_RT);
+        dbRule.setCount(100); // 平均响应时间100ms
+        dbRule.setTimeWindow(10); // 熔断时长10秒
+        dbRule.setMinRequestAmount(5); // 最小请求数
+        dbRule.setStatIntervalMs(1000); // 统计时长1秒
+        rules.add(dbRule);
+        
+        // Redis熔断规则
+        CircuitBreakerRule redisRule = new CircuitBreakerRule();
+        redisRule.setResource("redis:operation");
+        redisRule.setGrade(RuleConstant.DEGRADE_GRADE_EXCEPTION_RATIO);
+        redisRule.setCount(0.5); // 异常比例50%
+        redisRule.setTimeWindow(10);
+        redisRule.setMinRequestAmount(5);
+        redisRule.setStatIntervalMs(1000);
+        rules.add(redisRule);
+        
+        CircuitBreakerRuleManager.loadRules(rules);
+    }
+}
+```
+
+#### 10.2.2 熔断处理
+
+**熔断降级处理**:
+```java
+@Service
+public class SeckillService {
+    
+    @SentinelResource(value = "database:query",
+                     fallback = "fallbackQueryActivity")
+    public SeckillActivity queryActivity(Long activityId) {
+        return seckillActivityMapper.selectById(activityId);
+    }
+    
+    public SeckillActivity fallbackQueryActivity(Long activityId, Throwable ex) {
+        log.error("数据库查询熔断: {}", ex.getMessage());
+        // 返回缓存数据或默认值
+        return getCachedActivity(activityId);
+    }
+    
+    @SentinelResource(value = "redis:operation",
+                     fallback = "fallbackRedisOperation")
+    public void updateStock(Long activityId, Integer quantity) {
+        redisTemplate.opsForValue().decrement("seckill:stock:" + activityId, quantity);
+    }
+    
+    public void fallbackRedisOperation(Long activityId, Integer quantity, Throwable ex) {
+        log.error("Redis操作熔断: {}", ex.getMessage());
+        // 降级处理：直接更新数据库
+        updateStockInDatabase(activityId, quantity);
+    }
+}
+```
+
+## 11. 监控和告警
+
+### 11.1 应用监控
+
+#### 11.1.1 指标收集
+
+**自定义指标**:
+```java
+@Component
+public class BusinessMetrics {
+    
+    private final MeterRegistry meterRegistry;
+    private final Counter seckillSuccessCounter;
+    private final Counter seckillFailCounter;
+    private final Timer seckillTimer;
+    
+    public BusinessMetrics(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+        this.seckillSuccessCounter = Counter.builder("seckill.success")
+            .description("秒杀成功次数")
+            .register(meterRegistry);
+        this.seckillFailCounter = Counter.builder("seckill.fail")
+            .description("秒杀失败次数")
+            .register(meterRegistry);
+        this.seckillTimer = Timer.builder("seckill.duration")
+            .description("秒杀处理时间")
+            .register(meterRegistry);
+    }
+    
+    public void recordSeckillSuccess() {
+        seckillSuccessCounter.increment();
+    }
+    
+    public void recordSeckillFail() {
+        seckillFailCounter.increment();
+    }
+    
+    public void recordSeckillDuration(Duration duration) {
+        seckillTimer.record(duration);
+    }
+}
+```
+
+#### 11.1.2 健康检查
+
+**健康检查配置**:
+```java
+@Component
+public class CustomHealthIndicator implements HealthIndicator {
+    
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
+    
+    @Autowired
+    private DataSource dataSource;
+    
+    @Override
+    public Health health() {
+        Health.Builder builder = new Health.Builder();
+        
+        // 检查Redis连接
+        try {
+            redisTemplate.opsForValue().get("health:check");
+            builder.withDetail("redis", "UP");
+        } catch (Exception e) {
+            builder.down().withDetail("redis", "DOWN: " + e.getMessage());
+        }
+        
+        // 检查数据库连接
+        try {
+            dataSource.getConnection().close();
+            builder.withDetail("database", "UP");
+        } catch (Exception e) {
+            builder.down().withDetail("database", "DOWN: " + e.getMessage());
+        }
+        
+        return builder.build();
+    }
+}
+```
+
+### 11.2 业务监控
+
+#### 11.2.1 业务指标监控
+
+**业务指标收集**:
+```java
+@Service
+public class BusinessMonitorService {
+    
+    @Autowired
+    private BusinessMetrics businessMetrics;
+    
+    @EventListener
+    public void handleSeckillSuccess(SeckillSuccessEvent event) {
+        businessMetrics.recordSeckillSuccess();
+        log.info("秒杀成功: 活动ID={}, 用户ID={}", 
+            event.getActivityId(), event.getUserId());
+    }
+    
+    @EventListener
+    public void handleSeckillFail(SeckillFailEvent event) {
+        businessMetrics.recordSeckillFail();
+        log.warn("秒杀失败: 活动ID={}, 用户ID={}, 原因={}", 
+            event.getActivityId(), event.getUserId(), event.getReason());
+    }
+    
+    @EventListener
+    public void handleCouponClaim(CouponClaimEvent event) {
+        log.info("优惠券领取: 模板ID={}, 用户ID={}", 
+            event.getTemplateId(), event.getUserId());
+    }
+}
+```
+
+#### 11.2.2 告警配置
+
+**告警规则配置**:
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: sky-server
+```
+
+**告警规则**:
+```yaml
+groups:
+- name: sky-server-alerts
+  rules:
+  - alert: HighErrorRate
+    expr: rate(http_server_requests_seconds_count{status=~"5.."}[5m]) > 0.1
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "高错误率告警"
+      description: "错误率超过10%"
+  
+  - alert: HighResponseTime
+    expr: histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m])) > 1
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "高响应时间告警"
+      description: "95%响应时间超过1秒"
+```
+
+## 12. 性能优化
+
+### 12.1 缓存优化
+
+#### 12.1.1 多级缓存
+
+**本地缓存配置**:
+```java
+@Configuration
+@EnableCaching
+public class CacheConfig {
+    
+    @Bean
+    public CacheManager cacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.setCaffeine(Caffeine.newBuilder()
+            .maximumSize(1000)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .recordStats());
+        return cacheManager;
+    }
+}
+```
+
+**多级缓存实现**:
+```java
+@Service
+public class SeckillActivityService {
+    
+    @Cacheable(value = "seckill:activity", key = "#activityId")
+    public SeckillActivity getActivity(Long activityId) {
+        // 先从本地缓存获取
+        SeckillActivity activity = localCache.get(activityId);
+        if (activity != null) {
+            return activity;
+        }
+        
+        // 从Redis获取
+        activity = redisTemplate.opsForValue().get("seckill:activity:" + activityId);
+        if (activity != null) {
+            localCache.put(activityId, activity);
+            return activity;
+        }
+        
+        // 从数据库获取
+        activity = seckillActivityMapper.selectById(activityId);
+        if (activity != null) {
+            redisTemplate.opsForValue().set("seckill:activity:" + activityId, activity, 10, TimeUnit.MINUTES);
+            localCache.put(activityId, activity);
+        }
+        
+        return activity;
+    }
+}
+```
+
+#### 12.1.2 缓存预热
+
+**缓存预热服务**:
+```java
+@Service
+public class CacheWarmupService {
+    
+    @Autowired
+    private SeckillActivityService seckillActivityService;
+    
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+    
+    @PostConstruct
+    public void warmupCache() {
+        // 预热秒杀活动缓存
+        List<SeckillActivity> activities = seckillActivityService.getActiveActivities();
+        for (SeckillActivity activity : activities) {
+            String key = "seckill:activity:" + activity.getId();
+            redisTemplate.opsForValue().set(key, activity, 10, TimeUnit.MINUTES);
+        }
+        
+        // 预热库存缓存
+        for (SeckillActivity activity : activities) {
+            String stockKey = "seckill:stock:" + activity.getId();
+            redisTemplate.opsForValue().set(stockKey, activity.getStock());
+        }
+    }
+}
+```
+
+### 12.2 数据库优化
+
+#### 12.2.1 读写分离
+
+**数据源配置**:
+```yaml
+spring:
+  datasource:
+    master:
+      url: jdbc:mysql://localhost:3306/sky?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+      username: root
+      password: root
+      driver-class-name: com.mysql.cj.jdbc.Driver
+    slave:
+      url: jdbc:mysql://localhost:3307/sky?useUnicode=true&characterEncoding=utf8&serverTimezone=GMT%2B8
+      username: root
+      password: root
+      driver-class-name: com.mysql.cj.jdbc.Driver
+```
+
+**读写分离配置**:
+```java
+@Configuration
+public class DataSourceConfig {
+    
+    @Bean
+    @Primary
+    public DataSource masterDataSource() {
+        return DataSourceBuilder.create()
+            .url("jdbc:mysql://localhost:3306/sky")
+            .username("root")
+            .password("root")
+            .driverClassName("com.mysql.cj.jdbc.Driver")
+            .build();
+    }
+    
+    @Bean
+    public DataSource slaveDataSource() {
+        return DataSourceBuilder.create()
+            .url("jdbc:mysql://localhost:3307/sky")
+            .username("root")
+            .password("root")
+            .driverClassName("com.mysql.cj.jdbc.Driver")
+            .build();
+    }
+    
+    @Bean
+    public DataSource routingDataSource() {
+        DynamicRoutingDataSource routingDataSource = new DynamicRoutingDataSource();
+        Map<Object, Object> dataSourceMap = new HashMap<>();
+        dataSourceMap.put("master", masterDataSource());
+        dataSourceMap.put("slave", slaveDataSource());
+        routingDataSource.setTargetDataSources(dataSourceMap);
+        routingDataSource.setDefaultTargetDataSource(masterDataSource());
+        return routingDataSource;
+    }
+}
+```
+
+#### 12.2.2 分库分表
+
+**分表策略**:
+```java
+@Component
+public class ShardingStrategy {
+    
+    public String getTableName(String baseTable, Long userId) {
+        int shard = (int) (userId % 4);
+        return baseTable + "_" + shard;
+    }
+    
+    public String getDatabaseName(String baseDatabase, Long userId) {
+        int shard = (int) (userId % 2);
+        return baseDatabase + "_" + shard;
+    }
+}
+```
+
+## 13. 安全防护
+
+### 13.1 接口安全
+
+#### 13.1.1 接口鉴权
+
+**JWT配置**:
+```java
+@Configuration
+public class JwtConfig {
+    
+    @Value("${jwt.secret}")
+    private String secret;
+    
+    @Value("${jwt.expiration}")
+    private Long expiration;
+    
+    @Bean
+    public JwtTokenProvider jwtTokenProvider() {
+        return new JwtTokenProvider(secret, expiration);
+    }
+}
+```
+
+**JWT工具类**:
+```java
+@Component
+public class JwtTokenProvider {
+    
+    private final String secret;
+    private final Long expiration;
+    
+    public JwtTokenProvider(String secret, Long expiration) {
+        this.secret = secret;
+        this.expiration = expiration;
+    }
+    
+    public String generateToken(Long userId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+        
+        return Jwts.builder()
+            .setSubject(userId.toString())
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(SignatureAlgorithm.HS512, secret)
+            .compact();
+    }
+    
+    public Long getUserIdFromToken(String token) {
+        Claims claims = Jwts.parser()
+            .setSigningKey(secret)
+            .parseClaimsJws(token)
+            .getBody();
+        return Long.parseLong(claims.getSubject());
+    }
+    
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
+    }
+}
+```
+
+#### 13.1.2 接口限流
+
+**限流配置**:
+```java
+@Configuration
+public class RateLimitConfig {
+    
+    @Bean
+    public RateLimiter rateLimiter() {
+        return RateLimiter.create(100.0); // 每秒100个请求
+    }
+}
+```
+
+**限流拦截器**:
+```java
+@Component
+public class RateLimitInterceptor implements HandlerInterceptor {
+    
+    @Autowired
+    private RateLimiter rateLimiter;
+    
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        if (rateLimiter.tryAcquire()) {
+            return true;
+        } else {
+            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+            return false;
+        }
+    }
+}
+```
+
+### 13.2 数据安全
+
+#### 13.2.1 数据加密
+
+**敏感数据加密**:
+```java
+@Component
+public class DataEncryptionService {
+    
+    private final AESUtil aesUtil;
+    
+    public DataEncryptionService() {
+        this.aesUtil = new AESUtil("your-secret-key");
+    }
+    
+    public String encrypt(String data) {
+        return aesUtil.encrypt(data);
+    }
+    
+    public String decrypt(String encryptedData) {
+        return aesUtil.decrypt(encryptedData);
+    }
+}
+```
+
+#### 13.2.2 数据脱敏
+
+**数据脱敏工具**:
+```java
+@Component
+public class DataMaskingService {
+    
+    public String maskPhone(String phone) {
+        if (phone == null || phone.length() < 7) {
+            return phone;
+        }
+        return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
+    }
+    
+    public String maskEmail(String email) {
+        if (email == null || !email.contains("@")) {
+            return email;
+        }
+        String[] parts = email.split("@");
+        String username = parts[0];
+        if (username.length() <= 2) {
+            return email;
+        }
+        return username.substring(0, 2) + "***@" + parts[1];
+    }
+}
+```
+
+## 14. 测试策略
+
+### 14.1 单元测试
+
+#### 14.1.1 服务层测试
+
+**测试示例**:
+```java
+@SpringBootTest
+class SeckillActivityServiceTest {
+    
+    @Autowired
+    private SeckillActivityService seckillActivityService;
+    
+    @MockBean
+    private SeckillActivityMapper seckillActivityMapper;
+    
+    @MockBean
+    private RedisTemplate<String, Object> redisTemplate;
+    
+    @Test
+    void testParticipateSeckill_Success() {
+        // 准备测试数据
+        SeckillParticipateDTO dto = new SeckillParticipateDTO();
+        dto.setActivityId(1L);
+        dto.setUserId(1L);
+        dto.setQuantity(1);
+        
+        SeckillActivity activity = new SeckillActivity();
+        activity.setId(1L);
+        activity.setStock(10);
+        activity.setStatus(1);
+        
+        // Mock方法调用
+        when(seckillActivityMapper.selectById(1L)).thenReturn(activity);
+        when(redisTemplate.opsForValue().get("seckill:stock:1")).thenReturn(10);
+        
+        // 执行测试
+        Result result = seckillActivityService.participateSeckill(dto);
+        
+        // 验证结果
+        assertThat(result.getCode()).isEqualTo(1);
+        assertThat(result.getMsg()).isEqualTo("参与成功");
+    }
+}
+```
+
+#### 14.1.2 控制器测试
+
+**测试示例**:
+```java
+@WebMvcTest(SeckillActivityController.class)
+class SeckillActivityControllerTest {
+    
+    @Autowired
+    private MockMvc mockMvc;
+    
+    @MockBean
+    private SeckillActivityService seckillActivityService;
+    
+    @Test
+    void testParticipateSeckill() throws Exception {
+        // 准备测试数据
+        SeckillParticipateDTO dto = new SeckillParticipateDTO();
+        dto.setActivityId(1L);
+        dto.setUserId(1L);
+        dto.setQuantity(1);
+        
+        Result expectedResult = Result.success("参与成功");
+        when(seckillActivityService.participateSeckill(any())).thenReturn(expectedResult);
+        
+        // 执行测试
+        mockMvc.perform(post("/seckill/participate")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(JSON.toJSONString(dto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1))
+                .andExpect(jsonPath("$.msg").value("参与成功"));
+    }
+}
+```
+
+### 14.2 集成测试
+
+#### 14.2.1 数据库集成测试
+
+**测试配置**:
+```java
+@SpringBootTest
+@Testcontainers
+class DatabaseIntegrationTest {
+    
+    @Container
+    static MySQLContainer<?> mysql = new MySQLContainer<>("mysql:8.0")
+            .withDatabaseName("test_sky")
+            .withUsername("test")
+            .withPassword("test");
+    
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", mysql::getJdbcUrl);
+        registry.add("spring.datasource.username", mysql::getUsername);
+        registry.add("spring.datasource.password", mysql::getPassword);
+    }
+    
+    @Test
+    void testDatabaseConnection() {
+        // 测试数据库连接
+        assertThat(mysql.isRunning()).isTrue();
+    }
+}
+```
+
+#### 14.2.2 Redis集成测试
+
+**测试配置**:
+```java
+@SpringBootTest
+@Testcontainers
+class RedisIntegrationTest {
+    
+    @Container
+    static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
+            .withExposedPorts(6379);
+    
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.redis.host", redis::getHost);
+        registry.add("spring.redis.port", () -> redis.getMappedPort(6379));
+    }
+    
+    @Test
+    void testRedisConnection() {
+        // 测试Redis连接
+        assertThat(redis.isRunning()).isTrue();
+    }
+}
+```
+
+### 14.3 性能测试
+
+#### 14.3.1 压力测试
+
+**JMeter测试计划**:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2">
+  <hashTree>
+    <TestPlan testname="Seckill Performance Test">
+      <elementProp name="TestPlan.arguments" elementType="Arguments" guiclass="ArgumentsPanel">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.arguments" elementType="Arguments" guiclass="ArgumentsPanel">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+    </TestPlan>
+  </hashTree>
+</jmeterTestPlan>
+```
+
+#### 14.3.2 负载测试
+
+**负载测试配置**:
+```java
+@SpringBootTest
+class LoadTest {
+    
+    @Autowired
+    private SeckillActivityService seckillActivityService;
+    
+    @Test
+    void testConcurrentSeckill() throws InterruptedException {
+        int threadCount = 100;
+        int requestCount = 1000;
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+        
+        for (int i = 0; i < threadCount; i++) {
+            new Thread(() -> {
+                for (int j = 0; j < requestCount / threadCount; j++) {
+                    try {
+                        SeckillParticipateDTO dto = new SeckillParticipateDTO();
+                        dto.setActivityId(1L);
+                        dto.setUserId(Thread.currentThread().getId());
+                        dto.setQuantity(1);
+                        
+                        Result result = seckillActivityService.participateSeckill(dto);
+                        if (result.getCode() == 1) {
+                            successCount.incrementAndGet();
+                        } else {
+                            failCount.incrementAndGet();
+                        }
+                    } catch (Exception e) {
+                        failCount.incrementAndGet();
+                    }
+                }
+                latch.countDown();
+            }).start();
+        }
+        
+        latch.await();
+        
+        System.out.println("成功: " + successCount.get());
+        System.out.println("失败: " + failCount.get());
+    }
+}
+```
+
+通过以上实现，我们建立了一个完整的消息队列异步处理系统，实现了支付和积分服务的解耦，提高了系统的可扩展性和稳定性。
