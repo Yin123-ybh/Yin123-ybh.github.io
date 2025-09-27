@@ -1,3 +1,12 @@
+---
+title: "Hash咖啡项目后端改造指南 - 第三部分：消息队列和API接口"
+date: 2025-01-14
+draft: false
+tags: ["Java", "Spring Boot", "RabbitMQ", "消息队列", "API接口", "异步处理", "微服务"]
+categories: ["后端开发"]
+description: "基于RabbitMQ的消息队列异步处理系统，实现支付和积分服务的解耦，提高系统的可扩展性和稳定性"
+---
+
 # Hash咖啡后端改造指南-第三部分-消息队列和API接口
 
 ## 目录

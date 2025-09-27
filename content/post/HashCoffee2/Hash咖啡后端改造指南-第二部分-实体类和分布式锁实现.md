@@ -1,3 +1,12 @@
+---
+title: "Hash咖啡项目后端改造指南 - 第二部分：实体类和分布式锁实现"
+date: 2025-01-14
+draft: false
+tags: ["Java", "Spring Boot", "Redis", "分布式锁", "Lua脚本", "秒杀系统", "防超卖"]
+categories: ["后端开发"]
+description: "基于Lua脚本与Redisson分布式锁防止优惠券超卖与重复获取，通过MySQL数据库的原子性操作保证库存扣减的线程安全"
+---
+
 # Hash咖啡后端改造指南-第二部分-实体类和分布式锁实现
 
 ## 目录
