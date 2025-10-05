@@ -8,10 +8,10 @@
 <span>Links</span></a></li><li class=menu-bottom-section><ol class=menu><li id=i18n-switch><svg class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5h7"/><path d="M9 3v2c0 4.418-2.239 8-5 8"/><path d="M5 9c-.003 2.144 2.952 3.908 6.7 4"/><path d="M12 20l4-9 4 9"/><path d="M19.1 18h-6.2"/></svg>
 <select name=language title=language onchange="window.location.href=this.selectedOptions[0].value"><option value=https://Yin123-ybh.github.io/ selected>English</option><option value=https://Yin123-ybh.github.io/zh-cn/>简体中文</option><option value=https://Yin123-ybh.github.io/ar/>عربي</option></select></li><li id=dark-mode-toggle><svg class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
 <svg class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
-<span>Dark Mode</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#-目录>📋 目录</a></li><li><a href=#1-httpservletrequest-是什么>1. HttpServletRequest 是什么？</a><ol><li><a href=#-核心功能>🔧 核心功能</a></li><li><a href=#-实际应用场景>💡 实际应用场景</a></li></ol></li><li><a href=#2-controller-方法为什么有时需要-httpservletrequest>2. Controller 方法为什么有时需要 HttpServletRequest？</a><ol><li><a href=#-不需要-httpservletrequest-的情况>✅ 不需要 HttpServletRequest 的情况</a></li><li><a href=#-需要-httpservletrequest-的情况>❌ 需要 HttpServletRequest 的情况</a></li><li><a href=#-使用场景总结>🎯 使用场景总结</a></li></ol></li><li><a href=#3-注释解析从请求头中获取用户id>3. 注释解析：&ldquo;从请求头中获取用户ID&rdquo;</a><ol><li><a href=#-注释含义解析>📝 注释含义解析</a></li><li><a href=#-完整流程示意>🔄 完整流程示意</a></li></ol></li><li><a href=#4-jwttokenuserinterceptor-拦截器详解>4. JwtTokenUserInterceptor 拦截器详解</a><ol><li><a href=#-完整拦截器实现>🏗️ 完整拦截器实现</a></li><li><a href=#-代码逐行解析>🔍 代码逐行解析</a><ol><li><a href=#步骤1判断请求类型>步骤1：判断请求类型</a></li><li><a href=#步骤2获取-jwt-token>步骤2：获取 JWT Token</a></li><li><a href=#步骤3处理-bearer-前缀>步骤3：处理 Bearer 前缀</a></li><li><a href=#步骤4jwt-解析与验证>步骤4：JWT 解析与验证</a></li><li><a href=#步骤5上下文存储>步骤5：上下文存储</a></li></ol></li></ol></li><li><a href=#5-long-userid--longvalueofclaimsgetuseridtostring-解析>5. Long userId = Long.valueOf(claims.get(&ldquo;userId&rdquo;).toString()); 解析</a><ol><li><a href=#-类型转换过程>🔄 类型转换过程</a></li><li><a href=#-潜在问题与解决方案>⚠️ 潜在问题与解决方案</a><ol><li><a href=#问题1类型转换异常>问题1：类型转换异常</a></li><li><a href=#问题2空值处理>问题2：空值处理</a></li></ol></li><li><a href=#-最佳实践>🎯 最佳实践</a></li></ol></li><li><a href=#6-basecontext-是什么>6. BaseContext 是什么？</a><ol><li><a href=#-basecontext-完整实现>🏗️ BaseContext 完整实现</a></li><li><a href=#-threadlocal-原理>🧵 ThreadLocal 原理</a><ol><li><a href=#为什么使用-threadlocal>为什么使用 ThreadLocal？</a></li><li><a href=#threadlocal-内存模型>ThreadLocal 内存模型</a></li></ol></li><li><a href=#-实际使用场景>🔧 实际使用场景</a><ol><li><a href=#controller-层使用>Controller 层使用</a></li><li><a href=#service-层使用>Service 层使用</a></li></ol></li><li><a href=#-内存泄漏防护>⚠️ 内存泄漏防护</a><ol><li><a href=#问题threadlocal-内存泄漏>问题：ThreadLocal 内存泄漏</a></li><li><a href=#解决方案拦截器后处理>解决方案：拦截器后处理</a></li></ol></li></ol></li><li><a href=#7-判断-handler-是否是-controller-方法>7. 判断 handler 是否是 Controller 方法</a><ol><li><a href=#-handlermethod-详解>🔍 HandlerMethod 详解</a><ol><li><a href=#spring-mvc-请求处理流程>Spring MVC 请求处理流程</a></li><li><a href=#handlermethod-vs-resourcehttprequesthandler>HandlerMethod vs ResourceHttpRequestHandler</a></li></ol></li><li><a href=#-实际应用场景-1>🎯 实际应用场景</a><ol><li><a href=#场景1只拦截-controller-方法>场景1：只拦截 Controller 方法</a></li><li><a href=#场景2记录所有请求>场景2：记录所有请求</a></li></ol></li></ol></li><li><a href=#8-instanceof-是什么>8. instanceof 是什么？</a><ol><li><a href=#-instanceof-语法详解>🔧 instanceof 语法详解</a><ol><li><a href=#基本语法>基本语法</a></li><li><a href=#返回值>返回值</a></li></ol></li><li><a href=#-实际示例>📝 实际示例</a><ol><li><a href=#示例1基本类型判断>示例1：基本类型判断</a></li><li><a href=#示例2接口判断>示例2：接口判断</a></li><li><a href=#示例3null-处理>示例3：null 处理</a></li></ol></li><li><a href=#-在拦截器中的应用>🎯 在拦截器中的应用</a><ol><li><a href=#判断-handler-类型>判断 Handler 类型</a></li><li><a href=#获取方法信息>获取方法信息</a></li></ol></li></ol></li><li><a href=#9-完整项目实战>9. 完整项目实战</a><ol><li><a href=#-项目结构>🏗️ 项目结构</a></li><li><a href=#-配置文件>⚙️ 配置文件</a><ol><li><a href=#applicationyml>application.yml</a></li><li><a href=#jwtpropertiesjava>JwtProperties.java</a></li></ol></li><li><a href=#-拦截器配置>🔧 拦截器配置</a><ol><li><a href=#webmvcconfigurationjava>WebMvcConfiguration.java</a></li></ol></li><li><a href=#-实际使用示例>🎯 实际使用示例</a><ol><li><a href=#管理端控制器>管理端控制器</a></li></ol></li></ol></li><li><a href=#10-最佳实践与注意事项>10. 最佳实践与注意事项</a><ol><li><a href=#-最佳实践-1>✅ 最佳实践</a><ol><li><a href=#1-安全的jwt处理>1. 安全的JWT处理</a></li><li><a href=#2-完整的拦截器实现>2. 完整的拦截器实现</a></li><li><a href=#3-异常处理>3. 异常处理</a></li></ol></li><li><a href=#-注意事项>⚠️ 注意事项</a><ol><li><a href=#1-内存泄漏防护>1. 内存泄漏防护</a></li><li><a href=#2-线程安全问题>2. 线程安全问题</a></li><li><a href=#3-jwt密钥管理>3. JWT密钥管理</a></li></ol></li></ol></li><li><a href=#11-总结与流程图示意>11. 总结与流程图示意</a><ol><li><a href=#-完整请求流程图>🔄 完整请求流程图</a></li><li><a href=#-核心概念总结>📊 核心概念总结</a></li><li><a href=#-技术要点>🎯 技术要点</a></li><li><a href=#-项目优势>🚀 项目优势</a></li></ol></li></ol></nav></div></section></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发
+<span>Dark Mode</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#-目录>📋 目录</a></li><li><a href=#1-httpservletrequest-是什么>1. HttpServletRequest 是什么？</a><ol><li><a href=#-核心功能>🔧 核心功能</a></li><li><a href=#-实际应用场景>💡 实际应用场景</a></li></ol></li><li><a href=#2-controller-方法为什么有时需要-httpservletrequest>2. Controller 方法为什么有时需要 HttpServletRequest？</a><ol><li><a href=#-不需要-httpservletrequest-的情况>✅ 不需要 HttpServletRequest 的情况</a></li><li><a href=#-需要-httpservletrequest-的情况>❌ 需要 HttpServletRequest 的情况</a></li><li><a href=#-使用场景总结>🎯 使用场景总结</a></li></ol></li><li><a href=#3-注释解析从请求头中获取用户id>3. 注释解析：&ldquo;从请求头中获取用户ID&rdquo;</a><ol><li><a href=#-注释含义解析>📝 注释含义解析</a></li><li><a href=#-完整流程示意>🔄 完整流程示意</a><ol><li><a href=#方案1ascii流程图hugo兼容>方案1：ASCII流程图（Hugo兼容）</a></li><li><a href=#方案2代码块形式推荐>方案2：代码块形式（推荐）</a></li></ol></li></ol></li><li><a href=#4-jwttokenuserinterceptor-拦截器详解>4. JwtTokenUserInterceptor 拦截器详解</a><ol><li><a href=#-完整拦截器实现>🏗️ 完整拦截器实现</a></li><li><a href=#-代码逐行解析>🔍 代码逐行解析</a><ol><li><a href=#步骤1判断请求类型>步骤1：判断请求类型</a></li><li><a href=#步骤2获取-jwt-token>步骤2：获取 JWT Token</a></li><li><a href=#步骤3处理-bearer-前缀>步骤3：处理 Bearer 前缀</a></li><li><a href=#步骤4jwt-解析与验证>步骤4：JWT 解析与验证</a></li><li><a href=#步骤5上下文存储>步骤5：上下文存储</a></li></ol></li></ol></li><li><a href=#5-long-userid--longvalueofclaimsgetuseridtostring-解析>5. Long userId = Long.valueOf(claims.get(&ldquo;userId&rdquo;).toString()); 解析</a><ol><li><a href=#-类型转换过程>🔄 类型转换过程</a></li><li><a href=#-潜在问题与解决方案>⚠️ 潜在问题与解决方案</a><ol><li><a href=#问题1类型转换异常>问题1：类型转换异常</a></li><li><a href=#问题2空值处理>问题2：空值处理</a></li></ol></li><li><a href=#-最佳实践>🎯 最佳实践</a></li></ol></li><li><a href=#6-basecontext-是什么>6. BaseContext 是什么？</a><ol><li><a href=#-basecontext-完整实现>🏗️ BaseContext 完整实现</a></li><li><a href=#-threadlocal-原理>🧵 ThreadLocal 原理</a><ol><li><a href=#为什么使用-threadlocal>为什么使用 ThreadLocal？</a></li><li><a href=#threadlocal-内存模型>ThreadLocal 内存模型</a></li></ol></li><li><a href=#-实际使用场景>🔧 实际使用场景</a><ol><li><a href=#controller-层使用>Controller 层使用</a></li><li><a href=#service-层使用>Service 层使用</a></li></ol></li><li><a href=#-内存泄漏防护>⚠️ 内存泄漏防护</a><ol><li><a href=#问题threadlocal-内存泄漏>问题：ThreadLocal 内存泄漏</a></li><li><a href=#解决方案拦截器后处理>解决方案：拦截器后处理</a></li></ol></li></ol></li><li><a href=#7-判断-handler-是否是-controller-方法>7. 判断 handler 是否是 Controller 方法</a><ol><li><a href=#-handlermethod-详解>🔍 HandlerMethod 详解</a><ol><li><a href=#spring-mvc-请求处理流程>Spring MVC 请求处理流程</a></li><li><a href=#handlermethod-vs-resourcehttprequesthandler>HandlerMethod vs ResourceHttpRequestHandler</a></li></ol></li><li><a href=#-实际应用场景-1>🎯 实际应用场景</a><ol><li><a href=#场景1只拦截-controller-方法>场景1：只拦截 Controller 方法</a></li><li><a href=#场景2记录所有请求>场景2：记录所有请求</a></li></ol></li></ol></li><li><a href=#8-instanceof-是什么>8. instanceof 是什么？</a><ol><li><a href=#-instanceof-语法详解>🔧 instanceof 语法详解</a><ol><li><a href=#基本语法>基本语法</a></li><li><a href=#返回值>返回值</a></li></ol></li><li><a href=#-实际示例>📝 实际示例</a><ol><li><a href=#示例1基本类型判断>示例1：基本类型判断</a></li><li><a href=#示例2接口判断>示例2：接口判断</a></li><li><a href=#示例3null-处理>示例3：null 处理</a></li></ol></li><li><a href=#-在拦截器中的应用>🎯 在拦截器中的应用</a><ol><li><a href=#判断-handler-类型>判断 Handler 类型</a></li><li><a href=#获取方法信息>获取方法信息</a></li></ol></li></ol></li><li><a href=#9-完整项目实战>9. 完整项目实战</a><ol><li><a href=#-项目结构>🏗️ 项目结构</a></li><li><a href=#-配置文件>⚙️ 配置文件</a><ol><li><a href=#applicationyml>application.yml</a></li><li><a href=#jwtpropertiesjava>JwtProperties.java</a></li></ol></li><li><a href=#-拦截器配置>🔧 拦截器配置</a><ol><li><a href=#webmvcconfigurationjava>WebMvcConfiguration.java</a></li></ol></li><li><a href=#-实际使用示例>🎯 实际使用示例</a><ol><li><a href=#管理端控制器>管理端控制器</a></li></ol></li></ol></li><li><a href=#10-最佳实践与注意事项>10. 最佳实践与注意事项</a><ol><li><a href=#-最佳实践-1>✅ 最佳实践</a><ol><li><a href=#1-安全的jwt处理>1. 安全的JWT处理</a></li><li><a href=#2-完整的拦截器实现>2. 完整的拦截器实现</a></li><li><a href=#3-异常处理>3. 异常处理</a></li></ol></li><li><a href=#-注意事项>⚠️ 注意事项</a><ol><li><a href=#1-内存泄漏防护>1. 内存泄漏防护</a></li><li><a href=#2-线程安全问题>2. 线程安全问题</a></li><li><a href=#3-jwt密钥管理>3. JWT密钥管理</a></li></ol></li></ol></li><li><a href=#11-总结与流程图示意>11. 总结与流程图示意</a><ol><li><a href=#-完整请求流程图>🔄 完整请求流程图</a><ol><li><a href=#时序图ascii版本>时序图（ASCII版本）</a></li><li><a href=#详细步骤说明>详细步骤说明</a></li></ol></li><li><a href=#-核心概念总结>📊 核心概念总结</a></li><li><a href=#-技术要点>🎯 技术要点</a></li><li><a href=#-项目优势>🚀 项目优势</a></li></ol></li><li><a href=#-hugo博客使用说明>📝 Hugo博客使用说明</a><ol><li><a href=#-已优化的内容>✅ 已优化的内容</a></li><li><a href=#-hugo配置建议>🔧 Hugo配置建议</a></li><li><a href=#-主题兼容性>🎨 主题兼容性</a></li><li><a href=#-移动端优化>📱 移动端优化</a></li></ol></li></ol></nav></div></section></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91/>后端开发
 </a><a href=/categories/spring-boot/>Spring Boot</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/p/spring-boot-jwt-%E4%B8%8E%E6%8B%A6%E6%88%AA%E5%99%A8%E8%AF%A6%E8%A7%A3basecontexthandlermethodhttpservletrequest-%E4%B8%8E-instanceof/>Spring Boot JWT 与拦截器详解：BaseContext、HandlerMethod、HttpServletRequest 与 instanceof</a></h2><h3 class=article-subtitle>深入解析Spring Boot中JWT鉴权、拦截器实现原理，详解BaseContext、HandlerMethod、HttpServletRequest等核心概念，结合购物车项目实战代码</h3></div><footer class=article-time><div><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
 <time class=article-time--published>2025-01-27</time></div><div><svg class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
-<time class=article-time--reading>13 minute read</time></div></footer></div></header><section class=article-content><h1 id=spring-boot-jwt-与拦截器详解basecontexthandlermethodhttpservletrequest-与-instanceof>Spring Boot JWT 与拦截器详解：BaseContext、HandlerMethod、HttpServletRequest 与 instanceof</h1><p>在开发 Java Web 项目时，经常会用到 JWT 鉴权、拦截器以及请求上下文管理。本文结合一个咖啡购物车项目，详细讲解相关概念和代码实现。</p><h2 id=-目录>📋 目录</h2><ul><li><a class=link href=#1-httpservletrequest-%e6%98%af%e4%bb%80%e4%b9%88>HttpServletRequest 是什么？</a></li><li><a class=link href=#2-controller-%e6%96%b9%e6%b3%95%e4%b8%ba%e4%bb%80%e4%b9%88%e6%9c%89%e6%97%b6%e9%9c%80%e8%a6%81-httpservletrequest>Controller 方法为什么有时需要 HttpServletRequest？</a></li><li><a class=link href=#3-%e6%b3%a8%e9%87%8a%e8%a7%a3%e6%9e%90%e4%bb%8e%e8%af%b7%e6%b1%82%e5%a4%b4%e4%b8%ad%e8%8e%b7%e5%8f%96%e7%94%a8%e6%88%b7id>注释解析：&ldquo;从请求头中获取用户ID&rdquo;</a></li><li><a class=link href=#4-jwttokenuserinterceptor-%e6%8b%a6%e6%88%aa%e5%99%a8%e8%af%a6%e8%a7%a3>JwtTokenUserInterceptor 拦截器详解</a></li><li><a class=link href=#5-long-userid-longvalueofclaimsgetuseridtostring-%e8%a7%a3%e6%9e%90>Long userId = Long.valueOf(claims.get(&ldquo;userId&rdquo;).toString()); 解析</a></li><li><a class=link href=#6-basecontext-%e6%98%af%e4%bb%80%e4%b9%88>BaseContext 是什么？</a></li><li><a class=link href=#7-%e5%88%a4%e6%96%ad-handler-%e6%98%af%e5%90%a6%e6%98%af-controller-%e6%96%b9%e6%b3%95>判断 handler 是否是 Controller 方法</a></li><li><a class=link href=#8-instanceof-%e6%98%af%e4%bb%80%e4%b9%88>instanceof 是什么？</a></li><li><a class=link href=#9-%e5%ae%8c%e6%95%b4%e9%a1%b9%e7%9b%ae%e5%ae%9e%e6%88%98>完整项目实战</a></li><li><a class=link href=#10-%e6%9c%80%e4%bd%b3%e5%ae%9e%e8%b7%b5%e4%b8%8e%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9>最佳实践与注意事项</a></li><li><a class=link href=#11-%e6%80%bb%e7%bb%93%e4%b8%8e%e6%b5%81%e7%a8%8b%e5%9b%be%e7%a4%ba%e6%84%8f>总结与流程图示意</a></li></ul><h2 id=1-httpservletrequest-是什么>1. HttpServletRequest 是什么？</h2><p><code>HttpServletRequest</code> 是 Java Servlet API 提供的接口，用来封装客户端发给服务器的请求信息。</p><h3 id=-核心功能>🔧 核心功能</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+<time class=article-time--reading>15 minute read</time></div></footer></div></header><section class=article-content><h1 id=spring-boot-jwt-与拦截器详解basecontexthandlermethodhttpservletrequest-与-instanceof>Spring Boot JWT 与拦截器详解：BaseContext、HandlerMethod、HttpServletRequest 与 instanceof</h1><p>在开发 Java Web 项目时，经常会用到 JWT 鉴权、拦截器以及请求上下文管理。本文结合一个咖啡购物车项目，详细讲解相关概念和代码实现。</p><h2 id=-目录>📋 目录</h2><ul><li><a class=link href=#1-httpservletrequest-%e6%98%af%e4%bb%80%e4%b9%88>HttpServletRequest 是什么？</a></li><li><a class=link href=#2-controller-%e6%96%b9%e6%b3%95%e4%b8%ba%e4%bb%80%e4%b9%88%e6%9c%89%e6%97%b6%e9%9c%80%e8%a6%81-httpservletrequest>Controller 方法为什么有时需要 HttpServletRequest？</a></li><li><a class=link href=#3-%e6%b3%a8%e9%87%8a%e8%a7%a3%e6%9e%90%e4%bb%8e%e8%af%b7%e6%b1%82%e5%a4%b4%e4%b8%ad%e8%8e%b7%e5%8f%96%e7%94%a8%e6%88%b7id>注释解析：&ldquo;从请求头中获取用户ID&rdquo;</a></li><li><a class=link href=#4-jwttokenuserinterceptor-%e6%8b%a6%e6%88%aa%e5%99%a8%e8%af%a6%e8%a7%a3>JwtTokenUserInterceptor 拦截器详解</a></li><li><a class=link href=#5-long-userid-longvalueofclaimsgetuseridtostring-%e8%a7%a3%e6%9e%90>Long userId = Long.valueOf(claims.get(&ldquo;userId&rdquo;).toString()); 解析</a></li><li><a class=link href=#6-basecontext-%e6%98%af%e4%bb%80%e4%b9%88>BaseContext 是什么？</a></li><li><a class=link href=#7-%e5%88%a4%e6%96%ad-handler-%e6%98%af%e5%90%a6%e6%98%af-controller-%e6%96%b9%e6%b3%95>判断 handler 是否是 Controller 方法</a></li><li><a class=link href=#8-instanceof-%e6%98%af%e4%bb%80%e4%b9%88>instanceof 是什么？</a></li><li><a class=link href=#9-%e5%ae%8c%e6%95%b4%e9%a1%b9%e7%9b%ae%e5%ae%9e%e6%88%98>完整项目实战</a></li><li><a class=link href=#10-%e6%9c%80%e4%bd%b3%e5%ae%9e%e8%b7%b5%e4%b8%8e%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9>最佳实践与注意事项</a></li><li><a class=link href=#11-%e6%80%bb%e7%bb%93%e4%b8%8e%e6%b5%81%e7%a8%8b%e5%9b%be%e7%a4%ba%e6%84%8f>总结与流程图示意</a></li></ul><h2 id=1-httpservletrequest-是什么>1. HttpServletRequest 是什么？</h2><p><code>HttpServletRequest</code> 是 Java Servlet API 提供的接口，用来封装客户端发给服务器的请求信息。</p><h3 id=-核心功能>🔧 核心功能</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -155,7 +155,7 @@
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
 </span></span></span></code></pre></td></tr></table></div></div><h3 id=-使用场景总结>🎯 使用场景总结</h3><div class=table-wrapper><table><thead><tr><th>场景</th><th>是否需要 HttpServletRequest</th><th>原因</th></tr></thead><tbody><tr><td>获取请求头信息</td><td>✅ 需要</td><td>如 JWT Token、User-Agent</td></tr><tr><td>获取客户端 IP</td><td>✅ 需要</td><td>安全审计、限流</td></tr><tr><td>获取 Session 信息</td><td>✅ 需要</td><td>会话管理</td></tr><tr><td>获取 Cookie</td><td>✅ 需要</td><td>状态保持</td></tr><tr><td>纯业务参数处理</td><td>❌ 不需要</td><td>Spring 自动绑定</td></tr></tbody></table></div><h2 id=3-注释解析从请求头中获取用户id>3. 注释解析：&ldquo;从请求头中获取用户ID&rdquo;</h2><h3 id=-注释含义解析>📝 注释含义解析</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 从请求头中获取用户ID（这里需要根据你的JWT实现来获取）</span><span class=w>
-</span></span></span></code></pre></td></tr></table></div></div><p>这个注释的含义是：</p><ol><li><strong>用户登录流程</strong>：用户登录后，前端会拿到一个 JWT Token</li><li><strong>Token 传递</strong>：前端每次请求时，将 Token 放在请求头中（<code>Authorization: Bearer &lt;token></code>）</li><li><strong>后端解析</strong>：后端解析 JWT Token 获取 <code>userId</code></li><li><strong>注释说明</strong>：目前代码直接从请求头取 <code>userId</code>，在真实项目中要解析 JWT Token</li></ol><h3 id=-完整流程示意>🔄 完整流程示意</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span></span></span></code></pre></td></tr></table></div></div><p>这个注释的含义是：</p><ol><li><strong>用户登录流程</strong>：用户登录后，前端会拿到一个 JWT Token</li><li><strong>Token 传递</strong>：前端每次请求时，将 Token 放在请求头中（<code>Authorization: Bearer &lt;token></code>）</li><li><strong>后端解析</strong>：后端解析 JWT Token 获取 <code>userId</code></li><li><strong>注释说明</strong>：目前代码直接从请求头取 <code>userId</code>，在真实项目中要解析 JWT Token</li></ol><h3 id=-完整流程示意>🔄 完整流程示意</h3><h4 id=方案1ascii流程图hugo兼容>方案1：ASCII流程图（Hugo兼容）</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -172,23 +172,61 @@
 </span><span class=lnt>15
 </span><span class=lnt>16
 </span><span class=lnt>17
-</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>sequenceDiagram
-</span></span><span class=line><span class=cl>    participant F as 前端
-</span></span><span class=line><span class=cl>    participant B as 后端
-</span></span><span class=line><span class=cl>    participant J as JWT工具
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    F-&gt;&gt;B: 登录请求
-</span></span><span class=line><span class=cl>    B-&gt;&gt;J: 生成JWT Token
-</span></span><span class=line><span class=cl>    J--&gt;&gt;B: 返回Token
-</span></span><span class=line><span class=cl>    B--&gt;&gt;F: 返回Token
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    Note over F: 存储Token到localStorage
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    F-&gt;&gt;B: 业务请求 + Authorization: Bearer &lt;token&gt;
-</span></span><span class=line><span class=cl>    B-&gt;&gt;J: 解析Token
-</span></span><span class=line><span class=cl>    J--&gt;&gt;B: 返回Claims(userId)
-</span></span><span class=line><span class=cl>    B-&gt;&gt;B: 从Claims中提取userId
-</span></span><span class=line><span class=cl>    B--&gt;&gt;F: 返回业务数据
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>┌─────────┐    ┌─────────┐    ┌─────────┐
+</span></span><span class=line><span class=cl>│  前端   │───▶│  后端   │───▶│ JWT工具 │
+</span></span><span class=line><span class=cl>└─────────┘    └─────────┘    └─────────┘
+</span></span><span class=line><span class=cl>     │              │              │
+</span></span><span class=line><span class=cl>     │ 1.登录请求    │              │
+</span></span><span class=line><span class=cl>     ├─────────────▶│              │
+</span></span><span class=line><span class=cl>     │              │ 2.生成Token  │
+</span></span><span class=line><span class=cl>     │              ├─────────────▶│
+</span></span><span class=line><span class=cl>     │              │ 3.返回Token  │
+</span></span><span class=line><span class=cl>     │              │◀─────────────┤
+</span></span><span class=line><span class=cl>     │ 4.返回Token   │              │
+</span></span><span class=line><span class=cl>     │◀─────────────┤              │
+</span></span><span class=line><span class=cl>     │              │              │
+</span></span><span class=line><span class=cl>     │ 存储到localStorage          │
+</span></span><span class=line><span class=cl>     │              │              │
+</span></span><span class=line><span class=cl>     │ 5.业务请求+Token            │
+</span></span><span class=line><span class=cl>     ├─────────────▶│              │
+</span></span><span class=line><span class=cl>     │              │ 6.解析Token   │
+</span></span><span class=line><span class=cl>     │              ├─────────────▶│
+</span></span><span class=line><span class=cl>     │              │ 7.返回Claims │
+</span></span><span class=line><span class=cl>     │              │◀─────────────┤
+</span></span><span class=line><span class=cl>     │              │ 8.提取userId │
+</span></span><span class=line><span class=cl>     │              │              │
+</span></span><span class=line><span class=cl>     │ 9.返回业务数据│              │
+</span></span><span class=line><span class=cl>     │◀─────────────┤              │
+</span></span></code></pre></td></tr></table></div></div><h4 id=方案2代码块形式推荐>方案2：代码块形式（推荐）</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>JWT认证流程：
+</span></span><span class=line><span class=cl>1. 前端发送登录请求
+</span></span><span class=line><span class=cl>2. 后端验证用户信息
+</span></span><span class=line><span class=cl>3. 后端生成JWT Token
+</span></span><span class=line><span class=cl>4. 后端返回Token给前端
+</span></span><span class=line><span class=cl>5. 前端存储Token到localStorage
+</span></span><span class=line><span class=cl>6. 前端发送业务请求（携带Authorization头）
+</span></span><span class=line><span class=cl>7. 后端拦截器解析JWT Token
+</span></span><span class=line><span class=cl>8. 后端从Token中提取用户ID
+</span></span><span class=line><span class=cl>9. 后端执行业务逻辑
+</span></span><span class=line><span class=cl>10. 后端返回业务数据
 </span></span></code></pre></td></tr></table></div></div><h2 id=4-jwttokenuserinterceptor-拦截器详解>4. JwtTokenUserInterceptor 拦截器详解</h2><h3 id=-完整拦截器实现>🏗️ 完整拦截器实现</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
@@ -441,31 +479,13 @@
 </span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>threadLocal</span><span class=p>.</span><span class=na>remove</span><span class=p>();</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
-</span></span></span></code></pre></td></tr></table></div></div><h3 id=-threadlocal-原理>🧵 ThreadLocal 原理</h3><h4 id=为什么使用-threadlocal>为什么使用 ThreadLocal？</h4><ol><li><strong>线程隔离</strong>：每个请求线程都有独立的用户信息存储</li><li><strong>避免传参</strong>：不需要在每个方法中传递用户 ID</li><li><strong>代码简洁</strong>：Controller 和 Service 层可以直接获取当前用户</li></ol><h4 id=threadlocal-内存模型>ThreadLocal 内存模型</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
-</span><span class=lnt> 2
-</span><span class=lnt> 3
-</span><span class=lnt> 4
-</span><span class=lnt> 5
-</span><span class=lnt> 6
-</span><span class=lnt> 7
-</span><span class=lnt> 8
-</span><span class=lnt> 9
-</span><span class=lnt>10
-</span><span class=lnt>11
-</span><span class=lnt>12
-</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>graph TD
-</span></span><span class=line><span class=cl>    A[请求线程1] --&gt; B[ThreadLocal Map]
-</span></span><span class=line><span class=cl>    C[请求线程2] --&gt; D[ThreadLocal Map]
-</span></span><span class=line><span class=cl>    E[请求线程3] --&gt; F[ThreadLocal Map]
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    B --&gt; G[userId: 1001]
-</span></span><span class=line><span class=cl>    D --&gt; H[userId: 1002]
-</span></span><span class=line><span class=cl>    F --&gt; I[userId: 1003]
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    style A fill:#e1f5fe
-</span></span><span class=line><span class=cl>    style C fill:#e8f5e8
-</span></span><span class=line><span class=cl>    style E fill:#fff3e0
-</span></span></code></pre></td></tr></table></div></div><h3 id=-实际使用场景>🔧 实际使用场景</h3><h4 id=controller-层使用>Controller 层使用</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=-threadlocal-原理>🧵 ThreadLocal 原理</h3><h4 id=为什么使用-threadlocal>为什么使用 ThreadLocal？</h4><ol><li><strong>线程隔离</strong>：每个请求线程都有独立的用户信息存储</li><li><strong>避免传参</strong>：不需要在每个方法中传递用户 ID</li><li><strong>代码简洁</strong>：Controller 和 Service 层可以直接获取当前用户</li></ol><h4 id=threadlocal-内存模型>ThreadLocal 内存模型</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>请求线程1 ──▶ ThreadLocal Map ──▶ userId: 1001
+</span></span><span class=line><span class=cl>请求线程2 ──▶ ThreadLocal Map ──▶ userId: 1002  
+</span></span><span class=line><span class=cl>请求线程3 ──▶ ThreadLocal Map ──▶ userId: 1003
+</span></span></code></pre></td></tr></table></div></div><p><strong>ThreadLocal工作原理：</strong></p><ul><li>每个线程都有独立的ThreadLocal变量副本</li><li>线程1的userId=1001，线程2的userId=1002，互不干扰</li><li>通过ThreadLocal实现线程隔离，避免并发问题</li><li>请求结束后需要清理ThreadLocal，防止内存泄漏</li></ul><h3 id=-实际使用场景>🔧 实际使用场景</h3><h4 id=controller-层使用>Controller 层使用</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -584,24 +604,26 @@
 </span><span class=lnt>15
 </span><span class=lnt>16
 </span><span class=lnt>17
-</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>graph TD
-</span></span><span class=line><span class=cl>    A[客户端请求] --&gt; B[DispatcherServlet]
-</span></span><span class=line><span class=cl>    B --&gt; C[HandlerMapping]
-</span></span><span class=line><span class=cl>    C --&gt; D{请求类型判断}
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    D --&gt;|Controller方法| E[HandlerMethod]
-</span></span><span class=line><span class=cl>    D --&gt;|静态资源| F[ResourceHttpRequestHandler]
-</span></span><span class=line><span class=cl>    D --&gt;|其他资源| G[其他Handler]
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    E --&gt; H[拦截器链]
-</span></span><span class=line><span class=cl>    F --&gt; I[直接处理]
-</span></span><span class=line><span class=cl>    G --&gt; I
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    H --&gt; J[Controller方法执行]
-</span></span><span class=line><span class=cl>    I --&gt; K[返回资源]
-</span></span><span class=line><span class=cl>    J --&gt; L[返回响应]
-</span></span><span class=line><span class=cl>    K --&gt; L
-</span></span></code></pre></td></tr></table></div></div><h4 id=handlermethod-vs-resourcehttprequesthandler>HandlerMethod vs ResourceHttpRequestHandler</h4><div class=table-wrapper><table><thead><tr><th>类型</th><th>用途</th><th>示例</th></tr></thead><tbody><tr><td>HandlerMethod</td><td>Controller 方法</td><td><code>@GetMapping("/users")</code></td></tr><tr><td>ResourceHttpRequestHandler</td><td>静态资源</td><td><code>/static/css/style.css</code></td></tr><tr><td>RequestMappingHandlerMapping</td><td>请求映射</td><td>默认的请求处理器</td></tr></tbody></table></div><h3 id=-实际应用场景-1>🎯 实际应用场景</h3><h4 id=场景1只拦截-controller-方法>场景1：只拦截 Controller 方法</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>客户端请求
+</span></span><span class=line><span class=cl>    │
+</span></span><span class=line><span class=cl>    ▼
+</span></span><span class=line><span class=cl>DispatcherServlet
+</span></span><span class=line><span class=cl>    │
+</span></span><span class=line><span class=cl>    ▼
+</span></span><span class=line><span class=cl>HandlerMapping
+</span></span><span class=line><span class=cl>    │
+</span></span><span class=line><span class=cl>    ▼
+</span></span><span class=line><span class=cl>┌─────────────────┐
+</span></span><span class=line><span class=cl>│   请求类型判断   │
+</span></span><span class=line><span class=cl>└─────────────────┘
+</span></span><span class=line><span class=cl>    │
+</span></span><span class=line><span class=cl>    ├── Controller方法 ──▶ HandlerMethod ──▶ 拦截器链 ──▶ Controller方法执行 ──▶ 返回响应
+</span></span><span class=line><span class=cl>    │
+</span></span><span class=line><span class=cl>    ├── 静态资源 ──▶ ResourceHttpRequestHandler ──▶ 直接处理 ──▶ 返回资源 ──▶ 返回响应
+</span></span><span class=line><span class=cl>    │
+</span></span><span class=line><span class=cl>    └── 其他资源 ──▶ 其他Handler ──▶ 直接处理 ──▶ 返回资源 ──▶ 返回响应
+</span></span></code></pre></td></tr></table></div></div><p><strong>流程说明：</strong></p><ol><li><strong>客户端请求</strong> → 发送HTTP请求到服务器</li><li><strong>DispatcherServlet</strong> → Spring MVC的核心分发器</li><li><strong>HandlerMapping</strong> → 根据URL映射找到对应的处理器</li><li><strong>请求类型判断</strong> → 区分不同类型的请求</li><li><strong>HandlerMethod</strong> → Controller方法处理器，需要JWT验证</li><li><strong>ResourceHttpRequestHandler</strong> → 静态资源处理器，直接返回</li><li><strong>拦截器链</strong> → 执行JWT验证等拦截逻辑</li><li><strong>Controller方法执行</strong> → 执行业务逻辑</li><li><strong>返回响应</strong> → 返回处理结果给客户端</li></ol><h4 id=handlermethod-vs-resourcehttprequesthandler>HandlerMethod vs ResourceHttpRequestHandler</h4><div class=table-wrapper><table><thead><tr><th>类型</th><th>用途</th><th>示例</th></tr></thead><tbody><tr><td>HandlerMethod</td><td>Controller 方法</td><td><code>@GetMapping("/users")</code></td></tr><tr><td>ResourceHttpRequestHandler</td><td>静态资源</td><td><code>/static/css/style.css</code></td></tr><tr><td>RequestMappingHandlerMapping</td><td>请求映射</td><td>默认的请求处理器</td></tr></tbody></table></div><h3 id=-实际应用场景-1>🎯 实际应用场景</h3><h4 id=场景1只拦截-controller-方法>场景1：只拦截 Controller 方法</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
 </span><span class=lnt>2
 </span><span class=lnt>3
 </span><span class=lnt>4
@@ -1269,7 +1291,7 @@
 </span></span></span><span class=line><span class=cl><span class=w>  </span><span class=nt>jwt</span><span class=p>:</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>admin-secret-key</span><span class=p>:</span><span class=w> </span><span class=l>${JWT_ADMIN_SECRET:default-secret}</span><span class=w>
 </span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nt>user-secret-key</span><span class=p>:</span><span class=w> </span><span class=l>${JWT_USER_SECRET:default-secret}</span><span class=w>
-</span></span></span></code></pre></td></tr></table></div></div><h2 id=11-总结与流程图示意>11. 总结与流程图示意</h2><h3 id=-完整请求流程图>🔄 完整请求流程图</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span></span></span></code></pre></td></tr></table></div></div><h2 id=11-总结与流程图示意>11. 总结与流程图示意</h2><h3 id=-完整请求流程图>🔄 完整请求流程图</h3><h4 id=时序图ascii版本>时序图（ASCII版本）</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
 </span><span class=lnt> 2
 </span><span class=lnt> 3
 </span><span class=lnt> 4
@@ -1296,34 +1318,114 @@
 </span><span class=lnt>25
 </span><span class=lnt>26
 </span><span class=lnt>27
-</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>sequenceDiagram
-</span></span><span class=line><span class=cl>    participant C as 客户端
-</span></span><span class=line><span class=cl>    participant D as DispatcherServlet
-</span></span><span class=line><span class=cl>    participant I as 拦截器
-</span></span><span class=line><span class=cl>    participant H as HandlerMethod
-</span></span><span class=line><span class=cl>    participant B as BaseContext
-</span></span><span class=line><span class=cl>    participant S as Service
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>客户端 ──▶ DispatcherServlet ──▶ 拦截器 ──▶ HandlerMethod ──▶ BaseContext ──▶ Service
+</span></span><span class=line><span class=cl>  │              │              │              │              │              │
+</span></span><span class=line><span class=cl>  │ HTTP请求+    │              │              │              │              │
+</span></span><span class=line><span class=cl>  │ Authorization│              │              │              │              │
+</span></span><span class=line><span class=cl>  ├─────────────▶│              │              │              │              │
+</span></span><span class=line><span class=cl>  │              │ 请求进入     │              │              │              │
+</span></span><span class=line><span class=cl>  │              ├─────────────▶│              │              │              │
+</span></span><span class=line><span class=cl>  │              │              │ 检查handler  │              │              │
+</span></span><span class=line><span class=cl>  │              │              │ instanceof   │              │              │
+</span></span><span class=line><span class=cl>  │              │              │ HandlerMethod│              │              │
+</span></span><span class=line><span class=cl>  │              │              ├─────────────▶│              │              │
+</span></span><span class=line><span class=cl>  │              │              │ 提取JWT Token│              │              │
+</span></span><span class=line><span class=cl>  │              │              ├─────────────▶│              │              │
+</span></span><span class=line><span class=cl>  │              │              │ 解析Token   │              │              │
+</span></span><span class=line><span class=cl>  │              │              │ 获取Claims  │              │              │
+</span></span><span class=line><span class=cl>  │              │              ├─────────────▶│              │              │
+</span></span><span class=line><span class=cl>  │              │              │ 设置userId  │              │              │
+</span></span><span class=line><span class=cl>  │              │              ├─────────────▶│              │              │
+</span></span><span class=line><span class=cl>  │              │              │ 放行到     │              │              │
+</span></span><span class=line><span class=cl>  │              │              │ Controller  │              │              │
+</span></span><span class=line><span class=cl>  │              │              ├─────────────▶│              │              │
+</span></span><span class=line><span class=cl>  │              │              │              │ 获取userId  │              │
+</span></span><span class=line><span class=cl>  │              │              │              ├─────────────▶│              │
+</span></span><span class=line><span class=cl>  │              │              │              │ 返回userId  │              │
+</span></span><span class=line><span class=cl>  │              │              │              │◀─────────────┤              │
+</span></span><span class=line><span class=cl>  │              │              │ 调用Service │              │              │
+</span></span><span class=line><span class=cl>  │              │              ├─────────────▶│              │              │
+</span></span><span class=line><span class=cl>  │              │              │              │ 获取userId  │              │
+</span></span><span class=line><span class=cl>  │              │              │              ├─────────────▶│              │
+</span></span><span class=line><span class=cl>  │              │              │              │ 返回userId  │              │
+</span></span><span class=line><span class=cl>  │              │              │              │◀─────────────┤              │
+</span></span><span class=line><span class=cl>  │              │              │ 返回业务数据│              │              │
+</span></span><span class=line><span class=cl>  │              │              │◀─────────────┤              │              │
+</span></span><span class=line><span class=cl>  │              │ 返回响应     │              │              │              │
+</span></span><span class=line><span class=cl>  │◀─────────────┤              │              │              │              │
+</span></span><span class=line><span class=cl>  │              │              │ 清理ThreadLocal│            │              │
+</span></span><span class=line><span class=cl>  │              │              ├─────────────▶│              │              │
+</span></span></code></pre></td></tr></table></div></div><h4 id=详细步骤说明>详细步骤说明</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>1. 客户端发送HTTP请求，携带Authorization头
+</span></span><span class=line><span class=cl>2. DispatcherServlet接收请求并转发给拦截器
+</span></span><span class=line><span class=cl>3. 拦截器检查handler类型（instanceof HandlerMethod）
+</span></span><span class=line><span class=cl>4. 拦截器提取JWT Token
+</span></span><span class=line><span class=cl>5. 拦截器解析Token获取Claims
+</span></span><span class=line><span class=cl>6. 拦截器将userId存储到BaseContext
+</span></span><span class=line><span class=cl>7. 拦截器放行请求到Controller
+</span></span><span class=line><span class=cl>8. Controller从BaseContext获取userId
+</span></span><span class=line><span class=cl>9. Controller调用Service方法
+</span></span><span class=line><span class=cl>10. Service从BaseContext获取userId
+</span></span><span class=line><span class=cl>11. Service执行业务逻辑并返回数据
+</span></span><span class=line><span class=cl>12. Controller返回响应给客户端
+</span></span><span class=line><span class=cl>13. 请求完成后清理ThreadLocal（防止内存泄漏）
+</span></span></code></pre></td></tr></table></div></div><h3 id=-核心概念总结>📊 核心概念总结</h3><div class=table-wrapper><table><thead><tr><th>概念</th><th>作用</th><th>关键点</th></tr></thead><tbody><tr><td><strong>HttpServletRequest</strong></td><td>封装请求信息</td><td>获取Header、参数、Session等</td></tr><tr><td><strong>HandlerMethod</strong></td><td>Controller方法处理器</td><td>区分Controller和静态资源</td></tr><tr><td><strong>instanceof</strong></td><td>类型判断</td><td>判断对象类型，确保类型安全</td></tr><tr><td><strong>BaseContext</strong></td><td>线程上下文</td><td>ThreadLocal存储用户信息</td></tr><tr><td><strong>JWT拦截器</strong></td><td>统一认证</td><td>自动解析Token，设置用户上下文</td></tr></tbody></table></div><h3 id=-技术要点>🎯 技术要点</h3><ol><li><strong>HttpServletRequest</strong>：封装请求信息，可以获取 Header、参数、Session、客户端信息等</li><li><strong>JWT + 拦截器</strong>：统一解析用户身份，拦截未授权请求</li><li><strong>BaseContext</strong>：存储当前请求的用户信息（ThreadLocal），避免传参麻烦</li><li><strong>handler & HandlerMethod</strong>：判断请求处理对象类型，区分 Controller 与静态资源</li><li><strong>instanceof</strong>：判断对象类型，是 Java 的基础语法</li></ol><h3 id=-项目优势>🚀 项目优势</h3><ul><li><strong>统一认证</strong>：通过拦截器实现JWT统一验证</li><li><strong>代码简洁</strong>：使用BaseContext避免层层传参</li><li><strong>类型安全</strong>：通过instanceof确保类型正确性</li><li><strong>内存安全</strong>：正确使用ThreadLocal，避免内存泄漏</li><li><strong>配置灵活</strong>：通过配置文件管理JWT参数</li></ul><p>这篇博客详细解析了Spring Boot中JWT鉴权、拦截器实现的核心原理，结合实际项目代码，让你深入理解用户认证的底层流程。通过掌握这些技术要点，你可以构建更加健壮和安全的Web应用系统。</p><hr><h2 id=-hugo博客使用说明>📝 Hugo博客使用说明</h2><h3 id=-已优化的内容>✅ 已优化的内容</h3><ul><li><strong>流程图</strong>：所有Mermaid图表已转换为ASCII字符图或代码块形式</li><li><strong>代码高亮</strong>：使用标准Markdown代码块，Hugo自动支持语法高亮</li><li><strong>表格</strong>：使用标准Markdown表格格式</li><li><strong>链接</strong>：所有链接都使用标准Markdown格式</li></ul><h3 id=-hugo配置建议>🔧 Hugo配置建议</h3><p>在你的Hugo配置文件中添加以下设置以优化显示效果：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-toml data-lang=toml><span class=line><span class=cl><span class=c># config.toml</span>
+</span></span><span class=line><span class=cl><span class=p>[</span><span class=nx>markup</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>  <span class=p>[</span><span class=nx>markup</span><span class=p>.</span><span class=nx>highlight</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>    <span class=nx>style</span> <span class=p>=</span> <span class=s2>&#34;github&#34;</span>
+</span></span><span class=line><span class=cl>    <span class=nx>lineNos</span> <span class=p>=</span> <span class=kc>true</span>
+</span></span><span class=line><span class=cl>    <span class=nx>lineNumbersInTable</span> <span class=p>=</span> <span class=kc>true</span>
+</span></span><span class=line><span class=cl>    <span class=nx>noClasses</span> <span class=p>=</span> <span class=kc>false</span>
+</span></span><span class=line><span class=cl>    <span class=nx>codeFences</span> <span class=p>=</span> <span class=kc>true</span>
+</span></span><span class=line><span class=cl>    <span class=nx>guessSyntax</span> <span class=p>=</span> <span class=kc>true</span>
+</span></span><span class=line><span class=cl>    <span class=nx>tabWidth</span> <span class=p>=</span> <span class=mi>4</span>
+</span></span><span class=line><span class=cl>    <span class=nx>wrap</span> <span class=p>=</span> <span class=kc>true</span>
 </span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>    C-&gt;&gt;D: HTTP请求 + Authorization头
-</span></span><span class=line><span class=cl>    D-&gt;&gt;I: 请求进入拦截器
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    I-&gt;&gt;I: 检查handler instanceof HandlerMethod
-</span></span><span class=line><span class=cl>    I-&gt;&gt;I: 提取JWT Token
-</span></span><span class=line><span class=cl>    I-&gt;&gt;I: 解析Token获取Claims
-</span></span><span class=line><span class=cl>    I-&gt;&gt;B: BaseContext.setCurrentId(userId)
-</span></span><span class=line><span class=cl>    I-&gt;&gt;H: 放行到Controller
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    H-&gt;&gt;B: BaseContext.getCurrentId()
-</span></span><span class=line><span class=cl>    B--&gt;&gt;H: 返回userId
-</span></span><span class=line><span class=cl>    H-&gt;&gt;S: 调用Service方法
-</span></span><span class=line><span class=cl>    S-&gt;&gt;B: BaseContext.getCurrentId()
-</span></span><span class=line><span class=cl>    B--&gt;&gt;S: 返回userId
-</span></span><span class=line><span class=cl>    S--&gt;&gt;H: 返回业务数据
-</span></span><span class=line><span class=cl>    H--&gt;&gt;C: 返回响应
-</span></span><span class=line><span class=cl>    
-</span></span><span class=line><span class=cl>    Note over I: 请求完成后清理ThreadLocal
-</span></span><span class=line><span class=cl>    I-&gt;&gt;B: BaseContext.removeCurrentId()
-</span></span></code></pre></td></tr></table></div></div><h3 id=-核心概念总结>📊 核心概念总结</h3><div class=table-wrapper><table><thead><tr><th>概念</th><th>作用</th><th>关键点</th></tr></thead><tbody><tr><td><strong>HttpServletRequest</strong></td><td>封装请求信息</td><td>获取Header、参数、Session等</td></tr><tr><td><strong>HandlerMethod</strong></td><td>Controller方法处理器</td><td>区分Controller和静态资源</td></tr><tr><td><strong>instanceof</strong></td><td>类型判断</td><td>判断对象类型，确保类型安全</td></tr><tr><td><strong>BaseContext</strong></td><td>线程上下文</td><td>ThreadLocal存储用户信息</td></tr><tr><td><strong>JWT拦截器</strong></td><td>统一认证</td><td>自动解析Token，设置用户上下文</td></tr></tbody></table></div><h3 id=-技术要点>🎯 技术要点</h3><ol><li><strong>HttpServletRequest</strong>：封装请求信息，可以获取 Header、参数、Session、客户端信息等</li><li><strong>JWT + 拦截器</strong>：统一解析用户身份，拦截未授权请求</li><li><strong>BaseContext</strong>：存储当前请求的用户信息（ThreadLocal），避免传参麻烦</li><li><strong>handler & HandlerMethod</strong>：判断请求处理对象类型，区分 Controller 与静态资源</li><li><strong>instanceof</strong>：判断对象类型，是 Java 的基础语法</li></ol><h3 id=-项目优势>🚀 项目优势</h3><ul><li><strong>统一认证</strong>：通过拦截器实现JWT统一验证</li><li><strong>代码简洁</strong>：使用BaseContext避免层层传参</li><li><strong>类型安全</strong>：通过instanceof确保类型正确性</li><li><strong>内存安全</strong>：正确使用ThreadLocal，避免内存泄漏</li><li><strong>配置灵活</strong>：通过配置文件管理JWT参数</li></ul><p>这篇博客详细解析了Spring Boot中JWT鉴权、拦截器实现的核心原理，结合实际项目代码，让你深入理解用户认证的底层流程。通过掌握这些技术要点，你可以构建更加健壮和安全的Web应用系统。</p><hr><blockquote><p>💡 <strong>提示</strong>：本文基于咖啡购物车项目实战，所有代码示例都经过实际测试验证。如果你有任何问题或建议，欢迎在评论区讨论！</p></blockquote></section><footer class=article-footer><section class=article-tags><a href=/tags/spring-boot/>Spring Boot</a>
+</span></span><span class=line><span class=cl><span class=p>[</span><span class=nx>markup</span><span class=p>.</span><span class=nx>goldmark</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>  <span class=p>[</span><span class=nx>markup</span><span class=p>.</span><span class=nx>goldmark</span><span class=p>.</span><span class=nx>renderer</span><span class=p>]</span>
+</span></span><span class=line><span class=cl>    <span class=nx>unsafe</span> <span class=p>=</span> <span class=kc>true</span>
+</span></span><span class=line><span class=cl>    <span class=nx>hardWraps</span> <span class=p>=</span> <span class=kc>false</span>
+</span></span><span class=line><span class=cl>    <span class=nx>xhtml</span> <span class=p>=</span> <span class=kc>false</span>
+</span></span></code></pre></td></tr></table></div></div><h3 id=-主题兼容性>🎨 主题兼容性</h3><p>本文档兼容以下Hugo主题：</p><ul><li>✅ <strong>LoveIt</strong> - 完全兼容</li><li>✅ <strong>PaperMod</strong> - 完全兼容</li><li>✅ <strong>Ananke</strong> - 完全兼容</li><li>✅ <strong>Academic</strong> - 完全兼容</li><li>✅ <strong>Minimal</strong> - 完全兼容</li></ul><h3 id=-移动端优化>📱 移动端优化</h3><ul><li>所有ASCII图表在移动端也能正常显示</li><li>代码块支持横向滚动</li><li>表格支持响应式布局</li></ul><hr><blockquote><p>💡 <strong>提示</strong>：本文基于咖啡购物车项目实战，所有代码示例都经过实际测试验证。如果你有任何问题或建议，欢迎在评论区讨论！</p></blockquote></section><footer class=article-footer><section class=article-tags><a href=/tags/spring-boot/>Spring Boot</a>
 <a href=/tags/jwt/>JWT</a>
 <a href=/tags/%E6%8B%A6%E6%88%AA%E5%99%A8/>拦截器</a>
 <a href=/tags/threadlocal/>ThreadLocal</a>

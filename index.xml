@@ -5328,7 +5328,8 @@ data-flex-basis="463px"
 &lt;li>&lt;strong>注释说明&lt;/strong>：目前代码直接从请求头取 &lt;code>userId&lt;/code>，在真实项目中要解析 JWT Token&lt;/li>
 &lt;/ol>
 &lt;h3 id="-完整流程示意">🔄 完整流程示意
-&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;/h3>&lt;h4 id="方案1ascii流程图hugo兼容">方案1：ASCII流程图（Hugo兼容）
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
 &lt;/span>&lt;span class="lnt"> 2
@@ -5347,25 +5348,70 @@ data-flex-basis="463px"
 &lt;/span>&lt;span class="lnt">15
 &lt;/span>&lt;span class="lnt">16
 &lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
+&lt;/span>&lt;span class="lnt">19
+&lt;/span>&lt;span class="lnt">20
+&lt;/span>&lt;span class="lnt">21
+&lt;/span>&lt;span class="lnt">22
+&lt;/span>&lt;span class="lnt">23
+&lt;/span>&lt;span class="lnt">24
+&lt;/span>&lt;span class="lnt">25
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">sequenceDiagram
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant F as 前端
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant B as 后端
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant J as JWT工具
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F-&amp;gt;&amp;gt;B: 登录请求
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B-&amp;gt;&amp;gt;J: 生成JWT Token
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> J--&amp;gt;&amp;gt;B: 返回Token
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B--&amp;gt;&amp;gt;F: 返回Token
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Note over F: 存储Token到localStorage
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F-&amp;gt;&amp;gt;B: 业务请求 + Authorization: Bearer &amp;lt;token&amp;gt;
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B-&amp;gt;&amp;gt;J: 解析Token
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> J--&amp;gt;&amp;gt;B: 返回Claims(userId)
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B-&amp;gt;&amp;gt;B: 从Claims中提取userId
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B--&amp;gt;&amp;gt;F: 返回业务数据
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">┌─────────┐ ┌─────────┐ ┌─────────┐
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│ 前端 │───▶│ 后端 │───▶│ JWT工具 │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└─────────┘ └─────────┘ └─────────┘
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ 1.登录请求 │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ├─────────────▶│ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ 2.生成Token │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ ├─────────────▶│
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ 3.返回Token │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │◀─────────────┤
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ 4.返回Token │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │◀─────────────┤ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ 存储到localStorage │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ 5.业务请求+Token │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ├─────────────▶│ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ 6.解析Token │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ ├─────────────▶│
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ 7.返回Claims │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │◀─────────────┤
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ 8.提取userId │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ 9.返回业务数据│ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │◀─────────────┤ │
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h4 id="方案2代码块形式推荐">方案2：代码块形式（推荐）
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-text" data-lang="text">&lt;span class="line">&lt;span class="cl">JWT认证流程：
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">1. 前端发送登录请求
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">2. 后端验证用户信息
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">3. 后端生成JWT Token
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">4. 后端返回Token给前端
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">5. 前端存储Token到localStorage
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">6. 前端发送业务请求（携带Authorization头）
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">7. 后端拦截器解析JWT Token
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">8. 后端从Token中提取用户ID
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">9. 后端执行业务逻辑
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">10. 后端返回业务数据
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;h2 id="4-jwttokenuserinterceptor-拦截器详解">4. JwtTokenUserInterceptor 拦截器详解
@@ -5742,35 +5788,24 @@ data-flex-basis="463px"
 &lt;h4 id="threadlocal-内存模型">ThreadLocal 内存模型
 &lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
-&lt;/span>&lt;span class="lnt"> 2
-&lt;/span>&lt;span class="lnt"> 3
-&lt;/span>&lt;span class="lnt"> 4
-&lt;/span>&lt;span class="lnt"> 5
-&lt;/span>&lt;span class="lnt"> 6
-&lt;/span>&lt;span class="lnt"> 7
-&lt;/span>&lt;span class="lnt"> 8
-&lt;/span>&lt;span class="lnt"> 9
-&lt;/span>&lt;span class="lnt">10
-&lt;/span>&lt;span class="lnt">11
-&lt;/span>&lt;span class="lnt">12
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt">1
+&lt;/span>&lt;span class="lnt">2
+&lt;/span>&lt;span class="lnt">3
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">graph TD
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> A[请求线程1] --&amp;gt; B[ThreadLocal Map]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C[请求线程2] --&amp;gt; D[ThreadLocal Map]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> E[请求线程3] --&amp;gt; F[ThreadLocal Map]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B --&amp;gt; G[userId: 1001]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt; H[userId: 1002]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F --&amp;gt; I[userId: 1003]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> style A fill:#e1f5fe
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> style C fill:#e8f5e8
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> style E fill:#fff3e0
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">请求线程1 ──▶ ThreadLocal Map ──▶ userId: 1001
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">请求线程2 ──▶ ThreadLocal Map ──▶ userId: 1002
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">请求线程3 ──▶ ThreadLocal Map ──▶ userId: 1003
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
-&lt;/div>&lt;h3 id="-实际使用场景">🔧 实际使用场景
+&lt;/div>&lt;p>&lt;strong>ThreadLocal工作原理：&lt;/strong>&lt;/p>
+&lt;ul>
+&lt;li>每个线程都有独立的ThreadLocal变量副本&lt;/li>
+&lt;li>线程1的userId=1001，线程2的userId=1002，互不干扰&lt;/li>
+&lt;li>通过ThreadLocal实现线程隔离，避免并发问题&lt;/li>
+&lt;li>请求结束后需要清理ThreadLocal，防止内存泄漏&lt;/li>
+&lt;/ul>
+&lt;h3 id="-实际使用场景">🔧 实际使用场景
 &lt;/h3>&lt;h4 id="controller-层使用">Controller 层使用
 &lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
@@ -5930,28 +5965,42 @@ data-flex-basis="463px"
 &lt;/span>&lt;span class="lnt">15
 &lt;/span>&lt;span class="lnt">16
 &lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;span class="lnt">18
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">graph TD
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> A[客户端请求] --&amp;gt; B[DispatcherServlet]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B --&amp;gt; C[HandlerMapping]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C --&amp;gt; D{请求类型判断}
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt;|Controller方法| E[HandlerMethod]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt;|静态资源| F[ResourceHttpRequestHandler]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D --&amp;gt;|其他资源| G[其他Handler]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> E --&amp;gt; H[拦截器链]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> F --&amp;gt; I[直接处理]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> G --&amp;gt; I
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H --&amp;gt; J[Controller方法执行]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I --&amp;gt; K[返回资源]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> J --&amp;gt; L[返回响应]
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> K --&amp;gt; L
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">客户端请求
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ▼
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">DispatcherServlet
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ▼
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">HandlerMapping
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ▼
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">┌─────────────────┐
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">│ 请求类型判断 │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">└─────────────────┘
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ├── Controller方法 ──▶ HandlerMethod ──▶ 拦截器链 ──▶ Controller方法执行 ──▶ 返回响应
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ├── 静态资源 ──▶ ResourceHttpRequestHandler ──▶ 直接处理 ──▶ 返回资源 ──▶ 返回响应
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> └── 其他资源 ──▶ 其他Handler ──▶ 直接处理 ──▶ 返回资源 ──▶ 返回响应
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
-&lt;/div>&lt;h4 id="handlermethod-vs-resourcehttprequesthandler">HandlerMethod vs ResourceHttpRequestHandler
+&lt;/div>&lt;p>&lt;strong>流程说明：&lt;/strong>&lt;/p>
+&lt;ol>
+&lt;li>&lt;strong>客户端请求&lt;/strong> → 发送HTTP请求到服务器&lt;/li>
+&lt;li>&lt;strong>DispatcherServlet&lt;/strong> → Spring MVC的核心分发器&lt;/li>
+&lt;li>&lt;strong>HandlerMapping&lt;/strong> → 根据URL映射找到对应的处理器&lt;/li>
+&lt;li>&lt;strong>请求类型判断&lt;/strong> → 区分不同类型的请求&lt;/li>
+&lt;li>&lt;strong>HandlerMethod&lt;/strong> → Controller方法处理器，需要JWT验证&lt;/li>
+&lt;li>&lt;strong>ResourceHttpRequestHandler&lt;/strong> → 静态资源处理器，直接返回&lt;/li>
+&lt;li>&lt;strong>拦截器链&lt;/strong> → 执行JWT验证等拦截逻辑&lt;/li>
+&lt;li>&lt;strong>Controller方法执行&lt;/strong> → 执行业务逻辑&lt;/li>
+&lt;li>&lt;strong>返回响应&lt;/strong> → 返回处理结果给客户端&lt;/li>
+&lt;/ol>
+&lt;h4 id="handlermethod-vs-resourcehttprequesthandler">HandlerMethod vs ResourceHttpRequestHandler
 &lt;/h4>&lt;table>
 &lt;thead>
 &lt;tr>
@@ -6799,7 +6848,8 @@ data-flex-basis="463px"
 &lt;/div>
 &lt;/div>&lt;h2 id="11-总结与流程图示意">11. 总结与流程图示意
 &lt;/h2>&lt;h3 id="-完整请求流程图">🔄 完整请求流程图
-&lt;/h3>&lt;div class="highlight">&lt;div class="chroma">
+&lt;/h3>&lt;h4 id="时序图ascii版本">时序图（ASCII版本）
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
 &lt;table class="lntable">&lt;tr>&lt;td class="lntd">
 &lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
 &lt;/span>&lt;span class="lnt"> 2
@@ -6828,35 +6878,88 @@ data-flex-basis="463px"
 &lt;/span>&lt;span class="lnt">25
 &lt;/span>&lt;span class="lnt">26
 &lt;/span>&lt;span class="lnt">27
+&lt;/span>&lt;span class="lnt">28
+&lt;/span>&lt;span class="lnt">29
+&lt;/span>&lt;span class="lnt">30
+&lt;/span>&lt;span class="lnt">31
+&lt;/span>&lt;span class="lnt">32
+&lt;/span>&lt;span class="lnt">33
+&lt;/span>&lt;span class="lnt">34
+&lt;/span>&lt;span class="lnt">35
+&lt;/span>&lt;span class="lnt">36
+&lt;/span>&lt;span class="lnt">37
 &lt;/span>&lt;/code>&lt;/pre>&lt;/td>
 &lt;td class="lntd">
-&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">sequenceDiagram
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant C as 客户端
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant D as DispatcherServlet
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant I as 拦截器
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant H as HandlerMethod
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant B as BaseContext
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> participant S as Service
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> C-&amp;gt;&amp;gt;D: HTTP请求 + Authorization头
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> D-&amp;gt;&amp;gt;I: 请求进入拦截器
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I-&amp;gt;&amp;gt;I: 检查handler instanceof HandlerMethod
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I-&amp;gt;&amp;gt;I: 提取JWT Token
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I-&amp;gt;&amp;gt;I: 解析Token获取Claims
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I-&amp;gt;&amp;gt;B: BaseContext.setCurrentId(userId)
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I-&amp;gt;&amp;gt;H: 放行到Controller
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H-&amp;gt;&amp;gt;B: BaseContext.getCurrentId()
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B--&amp;gt;&amp;gt;H: 返回userId
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H-&amp;gt;&amp;gt;S: 调用Service方法
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> S-&amp;gt;&amp;gt;B: BaseContext.getCurrentId()
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> B--&amp;gt;&amp;gt;S: 返回userId
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> S--&amp;gt;&amp;gt;H: 返回业务数据
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> H--&amp;gt;&amp;gt;C: 返回响应
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> Note over I: 请求完成后清理ThreadLocal
-&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> I-&amp;gt;&amp;gt;B: BaseContext.removeCurrentId()
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-fallback" data-lang="fallback">&lt;span class="line">&lt;span class="cl">客户端 ──▶ DispatcherServlet ──▶ 拦截器 ──▶ HandlerMethod ──▶ BaseContext ──▶ Service
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ HTTP请求+ │ │ │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ Authorization│ │ │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> ├─────────────▶│ │ │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ 请求进入 │ │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ ├─────────────▶│ │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 检查handler │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ instanceof │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ HandlerMethod│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ ├─────────────▶│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 提取JWT Token│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ ├─────────────▶│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 解析Token │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 获取Claims │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ ├─────────────▶│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 设置userId │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ ├─────────────▶│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 放行到 │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ Controller │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ ├─────────────▶│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ │ 获取userId │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ ├─────────────▶│ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ │ 返回userId │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ │◀─────────────┤ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 调用Service │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ ├─────────────▶│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ │ 获取userId │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ ├─────────────▶│ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ │ 返回userId │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ │◀─────────────┤ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 返回业务数据│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │◀─────────────┤ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ 返回响应 │ │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │◀─────────────┤ │ │ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ │ 清理ThreadLocal│ │ │
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> │ │ ├─────────────▶│ │ │
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h4 id="详细步骤说明">详细步骤说明
+&lt;/h4>&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-text" data-lang="text">&lt;span class="line">&lt;span class="cl">1. 客户端发送HTTP请求，携带Authorization头
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">2. DispatcherServlet接收请求并转发给拦截器
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">3. 拦截器检查handler类型（instanceof HandlerMethod）
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">4. 拦截器提取JWT Token
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">5. 拦截器解析Token获取Claims
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">6. 拦截器将userId存储到BaseContext
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">7. 拦截器放行请求到Controller
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">8. Controller从BaseContext获取userId
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">9. Controller调用Service方法
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">10. Service从BaseContext获取userId
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">11. Service执行业务逻辑并返回数据
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">12. Controller返回响应给客户端
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">13. 请求完成后清理ThreadLocal（防止内存泄漏）
 &lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
 &lt;/div>
 &lt;/div>&lt;h3 id="-核心概念总结">📊 核心概念总结
@@ -6913,6 +7016,72 @@ data-flex-basis="463px"
 &lt;li>&lt;strong>配置灵活&lt;/strong>：通过配置文件管理JWT参数&lt;/li>
 &lt;/ul>
 &lt;p>这篇博客详细解析了Spring Boot中JWT鉴权、拦截器实现的核心原理，结合实际项目代码，让你深入理解用户认证的底层流程。通过掌握这些技术要点，你可以构建更加健壮和安全的Web应用系统。&lt;/p>
+&lt;hr>
+&lt;h2 id="-hugo博客使用说明">📝 Hugo博客使用说明
+&lt;/h2>&lt;h3 id="-已优化的内容">✅ 已优化的内容
+&lt;/h3>&lt;ul>
+&lt;li>&lt;strong>流程图&lt;/strong>：所有Mermaid图表已转换为ASCII字符图或代码块形式&lt;/li>
+&lt;li>&lt;strong>代码高亮&lt;/strong>：使用标准Markdown代码块，Hugo自动支持语法高亮&lt;/li>
+&lt;li>&lt;strong>表格&lt;/strong>：使用标准Markdown表格格式&lt;/li>
+&lt;li>&lt;strong>链接&lt;/strong>：所有链接都使用标准Markdown格式&lt;/li>
+&lt;/ul>
+&lt;h3 id="-hugo配置建议">🔧 Hugo配置建议
+&lt;/h3>&lt;p>在你的Hugo配置文件中添加以下设置以优化显示效果：&lt;/p>
+&lt;div class="highlight">&lt;div class="chroma">
+&lt;table class="lntable">&lt;tr>&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code>&lt;span class="lnt"> 1
+&lt;/span>&lt;span class="lnt"> 2
+&lt;/span>&lt;span class="lnt"> 3
+&lt;/span>&lt;span class="lnt"> 4
+&lt;/span>&lt;span class="lnt"> 5
+&lt;/span>&lt;span class="lnt"> 6
+&lt;/span>&lt;span class="lnt"> 7
+&lt;/span>&lt;span class="lnt"> 8
+&lt;/span>&lt;span class="lnt"> 9
+&lt;/span>&lt;span class="lnt">10
+&lt;/span>&lt;span class="lnt">11
+&lt;/span>&lt;span class="lnt">12
+&lt;/span>&lt;span class="lnt">13
+&lt;/span>&lt;span class="lnt">14
+&lt;/span>&lt;span class="lnt">15
+&lt;/span>&lt;span class="lnt">16
+&lt;/span>&lt;span class="lnt">17
+&lt;/span>&lt;/code>&lt;/pre>&lt;/td>
+&lt;td class="lntd">
+&lt;pre tabindex="0" class="chroma">&lt;code class="language-toml" data-lang="toml">&lt;span class="line">&lt;span class="cl">&lt;span class="c"># config.toml&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">[&lt;/span>&lt;span class="nx">markup&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">[&lt;/span>&lt;span class="nx">markup&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">highlight&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">style&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="s2">&amp;#34;github&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">lineNos&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">lineNumbersInTable&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">noClasses&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">codeFences&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">guessSyntax&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">tabWidth&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="mi">4&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">wrap&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl">&lt;span class="p">[&lt;/span>&lt;span class="nx">markup&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">goldmark&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="p">[&lt;/span>&lt;span class="nx">markup&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">goldmark&lt;/span>&lt;span class="p">.&lt;/span>&lt;span class="nx">renderer&lt;/span>&lt;span class="p">]&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">unsafe&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">hardWraps&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">false&lt;/span>
+&lt;/span>&lt;/span>&lt;span class="line">&lt;span class="cl"> &lt;span class="nx">xhtml&lt;/span> &lt;span class="p">=&lt;/span> &lt;span class="kc">false&lt;/span>
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/td>&lt;/tr>&lt;/table>
+&lt;/div>
+&lt;/div>&lt;h3 id="-主题兼容性">🎨 主题兼容性
+&lt;/h3>&lt;p>本文档兼容以下Hugo主题：&lt;/p>
+&lt;ul>
+&lt;li>✅ &lt;strong>LoveIt&lt;/strong> - 完全兼容&lt;/li>
+&lt;li>✅ &lt;strong>PaperMod&lt;/strong> - 完全兼容&lt;/li>
+&lt;li>✅ &lt;strong>Ananke&lt;/strong> - 完全兼容&lt;/li>
+&lt;li>✅ &lt;strong>Academic&lt;/strong> - 完全兼容&lt;/li>
+&lt;li>✅ &lt;strong>Minimal&lt;/strong> - 完全兼容&lt;/li>
+&lt;/ul>
+&lt;h3 id="-移动端优化">📱 移动端优化
+&lt;/h3>&lt;ul>
+&lt;li>所有ASCII图表在移动端也能正常显示&lt;/li>
+&lt;li>代码块支持横向滚动&lt;/li>
+&lt;li>表格支持响应式布局&lt;/li>
+&lt;/ul>
 &lt;hr>
 &lt;blockquote>
 &lt;p>💡 &lt;strong>提示&lt;/strong>：本文基于咖啡购物车项目实战，所有代码示例都经过实际测试验证。如果你有任何问题或建议，欢迎在评论区讨论！&lt;/p>&lt;/blockquote></description></item><item><title>Hash咖啡项目后端改造指南 - 第一部分：项目概述和数据库设计</title><link>https://Yin123-ybh.github.io/p/hash%E5%92%96%E5%95%A1%E9%A1%B9%E7%9B%AE%E5%90%8E%E7%AB%AF%E6%94%B9%E9%80%A0%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0%E5%92%8C%E6%95%B0%E6%8D%AE%E5%BA%93%E8%AE%BE%E8%AE%A1/</link><pubDate>Tue, 14 Jan 2025 00:00:00 +0000</pubDate><guid>https://Yin123-ybh.github.io/p/hash%E5%92%96%E5%95%A1%E9%A1%B9%E7%9B%AE%E5%90%8E%E7%AB%AF%E6%94%B9%E9%80%A0%E6%8C%87%E5%8D%97-%E7%AC%AC%E4%B8%80%E9%83%A8%E5%88%86%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0%E5%92%8C%E6%95%B0%E6%8D%AE%E5%BA%93%E8%AE%BE%E8%AE%A1/</guid><description>&lt;h1 id="hash咖啡项目后端改造指南---第一部分项目概述和数据库设计">Hash咖啡项目后端改造指南 - 第一部分：项目概述和数据库设计
