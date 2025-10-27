@@ -1197,18 +1197,10 @@ Spring Cloud Gateway 的设计非常"优雅"——
 * 《JWT Token 在微服务中的最佳实践》
 * 《网关限流熔断实战总结》
 
----
 
-<div style="text-align: center; margin-top: 40px; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 10px;">
-
-**🎉 感谢阅读！** 如果本文对你有帮助，请点赞和分享。
-
-**📝 如有问题或建议，欢迎留言讨论！**
-
-</div>
 
 ---
 
 *最后更新：2025-01-20*
-*作者：george*
+*作者：Cecilia*
 *许可：本文采用 [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) 许可协议*
