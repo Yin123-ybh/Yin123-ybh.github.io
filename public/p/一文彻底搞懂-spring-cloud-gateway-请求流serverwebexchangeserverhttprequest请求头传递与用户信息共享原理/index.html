@@ -1,0 +1,1285 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><meta name=description content="深入解析 Spring Cloud Gateway 的底层响应式架构，包括 ServerWebExchange、ServerHttpRequest 不可变对象模型、mutate() 机制原理，以及如何安全高效地传递用户信息。"><meta name=keywords content="Spring Cloud Gateway,ServerWebExchange,WebFlux,响应式编程,不可变对象,JWT传递"><title>一文彻底搞懂 Spring Cloud Gateway 请求流：ServerWebExchange、ServerHttpRequest、请求头传递与用户信息共享原理</title><link rel=canonical href=https://Yin123-ybh.github.io/p/%E4%B8%80%E6%96%87%E5%BD%BB%E5%BA%95%E6%90%9E%E6%87%82-spring-cloud-gateway-%E8%AF%B7%E6%B1%82%E6%B5%81serverwebexchangeserverhttprequest%E8%AF%B7%E6%B1%82%E5%A4%B4%E4%BC%A0%E9%80%92%E4%B8%8E%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF%E5%85%B1%E4%BA%AB%E5%8E%9F%E7%90%86/><link rel=stylesheet href=/scss/style.min.946cca6c6259ef94ac55abfae7c7bf3291ea3ed5eea17ef77500b257217c6710.css><meta property='og:title' content="一文彻底搞懂 Spring Cloud Gateway 请求流：ServerWebExchange、ServerHttpRequest、请求头传递与用户信息共享原理"><meta property='og:description' content="深入解析 Spring Cloud Gateway 的底层响应式架构，包括 ServerWebExchange、ServerHttpRequest 不可变对象模型、mutate() 机制原理，以及如何安全高效地传递用户信息。"><meta property='og:url' content='https://Yin123-ybh.github.io/p/%E4%B8%80%E6%96%87%E5%BD%BB%E5%BA%95%E6%90%9E%E6%87%82-spring-cloud-gateway-%E8%AF%B7%E6%B1%82%E6%B5%81serverwebexchangeserverhttprequest%E8%AF%B7%E6%B1%82%E5%A4%B4%E4%BC%A0%E9%80%92%E4%B8%8E%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF%E5%85%B1%E4%BA%AB%E5%8E%9F%E7%90%86/'><meta property='og:site_name' content='Cecilia-塞西莉娅'><meta property='og:type' content='article'><meta property='article:section' content='Post'><meta property='article:tag' content='Spring Cloud Gateway'><meta property='article:tag' content='WebFlux'><meta property='article:tag' content='JWT'><meta property='article:tag' content='Filter'><meta property='article:tag' content='Reactive Programming'><meta property='article:tag' content='微服务网关'><meta property='article:published_time' content='2025-01-20T10:00:00+08:00'><meta property='article:modified_time' content='2025-01-20T10:00:00+08:00'><meta name=twitter:title content="一文彻底搞懂 Spring Cloud Gateway 请求流：ServerWebExchange、ServerHttpRequest、请求头传递与用户信息共享原理"><meta name=twitter:description content="深入解析 Spring Cloud Gateway 的底层响应式架构，包括 ServerWebExchange、ServerHttpRequest 不可变对象模型、mutate() 机制原理，以及如何安全高效地传递用户信息。"><link rel="shortcut icon" href=/favicon.ico></head><body class=article-page><script>(function(){const e="StackColorScheme";localStorage.getItem(e)||localStorage.setItem(e,"auto")})()</script><script>(function(){const t="StackColorScheme",e=localStorage.getItem(t),n=window.matchMedia("(prefers-color-scheme: dark)").matches===!0;e=="dark"||e==="auto"&&n?document.documentElement.dataset.scheme="dark":document.documentElement.dataset.scheme="light"})()</script><div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky"><button class="hamburger hamburger--spin" type=button id=toggle-menu aria-label="Toggle Menu">
+<span class=hamburger-box><span class=hamburger-inner></span></span></button><header><figure class=site-avatar><a href=/><img src=/img/avatar_hu_8636e4c1b17bd1a4.png width=300 height=300 class=site-logo loading=lazy alt=Avatar>
+</a><span class=emoji>🧑‍💻</span></figure><div class=site-meta><h1 class=site-name><a href=/>Cecilia-塞西莉娅</a></h1><h2 class=site-description>Welcome to my website</h2></div></header><ol class=menu-social><li><a href=https://github.com/Yin123-ybh target=_blank title=GitHub rel=me><svg class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6.0 00-1.3-3.2 4.2 4.2.0 00-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3.0 00-6.2.0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2.0 00-.1 3.2A4.6 4.6.0 004 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg></a></li><li><a href=https://twitter.com target=_blank title=Twitter rel=me><svg class="icon icon-tabler icon-tabler-brand-twitter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M22 4.01c-1 .49-1.98.689-3 .99-1.121-1.265-2.783-1.335-4.38-.737S11.977 6.323 12 8v1c-3.245.083-6.135-1.395-8-4 0 0-4.182 7.433 4 11-1.872 1.247-3.739 2.088-6 2 3.308 1.803 6.913 2.423 10.034 1.517 3.58-1.04 6.522-3.723 7.651-7.742a13.84 13.84.0 00.497-3.753C20.18 7.773 21.692 5.25 22 4.009z"/></svg></a></li></ol><ol class=menu id=main-menu><li><a href=/><svg class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><polyline points="5 12 3 12 12 3 21 12 19 12"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/><path d="M9 21v-6a2 2 0 012-2h2a2 2 0 012 2v6"/></svg>
+<span>Home</span></a></li><li><a href=/about/><svg class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="7" r="4"/><path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/></svg>
+<span>About</span></a></li><li><a href=/archives/><svg class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><rect x="3" y="4" width="18" height="4" rx="2"/><path d="M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+<span>Archives</span></a></li><li><a href=/search/><svg class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="10" cy="10" r="7"/><line x1="21" y1="21" x2="15" y2="15"/></svg>
+<span>Search</span></a></li><li><a href=/links/><svg class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M10 14a3.5 3.5.0 005 0l4-4a3.5 3.5.0 00-5-5l-.5.5"/><path d="M14 10a3.5 3.5.0 00-5 0l-4 4a3.5 3.5.0 005 5l.5-.5"/></svg>
+<span>Links</span></a></li><li class=menu-bottom-section><ol class=menu><li id=i18n-switch><svg class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 5h7"/><path d="M9 3v2c0 4.418-2.239 8-5 8"/><path d="M5 9c-.003 2.144 2.952 3.908 6.7 4"/><path d="M12 20l4-9 4 9"/><path d="M19.1 18h-6.2"/></svg>
+<select name=language title=language onchange="window.location.href=this.selectedOptions[0].value"><option value=https://Yin123-ybh.github.io/ selected>English</option><option value=https://Yin123-ybh.github.io/zh-cn/>简体中文</option><option value=https://Yin123-ybh.github.io/ar/>عربي</option></select></li><li id=dark-mode-toggle><svg class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="8" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<svg class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="16" cy="12" r="2"/><rect x="2" y="6" width="20" height="12" rx="6"/></svg>
+<span>Dark Mode</span></li></ol></li></ol></aside><aside class="sidebar right-sidebar sticky"><section class="widget archives"><div class=widget-icon><svg class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><line x1="5" y1="9" x2="19" y2="9"/><line x1="5" y1="15" x2="19" y2="15"/><line x1="11" y1="4" x2="7" y2="20"/><line x1="17" y1="4" x2="13" y2="20"/></svg></div><h2 class="widget-title section-title">Table of contents</h2><div class=widget--toc><nav id=TableOfContents><ol><li><a href=#-前言>🚀 前言</a></li><li><a href=#-一spring-cloud-gateway-的定位与原理>🧭 一、Spring Cloud Gateway 的定位与原理</a><ol><li><a href=#1-什么是网关>1. 什么是网关</a></li><li><a href=#2-spring-cloud-gateway-的底层引擎>2. Spring Cloud Gateway 的底层引擎</a><ol><li><a href=#响应式编程的三驾马车>响应式编程的三驾马车</a></li><li><a href=#性能对比>性能对比</a></li></ol></li></ol></li><li><a href=#-二serverwebexchange请求的上下文容器>🧩 二、ServerWebExchange：请求的"上下文容器"</a><ol><li><a href=#它包含什么>它包含什么？</a></li><li><a href=#attributes-的妙用>attributes 的妙用</a></li><li><a href=#举例说明>举例说明</a></li></ol></li><li><a href=#-三serverhttprequest-与-serverhttpresponse-详解>🧠 三、ServerHttpRequest 与 ServerHttpResponse 详解</a><ol><li><a href=#1-serverhttprequest-的核心职责>1. ServerHttpRequest 的核心职责</a></li><li><a href=#2-serverhttpresponse-的核心职责>2. ServerHttpResponse 的核心职责</a></li></ol></li><li><a href=#-四不可变对象immutable-object模型>⚙️ 四、不可变对象（Immutable Object）模型</a><ol><li><a href=#1-为什么要不可变>1. 为什么要不可变？</a><ol><li><a href=#传统可变对象的风险>传统可变对象的风险</a></li><li><a href=#响应式环境下的考虑>响应式环境下的考虑</a></li></ol></li><li><a href=#2-不可变带来的好处>2. 不可变带来的好处</a></li><li><a href=#3-不可变带来的限制>3. 不可变带来的"限制"</a></li></ol></li><li><a href=#-五mutate-的底层原理与实现细节>🧩 五、mutate() 的底层原理与实现细节</a><ol><li><a href=#1-mutate-是什么>1. mutate() 是什么？</a></li><li><a href=#2-工作原理示意>2. 工作原理示意</a></li><li><a href=#3-mutate-的内部实现简化版>3. mutate() 的内部实现（简化版）</a></li><li><a href=#4-性能优化细节>4. 性能优化细节</a></li></ol></li><li><a href=#-六重新放入-serverwebexchange>🔄 六、重新放入 ServerWebExchange</a><ol><li><a href=#1-创建新-exchange>1. 创建新 Exchange</a></li><li><a href=#2-完整流程示意>2. 完整流程示意</a></li><li><a href=#3-为什么-response-和-attributes-不变>3. 为什么 response 和 attributes 不变？</a></li></ol></li><li><a href=#-七为什么要这么传递用户信息>🔐 七、为什么要这么传递用户信息？</a><ol><li><a href=#1-性能考虑>1. 性能考虑</a><ol><li><a href=#方案a每个服务都解析-token重复工作>方案A：每个服务都解析 Token（重复工作）</a></li><li><a href=#方案b网关解析通过-header-传递推荐>方案B：网关解析，通过 Header 传递（推荐）</a></li></ol></li><li><a href=#2-最简单的办法在请求头中附加用户信息>2. 最简单的办法：在请求头中附加用户信息</a></li><li><a href=#3-数据传递示例>3. 数据传递示例</a></li></ol></li><li><a href=#-八替代方案与安全考虑>🧰 八、替代方案与安全考虑</a><ol><li><a href=#1-attributes-方式仅内部使用>1. attributes 方式（仅内部使用）</a><ol><li><a href=#attributes-vs-header-对比>attributes vs Header 对比</a></li></ol></li><li><a href=#2-请求头方式跨服务传递>2. 请求头方式（跨服务传递）</a><ol><li><a href=#安全风险>安全风险</a></li><li><a href=#安全建议>安全建议</a></li></ol></li><li><a href=#3-统一上下文管理高级方案>3. 统一上下文管理（高级方案）</a></li></ol></li><li><a href=#-九请求流完整执行过程>⚡ 九、请求流完整执行过程</a><ol><li><a href=#阶段1请求到达-gateway>阶段1：请求到达 Gateway</a></li><li><a href=#阶段2进入-globalfilter>阶段2：进入 GlobalFilter</a></li><li><a href=#阶段3路由转发>阶段3：路由转发</a></li><li><a href=#阶段4下游服务处理>阶段4：下游服务处理</a></li><li><a href=#阶段5响应返回>阶段5：响应返回</a></li></ol></li><li><a href=#-十生产实践经验总结>💡 十、生产实践经验总结</a><ol><li><a href=#1-不要修改原始对象>1. 不要修改原始对象</a></li><li><a href=#2-使用-header-传递轻量级信息>2. 使用 Header 传递轻量级信息</a></li><li><a href=#3-网关是请求入口--安全边界>3. 网关是"请求入口 + 安全边界"</a></li><li><a href=#4-响应式链中的对象均为一次性使用>4. 响应式链中的对象均为一次性使用</a></li><li><a href=#5-推荐搭配-mdc-或-threadlocal-上下文跟踪>5. 推荐搭配 MDC 或 ThreadLocal 上下文跟踪</a></li><li><a href=#6-性能优化技巧>6. 性能优化技巧</a></li></ol></li><li><a href=#-十一示意图请求流转全过程>🧱 十一、示意图：请求流转全过程</a></li><li><a href=#-十二常见问题与解决方案>🎯 十二、常见问题与解决方案</a><ol><li><a href=#q1如何在-filter-中获取或修改请求体>Q1：如何在 Filter 中获取或修改请求体？</a></li><li><a href=#q2如何在-filter-中获取响应体>Q2：如何在 Filter 中获取响应体？</a></li><li><a href=#q3filter-的执行顺序如何控制>Q3：Filter 的执行顺序如何控制？</a></li><li><a href=#q4如何实现熔断降级>Q4：如何实现熔断降级？</a></li></ol></li><li><a href=#-十三结语>🏁 十三、结语</a><ol><li><a href=#核心要点回顾>核心要点回顾</a></li><li><a href=#下一步学习>下一步学习</a></li></ol></li><li><a href=#-延伸阅读>📚 延伸阅读</a><ol><li><a href=#官方文档>官方文档</a></li><li><a href=#技术规范>技术规范</a></li><li><a href=#推荐书籍>推荐书籍</a></li><li><a href=#相关文章>相关文章</a></li></ol></li></ol></nav></div></section></aside><main class="main full-width"><article class=main-article><header class=article-header><div class=article-details><header class=article-category><a href=/categories/%E6%8A%80%E6%9C%AF%E5%8D%9A%E5%AE%A2/>技术博客
+</a><a href=/categories/%E5%90%8E%E7%AB%AF%E6%9E%B6%E6%9E%84/>后端架构</a></header><div class=article-title-wrapper><h2 class=article-title><a href=/p/%E4%B8%80%E6%96%87%E5%BD%BB%E5%BA%95%E6%90%9E%E6%87%82-spring-cloud-gateway-%E8%AF%B7%E6%B1%82%E6%B5%81serverwebexchangeserverhttprequest%E8%AF%B7%E6%B1%82%E5%A4%B4%E4%BC%A0%E9%80%92%E4%B8%8E%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF%E5%85%B1%E4%BA%AB%E5%8E%9F%E7%90%86/>一文彻底搞懂 Spring Cloud Gateway 请求流：ServerWebExchange、ServerHttpRequest、请求头传递与用户信息共享原理</a></h2><h3 class=article-subtitle>深入解析 Spring Cloud Gateway 的底层响应式架构，包括 ServerWebExchange、ServerHttpRequest 不可变对象模型、mutate() 机制原理，以及如何安全高效地传递用户信息。</h3></div><footer class=article-time><div><svg class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><path d="M11.795 21H5a2 2 0 01-2-2V7a2 2 0 012-2h12a2 2 0 012 2v4"/><circle cx="18" cy="18" r="4"/><path d="M15 3v4"/><path d="M7 3v4"/><path d="M3 11h16"/><path d="M18 16.496V18l1 1"/></svg>
+<time class=article-time--published>2025-01-20</time></div><div><svg class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+<time class=article-time--reading>14 minute read</time></div></footer></div></header><section class=article-content><h2 id=-前言>🚀 前言</h2><p>在使用 <strong>Spring Cloud Gateway</strong> 开发微服务网关时，我们常常会看到这样一段经典代码：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>filter</span><span class=p>(</span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>exchange</span><span class=p>,</span><span class=w> </span><span class=n>GatewayFilterChain</span><span class=w> </span><span class=n>chain</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>request</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=n>isExclude</span><span class=p>(</span><span class=n>request</span><span class=p>.</span><span class=na>getPath</span><span class=p>().</span><span class=na>toString</span><span class=p>()))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>chain</span><span class=p>.</span><span class=na>filter</span><span class=p>(</span><span class=n>exchange</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>String</span><span class=w> </span><span class=n>token</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>().</span><span class=na>getFirst</span><span class=p>(</span><span class=s>&#34;authorization&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>try</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>userId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>jwtTool</span><span class=p>.</span><span class=na>parseToken</span><span class=p>(</span><span class=n>token</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w> </span><span class=k>catch</span><span class=w> </span><span class=p>(</span><span class=n>UnauthorizedException</span><span class=w> </span><span class=n>e</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>exchange</span><span class=p>.</span><span class=na>getResponse</span><span class=p>().</span><span class=na>setStatusCode</span><span class=p>(</span><span class=n>HttpStatus</span><span class=p>.</span><span class=na>UNAUTHORIZED</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getResponse</span><span class=p>().</span><span class=na>setComplete</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>newRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>String</span><span class=p>.</span><span class=na>valueOf</span><span class=p>(</span><span class=n>userId</span><span class=p>))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>newExchange</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>request</span><span class=p>(</span><span class=n>newRequest</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=n>chain</span><span class=p>.</span><span class=na>filter</span><span class=p>(</span><span class=n>newExchange</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>看似简单的几行代码，实际上蕴含了 Spring Cloud Gateway 的核心设计哲学：
+<strong>响应式编程（Reactive Programming）</strong>、<strong>不可变数据模型（Immutable Model）</strong> 与 <strong>声明式数据流（Declarative Data Flow）</strong>。</p><p>本文将带你从底层原理出发，深入理解这一切的背后逻辑。</p><hr><h2 id=-一spring-cloud-gateway-的定位与原理>🧭 一、Spring Cloud Gateway 的定位与原理</h2><h3 id=1-什么是网关>1. 什么是网关</h3><p>在微服务架构中，网关（Gateway）是<strong>所有外部请求的唯一入口</strong>。
+它负责：</p><ul><li><strong>统一认证与鉴权</strong>：所有请求在进入微服务之前，先经过网关的身份验证</li><li><strong>流量控制与限流</strong>：防止单个服务被压垮</li><li><strong>路由分发</strong>：根据规则将请求转发到不同的后端服务</li><li><strong>日志追踪与监控</strong>：记录所有请求日志，便于排查问题</li><li><strong>参数过滤与安全校验</strong>：SQL注入、XSS攻击等安全防护</li><li><strong>跨域处理</strong>：统一处理CORS问题</li></ul><p>可以把它理解为：</p><blockquote><p><strong>&ldquo;所有微服务的门卫 + 安保 + 接待员&rdquo;</strong></p></blockquote><p>如下图所示：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>┌─────────────┐
+</span></span><span class=line><span class=cl>│   Client    │
+</span></span><span class=line><span class=cl>└──────┬──────┘
+</span></span><span class=line><span class=cl>       │
+</span></span><span class=line><span class=cl>       ↓
+</span></span><span class=line><span class=cl>┌─────────────────────────────────────┐
+</span></span><span class=line><span class=cl>│     Spring Cloud Gateway            │
+</span></span><span class=line><span class=cl>│                                     │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │  GlobalFilter                │  │
+</span></span><span class=line><span class=cl>│  │  - 认证鉴权                   │  │
+</span></span><span class=line><span class=cl>│  │  - 限流熔断                   │  │
+</span></span><span class=line><span class=cl>│  │  - 日志追踪                   │  │
+</span></span><span class=line><span class=cl>│  └───────────┬──────────────────┘  │
+</span></span><span class=line><span class=cl>│              ↓                      │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │  RouteLocator                │  │
+</span></span><span class=line><span class=cl>│  │  - 路由匹配                   │  │
+</span></span><span class=line><span class=cl>│  │  - 转发规则                   │  │
+</span></span><span class=line><span class=cl>│  └───────────┬──────────────────┘  │
+</span></span><span class=line><span class=cl>└──────────────┼──────────────────────┘
+</span></span><span class=line><span class=cl>               │
+</span></span><span class=line><span class=cl>               ↓
+</span></span><span class=line><span class=cl>    ┌──────────┴──────────┐
+</span></span><span class=line><span class=cl>    │                     │
+</span></span><span class=line><span class=cl>┌───┴────┐          ┌────┴─────┐
+</span></span><span class=line><span class=cl>│ Order  │          │ Product  │
+</span></span><span class=line><span class=cl>│Service │          │ Service  │
+</span></span><span class=line><span class=cl>└────────┘          └──────────┘
+</span></span></code></pre></td></tr></table></div></div><hr><h3 id=2-spring-cloud-gateway-的底层引擎>2. Spring Cloud Gateway 的底层引擎</h3><p>Spring Cloud Gateway 构建在 <strong>Spring WebFlux</strong> 之上，
+而 WebFlux 又是基于 <strong>Reactor 响应式流（Reactive Streams）</strong> 标准。</p><h4 id=响应式编程的三驾马车>响应式编程的三驾马车</h4><p><strong>Reactor</strong> 是 Spring 团队开发的响应式流库，提供两个核心类型：</p><ul><li><strong>Mono</strong>：表示异步的0-1个值（类似 Optional）</li><li><strong>Flux</strong>：表示异步的0-N个值的序列</li></ul><p>WebFlux 的核心目标是：</p><blockquote><p><strong>非阻塞 + 异步 + 高并发 + 函数式编程风格</strong></p></blockquote><p>这意味着：</p><ul><li>✅ <strong>每个请求不会独占线程</strong>：传统 Servlet 模式下，一个请求需要一个线程，线程资源有限（通常几百个），在高并发下很容易耗尽</li><li>✅ <strong>数据在 Filter 链中以「流」的形式传递</strong>：数据是流动的，不是静止的</li><li>✅ <strong>每个对象都是不可变的（Immutable）</strong>：在异步环境下保证线程安全</li><li>✅ <strong>过滤器之间通过 Mono / Flux 组合形成异步管道</strong>：代码是声明式的，描述"做什么"而非"怎么做"</li></ul><h4 id=性能对比>性能对比</h4><div class=table-wrapper><table><thead><tr><th>特性</th><th>传统 Servlet</th><th>Spring WebFlux</th></tr></thead><tbody><tr><td>I/O模型</td><td>阻塞IO</td><td>非阻塞IO</td></tr><tr><td>线程模型</td><td>每个请求一个线程（浪费）</td><td>事件循环（高效）</td></tr><tr><td>并发能力</td><td>~200 req/s per thread</td><td>~10,000 req/s</td></tr><tr><td>编程风格</td><td>命令式</td><td>声明式（函数式）</td></tr></tbody></table></div><hr><h2 id=-二serverwebexchange请求的上下文容器>🧩 二、ServerWebExchange：请求的"上下文容器"</h2><p>在 WebFlux 中，每一次请求会被封装为一个 <code>ServerWebExchange</code> 对象。</p><h3 id=它包含什么>它包含什么？</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-text data-lang=text><span class=line><span class=cl>ServerWebExchange
+</span></span><span class=line><span class=cl>├── ServerHttpRequest   → 请求部分（URL、Header、Body等）
+</span></span><span class=line><span class=cl>├── ServerHttpResponse  → 响应部分（Header、Body等）
+</span></span><span class=line><span class=cl>└── attributes           → Map结构的共享上下文（Filter间传递数据）
+</span></span></code></pre></td></tr></table></div></div><p>理解方式：</p><blockquote><p><strong>&ldquo;ServerWebExchange 就像一个信封，里面装着请求(request)和响应(response)，并附带一张小纸条（attributes）来记录额外信息。&rdquo;</strong></p></blockquote><h3 id=attributes-的妙用>attributes 的妙用</h3><p><code>attributes</code> 是一个 <code>Map&lt;String, Object></code>，用于在同一请求的处理链中传递自定义数据。</p><p>常见的用途：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 在第一个 Filter 中设置</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>().</span><span class=na>put</span><span class=p>(</span><span class=s>&#34;startTime&#34;</span><span class=p>,</span><span class=w> </span><span class=n>System</span><span class=p>.</span><span class=na>currentTimeMillis</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>().</span><span class=na>put</span><span class=p>(</span><span class=s>&#34;requestId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>UUID</span><span class=p>.</span><span class=na>randomUUID</span><span class=p>().</span><span class=na>toString</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 在后续 Filter 中获取</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Long</span><span class=w> </span><span class=n>startTime</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=p>(</span><span class=n>Long</span><span class=p>)</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>().</span><span class=na>get</span><span class=p>(</span><span class=s>&#34;startTime&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>requestId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=p>(</span><span class=n>String</span><span class=p>)</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>().</span><span class=na>get</span><span class=p>(</span><span class=s>&#34;requestId&#34;</span><span class=p>);</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=举例说明>举例说明</h3><p>当用户请求：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>GET /api/order?id=1
+</span></span><span class=line><span class=cl>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+</span></span><span class=line><span class=cl>Content-Type: application/json
+</span></span></code></pre></td></tr></table></div></div><p>在 Gateway 层就会被解析成：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>exchange</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=p>...;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 获取请求信息</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>request</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>URI</span><span class=w> </span><span class=n>uri</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getURI</span><span class=p>();</span><span class=w>                    </span><span class=c1>// /api/order?id=1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>HttpMethod</span><span class=w> </span><span class=n>method</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getMethod</span><span class=p>();</span><span class=w>        </span><span class=c1>// GET</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>HttpHeaders</span><span class=w> </span><span class=n>headers</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>();</span><span class=w>     </span><span class=c1>// Authorization, Content-Type</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Flux</span><span class=o>&lt;</span><span class=n>DataBuffer</span><span class=o>&gt;</span><span class=w> </span><span class=n>body</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getBody</span><span class=p>();</span><span class=w>     </span><span class=c1>// 请求体</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 获取响应对象（用于向客户端返回）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpResponse</span><span class=w> </span><span class=n>response</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getResponse</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>response</span><span class=p>.</span><span class=na>setStatusCode</span><span class=p>(</span><span class=n>HttpStatus</span><span class=p>.</span><span class=na>OK</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>response</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>().</span><span class=na>add</span><span class=p>(</span><span class=s>&#34;Content-Type&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;application/json&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 获取共享属性</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Map</span><span class=o>&lt;</span><span class=n>String</span><span class=p>,</span><span class=w> </span><span class=n>Object</span><span class=o>&gt;</span><span class=w> </span><span class=n>attrs</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>attrs</span><span class=p>.</span><span class=na>put</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>10086L</span><span class=p>);</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=-三serverhttprequest-与-serverhttpresponse-详解>🧠 三、ServerHttpRequest 与 ServerHttpResponse 详解</h2><p>这两个类分别封装了 HTTP 协议中的请求与响应部分。</p><h3 id=1-serverhttprequest-的核心职责>1. ServerHttpRequest 的核心职责</h3><p>负责保存：</p><ul><li><strong>请求方法（Method）</strong>：GET、POST、PUT、DELETE 等</li><li><strong>URL 信息</strong>：完整路径、查询参数、路径变量</li><li><strong>请求头（Headers）</strong>：Authorization、Content-Type 等</li><li><strong>请求体（Body）</strong>：以 Flux<databuffer> 形式提供，支持流式读取</li></ul><p>典型使用场景：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>request</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 获取请求路径</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>path</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getURI</span><span class=p>().</span><span class=na>getPath</span><span class=p>();</span><span class=w>        </span><span class=c1>// /api/orders</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>query</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getURI</span><span class=p>().</span><span class=na>getQuery</span><span class=p>();</span><span class=w>      </span><span class=c1>// id=1</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 获取请求头</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>auth</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>().</span><span class=na>getFirst</span><span class=p>(</span><span class=s>&#34;Authorization&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>contentType</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>().</span><span class=na>getFirst</span><span class=p>(</span><span class=s>&#34;Content-Type&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 获取请求方法</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>HttpMethod</span><span class=w> </span><span class=n>method</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getMethod</span><span class=p>();</span><span class=w>          </span><span class=c1>// GET, POST, etc.</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 获取请求体（需要订阅 Flux）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>request</span><span class=p>.</span><span class=na>getBody</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>.</span><span class=na>collectList</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>.</span><span class=na>subscribe</span><span class=p>(</span><span class=n>dataBuffers</span><span class=w> </span><span class=o>-&gt;</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 处理请求体数据</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>});</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=2-serverhttpresponse-的核心职责>2. ServerHttpResponse 的核心职责</h3><p>负责：</p><ul><li><strong>响应状态码</strong>：200、401、404、500 等</li><li><strong>响应头</strong>：Content-Type、Set-Cookie 等</li><li><strong>响应体输出流</strong>：以 Reactive 方式写入</li></ul><p>示例：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>ServerHttpResponse</span><span class=w> </span><span class=n>response</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getResponse</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 设置状态码</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>response</span><span class=p>.</span><span class=na>setStatusCode</span><span class=p>(</span><span class=n>HttpStatus</span><span class=p>.</span><span class=na>UNAUTHORIZED</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 设置响应头</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>response</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>().</span><span class=na>add</span><span class=p>(</span><span class=s>&#34;Content-Type&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;application/json&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 写入响应体</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>response</span><span class=p>.</span><span class=na>writeWith</span><span class=p>(</span><span class=n>Flux</span><span class=p>.</span><span class=na>just</span><span class=p>(</span><span class=n>bufferFactory</span><span class=p>.</span><span class=na>wrap</span><span class=p>(</span><span class=s>&#34;{\&#34;error\&#34;:\&#34;Unauthorized\&#34;}&#34;</span><span class=p>.</span><span class=na>getBytes</span><span class=p>())));</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 或者直接设置为完成（空响应）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=k>return</span><span class=w> </span><span class=n>response</span><span class=p>.</span><span class=na>setComplete</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=-四不可变对象immutable-object模型>⚙️ 四、不可变对象（Immutable Object）模型</h2><p>这一点是很多人第一次使用 WebFlux/Gateway 时最难理解的地方。</p><h3 id=1-为什么要不可变>1. 为什么要不可变？</h3><p>在响应式架构中，系统要同时处理成千上万个异步请求。
+如果对象是可变的（Mutable），那么不同线程修改同一个请求对象时，就会导致<strong>数据竞争和不可预测的错误</strong>。</p><h4 id=传统可变对象的风险>传统可变对象的风险</h4><p>假设有这样的代码：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 错误示例</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>Request</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=n>userId</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>void</span><span class=w> </span><span class=nf>setUserId</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>userId</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>this</span><span class=p>.</span><span class=na>userId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>userId</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 假设有两个线程同时修改</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Request</span><span class=w> </span><span class=n>request</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>Request</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Thread</span><span class=o>-</span><span class=n>1</span><span class=p>:</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>setUserId</span><span class=p>(</span><span class=s>&#34;10086&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Thread</span><span class=o>-</span><span class=n>2</span><span class=p>:</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>setUserId</span><span class=p>(</span><span class=s>&#34;10087&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 最终 userId 的值不确定！</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>在多线程环境下，可变对象会造成：</p><ul><li>数据竞争（Race Condition）</li><li>线程不安全</li><li>难以调试和追踪</li></ul><h4 id=响应式环境下的考虑>响应式环境下的考虑</h4><p>在非阻塞模式下，一个请求可能会在多个线程之间切换执行：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>请求1 → Thread-A → 切换到 Thread-B → 继续执行
+</span></span><span class=line><span class=cl>请求2 → Thread-C → 继续执行
+</span></span></code></pre></td></tr></table></div></div><p>如果对象可变，不同线程修改同一对象会导致：</p><ul><li>数据不一致</li><li>不可预测的行为</li><li>需要大量锁机制，降低性能</li></ul><p>因此：</p><blockquote><p><strong>WebFlux 中所有关键对象（<code>ServerWebExchange</code>、<code>ServerHttpRequest</code>、<code>ServerHttpResponse</code>）都是不可变的。</strong></p></blockquote><h3 id=2-不可变带来的好处>2. 不可变带来的好处</h3><ul><li>✅ <strong>线程安全</strong>：不需要额外的锁机制</li><li>✅ <strong>可预测性</strong>：数据不会被意外修改</li><li>✅ <strong>易于并发</strong>：多个线程可以安全地同时读取</li><li>✅ <strong>函数式风格</strong>：符合"无副作用"原则</li></ul><h3 id=3-不可变带来的限制>3. 不可变带来的"限制"</h3><p>你<strong>不能直接修改请求头</strong>、<strong>不能直接改URL</strong>。</p><p>例如，这样的代码是不可行的：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// ❌ 错误：对象是不可变的，没有 setter 方法</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>request</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>().</span><span class=na>add</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;10086&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>request</span><span class=p>.</span><span class=na>setPath</span><span class=p>(</span><span class=s>&#34;/new/path&#34;</span><span class=p>);</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>必须通过一个特殊机制：<strong><code>mutate()</code></strong>。</p><hr><h2 id=-五mutate-的底层原理与实现细节>🧩 五、mutate() 的底层原理与实现细节</h2><h3 id=1-mutate-是什么>1. mutate() 是什么？</h3><p><code>mutate()</code> 是一个<strong>构建器（Builder）模式</strong>的实现。
+它的工作机制如下：</p><ol><li><strong>拷贝原对象的所有字段</strong></li><li><strong>应用你想要的修改</strong></li><li><strong>返回一个新的对象实例</strong></li></ol><h3 id=2-工作原理示意>2. 工作原理示意</h3><p>以请求为例：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 原始的请求对象</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>oldRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 使用 mutate() 创建新请求</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>newRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>oldRequest</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;10086&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userRole&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;ADMIN&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>path</span><span class=p>(</span><span class=s>&#34;/new/path&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>执行后：</p><ul><li>✅ 原来的 <code>oldRequest</code> 依旧保留，内容不变</li><li>✅ 新的 <code>newRequest</code> 是"克隆体"，包含相同的数据 + 新的 header</li></ul><h3 id=3-mutate-的内部实现简化版>3. mutate() 的内部实现（简化版）</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// ServerHttpRequest 接口</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=kd>interface</span> <span class=nc>ServerHttpRequest</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// mutate() 方法返回构建器</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>default</span><span class=w> </span><span class=n>Builder</span><span class=w> </span><span class=nf>mutate</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>DefaultBuilder</span><span class=p>(</span><span class=k>this</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 构建器接口</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>interface</span> <span class=nc>Builder</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>Builder</span><span class=w> </span><span class=nf>header</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>key</span><span class=p>,</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=n>value</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>Builder</span><span class=w> </span><span class=nf>path</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>path</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=nf>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 具体实现</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>class</span> <span class=nc>DefaultBuilder</span><span class=w> </span><span class=kd>implements</span><span class=w> </span><span class=n>ServerHttpRequest</span><span class=p>.</span><span class=na>Builder</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>delegate</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>DefaultBuilder</span><span class=p>(</span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>delegate</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>this</span><span class=p>.</span><span class=na>delegate</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>delegate</span><span class=p>;</span><span class=w>  </span><span class=c1>// 保存原始对象引用</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>Builder</span><span class=w> </span><span class=nf>header</span><span class=p>(</span><span class=n>String</span><span class=w> </span><span class=n>key</span><span class=p>,</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=n>value</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 记录修改操作，但不立即执行</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>this</span><span class=p>.</span><span class=na>headersToAdd</span><span class=p>.</span><span class=na>put</span><span class=p>(</span><span class=n>key</span><span class=p>,</span><span class=w> </span><span class=n>value</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=k>this</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=nf>build</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 在这里创建新对象</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>DelegatingServerHttpRequest</span><span class=p>(</span><span class=n>delegate</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=kd>public</span><span class=w> </span><span class=n>HttpHeaders</span><span class=w> </span><span class=nf>getHeaders</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>HttpHeaders</span><span class=w> </span><span class=n>headers</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>HttpHeaders</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>headers</span><span class=p>.</span><span class=na>putAll</span><span class=p>(</span><span class=n>delegate</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>headers</span><span class=p>.</span><span class=na>addAll</span><span class=p>(</span><span class=n>headersToAdd</span><span class=p>);</span><span class=w>  </span><span class=c1>// 应用修改</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>return</span><span class=w> </span><span class=n>headers</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>};</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>这就是 <strong>函数式编程风格中的无副作用（No Side Effect）</strong>。</p><h3 id=4-性能优化细节>4. 性能优化细节</h3><p>WebFlux 的实现非常高效：</p><ul><li><strong>延迟拷贝（Lazy Copy-on-Write）</strong>：只有在真正需要时才创建副本</li><li><strong>对象池化</strong>：复用底层数据结构</li><li><strong>零拷贝</strong>：尽可能避免不必要的数据移动</li></ul><hr><h2 id=-六重新放入-serverwebexchange>🔄 六、重新放入 ServerWebExchange</h2><p>修改完请求后，如果想继续往下传递，就要创建一个新的 <code>ServerWebExchange</code>。</p><h3 id=1-创建新-exchange>1. 创建新 Exchange</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>newExchange</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>request</span><span class=p>(</span><span class=n>newRequest</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>它会生成一个新的 exchange 实例，包含：</p><ul><li><strong>新的 request</strong>（加了 header）</li><li><strong>原来的 response</strong>（没变）</li><li><strong>原来的 attributes</strong>（没变，但内容相同）</li></ul><h3 id=2-完整流程示意>2. 完整流程示意</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>旧 exchange
+</span></span><span class=line><span class=cl>│
+</span></span><span class=line><span class=cl>├── request: 
+</span></span><span class=line><span class=cl>│   ├── path: /api/order
+</span></span><span class=line><span class=cl>│   ├── method: GET
+</span></span><span class=line><span class=cl>│   └── headers: {Authorization: Bearer xxx}
+</span></span><span class=line><span class=cl>│
+</span></span><span class=line><span class=cl>├── response: 
+</span></span><span class=line><span class=cl>│   ├── statusCode: null
+</span></span><span class=line><span class=cl>│   └── headers: {}
+</span></span><span class=line><span class=cl>│
+</span></span><span class=line><span class=cl>└── attributes: {}
+</span></span><span class=line><span class=cl>   ↓ mutate() 修改
+</span></span><span class=line><span class=cl>   ↓
+</span></span><span class=line><span class=cl>新 exchange
+</span></span><span class=line><span class=cl>│
+</span></span><span class=line><span class=cl>├── request: 
+</span></span><span class=line><span class=cl>│   ├── path: /api/order
+</span></span><span class=line><span class=cl>│   ├── method: GET
+</span></span><span class=line><span class=cl>│   └── headers: {
+</span></span><span class=line><span class=cl>│       Authorization: Bearer xxx,
+</span></span><span class=line><span class=cl>│       userId: 10086        ← 新增
+</span></span><span class=line><span class=cl>│   }
+</span></span><span class=line><span class=cl>│
+</span></span><span class=line><span class=cl>├── response: (未变)
+</span></span><span class=line><span class=cl>└── attributes: (未变)
+</span></span></code></pre></td></tr></table></div></div><h3 id=3-为什么-response-和-attributes-不变>3. 为什么 response 和 attributes 不变？</h3><ul><li><strong>response</strong>：如果没修改，复用原来的就好，避免不必要的拷贝</li><li><strong>attributes</strong>：共享上下文，所有引用都指向同一个 Map，修改是安全的</li></ul><hr><h2 id=-七为什么要这么传递用户信息>🔐 七、为什么要这么传递用户信息？</h2><p>在网关层验证完 JWT Token 后，我们希望把用户身份传递给下游服务。
+否则每个微服务都要重复解析 Token，浪费性能。</p><h3 id=1-性能考虑>1. 性能考虑</h3><h4 id=方案a每个服务都解析-token重复工作>方案A：每个服务都解析 Token（重复工作）</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>Client 
+</span></span><span class=line><span class=cl>  → Gateway (解析 Token，得到 userId)
+</span></span><span class=line><span class=cl>    → Order Service (又解析一次 Token)
+</span></span><span class=line><span class=cl>      → Inventory Service (又解析一次 Token)
+</span></span><span class=line><span class=cl>        → Payment Service (又解析一次 Token)
+</span></span></code></pre></td></tr></table></div></div><p>问题：</p><ul><li>浪费 CPU 资源（重复解析）</li><li>增加延迟（每个服务都要验证）</li><li>维护成本高（每个服务都需要引入 JWT 库）</li></ul><h4 id=方案b网关解析通过-header-传递推荐>方案B：网关解析，通过 Header 传递（推荐）</h4><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>Client 
+</span></span><span class=line><span class=cl>  → Gateway (解析 Token，得到 userId，添加到 Header)
+</span></span><span class=line><span class=cl>    → Order Service (从 Header 读取 userId)
+</span></span><span class=line><span class=cl>      → Inventory Service (从 Header 读取 userId)
+</span></span><span class=line><span class=cl>        → Payment Service (从 Header 读取 userId)
+</span></span></code></pre></td></tr></table></div></div><p>优势：</p><ul><li>✅ 只解析一次 Token</li><li>✅ 下游服务无感知</li><li>✅ 性能更好</li><li>✅ 架构更清晰</li></ul><h3 id=2-最简单的办法在请求头中附加用户信息>2. 最简单的办法：在请求头中附加用户信息</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>newRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>String</span><span class=p>.</span><span class=na>valueOf</span><span class=p>(</span><span class=n>userId</span><span class=p>))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userName&#34;</span><span class=p>,</span><span class=w> </span><span class=n>user</span><span class=p>.</span><span class=na>getName</span><span class=p>())</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userRole&#34;</span><span class=p>,</span><span class=w> </span><span class=n>user</span><span class=p>.</span><span class=na>getRole</span><span class=p>())</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>下游服务即可直接读取：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span><span class=lnt>9
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@GetMapping</span><span class=p>(</span><span class=s>&#34;/api/orders&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>List</span><span class=o>&lt;</span><span class=n>Order</span><span class=o>&gt;&gt;</span><span class=w> </span><span class=nf>getOrders</span><span class=p>(</span><span class=n>HttpServletRequest</span><span class=w> </span><span class=n>request</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>String</span><span class=w> </span><span class=n>userId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeader</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>String</span><span class=w> </span><span class=n>userName</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeader</span><span class=p>(</span><span class=s>&#34;userName&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>String</span><span class=w> </span><span class=n>userRole</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeader</span><span class=p>(</span><span class=s>&#34;userRole&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 使用用户信息处理业务</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=n>ResponseEntity</span><span class=p>.</span><span class=na>ok</span><span class=p>(</span><span class=n>orderService</span><span class=p>.</span><span class=na>getOrdersByUserId</span><span class=p>(</span><span class=n>Long</span><span class=p>.</span><span class=na>valueOf</span><span class=p>(</span><span class=n>userId</span><span class=p>)));</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=3-数据传递示例>3. 数据传递示例</h3><p>假设客户端发送请求：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>GET /api/orders
+</span></span><span class=line><span class=cl>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+</span></span></code></pre></td></tr></table></div></div><p>在 Gateway 的处理流程：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 1. 接收请求</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>originalRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// Headers: { Authorization: Bearer xxx }</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 2. 解析 Token</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>jwtService</span><span class=p>.</span><span class=na>parseToken</span><span class=p>(</span><span class=n>token</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>userName</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;张三&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>userRole</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;USER&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 3. 创建新请求（添加用户信息）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>enhancedRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>originalRequest</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>String</span><span class=p>.</span><span class=na>valueOf</span><span class=p>(</span><span class=n>userId</span><span class=p>))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userName&#34;</span><span class=p>,</span><span class=w> </span><span class=n>userName</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userRole&#34;</span><span class=p>,</span><span class=w> </span><span class=n>userRole</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// Headers: { Authorization: Bearer xxx, userId: 10086, userName: 张三, userRole: USER }</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 4. 传递到下游服务</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>newExchange</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>request</span><span class=p>(</span><span class=n>enhancedRequest</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>下游服务收到：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>GET /api/orders
+</span></span><span class=line><span class=cl>Authorization: Bearer xxx
+</span></span><span class=line><span class=cl>userId: 10086
+</span></span><span class=line><span class=cl>userName: 张三
+</span></span><span class=line><span class=cl>userRole: USER
+</span></span></code></pre></td></tr></table></div></div><hr><h2 id=-八替代方案与安全考虑>🧰 八、替代方案与安全考虑</h2><h3 id=1-attributes-方式仅内部使用>1. attributes 方式（仅内部使用）</h3><p>在过滤器链中，也可以用 <code>exchange.getAttributes().put("userId", userId)</code>，</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 在 GlobalFilter 中设置</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>().</span><span class=na>put</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>userId</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 在其他 Filter 中获取</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=p>(</span><span class=n>Long</span><span class=p>)</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>().</span><span class=na>get</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>);</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p>但这只在当前网关的处理链有效，<strong>无法传递到下游服务</strong>。</p><h4 id=attributes-vs-header-对比>attributes vs Header 对比</h4><div class=table-wrapper><table><thead><tr><th>特性</th><th>attributes</th><th>Header</th></tr></thead><tbody><tr><td>作用域</td><td>仅在 Gateway 内部</td><td>跨服务传递</td></tr><tr><td>可见性</td><td>不可见（请求头中看不到）</td><td>可见（请求头中能看到）</td></tr><tr><td>用途</td><td>内部数据传递</td><td>跨服务数据传递</td></tr><tr><td>安全性</td><td>高（不会被外部访问）</td><td>需要考虑安全性</td></tr></tbody></table></div><h3 id=2-请求头方式跨服务传递>2. 请求头方式（跨服务传递）</h3><p>这种方式最常用，因为请求头会被自动转发给后端。</p><p>不过要注意安全问题：</p><h4 id=安全风险>安全风险</h4><ul><li>❌ <strong>不要直接传递敏感数据</strong>：如完整 JWT、密码、身份证号</li><li>❌ <strong>不要传递业务秘密</strong>：如账户余额、私有令牌</li><li>⚠️ <strong>小心信息泄露</strong>：请求头可能被记录到日志中</li></ul><h4 id=安全建议>安全建议</h4><ul><li>✅ <strong>只传递必要字段</strong>：如 <code>userId</code>、<code>role</code>、<code>tenantId</code></li><li>✅ <strong>数据脱敏</strong>：如果必须传递敏感信息，先加密或脱敏</li><li>✅ <strong>签名验证</strong>：在关键Header上添加签名，防止篡改</li><li>✅ <strong>HTTPS传输</strong>：确保传输过程加密</li></ul><p>示例：带签名的用户信息传递</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// Gateway 端添加签名</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>userId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;10086&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>timestamp</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>String</span><span class=p>.</span><span class=na>valueOf</span><span class=p>(</span><span class=n>System</span><span class=p>.</span><span class=na>currentTimeMillis</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>signature</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>generateSignature</span><span class=p>(</span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>timestamp</span><span class=p>,</span><span class=w> </span><span class=n>secretKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>newRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>userId</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;timestamp&#34;</span><span class=p>,</span><span class=w> </span><span class=n>timestamp</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;signature&#34;</span><span class=p>,</span><span class=w> </span><span class=n>signature</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 下游服务验证签名</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>receivedSignature</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeader</span><span class=p>(</span><span class=s>&#34;signature&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>expectedSignature</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>generateSignature</span><span class=p>(</span><span class=n>userId</span><span class=p>,</span><span class=w> </span><span class=n>timestamp</span><span class=p>,</span><span class=w> </span><span class=n>secretKey</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=k>if</span><span class=w> </span><span class=p>(</span><span class=o>!</span><span class=n>receivedSignature</span><span class=p>.</span><span class=na>equals</span><span class=p>(</span><span class=n>expectedSignature</span><span class=p>))</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>throw</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>SecurityException</span><span class=p>(</span><span class=s>&#34;Invalid signature&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=3-统一上下文管理高级方案>3. 统一上下文管理（高级方案）</h3><p>对于大型系统，可以建立一个统一的上下文管理机制：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>UserContext</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=n>userName</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=n>role</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>private</span><span class=w> </span><span class=n>Map</span><span class=o>&lt;</span><span class=n>String</span><span class=p>,</span><span class=w> </span><span class=n>Object</span><span class=o>&gt;</span><span class=w> </span><span class=n>customAttrs</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// 可以序列化为JSON传递给下游服务</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>String</span><span class=w> </span><span class=nf>toJson</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w> </span><span class=p>...</span><span class=w> </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 在 Gateway 中封装</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>newRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;X-User-Context&#34;</span><span class=p>,</span><span class=w> </span><span class=n>userContext</span><span class=p>.</span><span class=na>toJson</span><span class=p>())</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 下游服务解析</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>String</span><span class=w> </span><span class=n>contextJson</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeader</span><span class=p>(</span><span class=s>&#34;X-User-Context&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>UserContext</span><span class=w> </span><span class=n>ctx</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>UserContext</span><span class=p>.</span><span class=na>fromJson</span><span class=p>(</span><span class=n>contextJson</span><span class=p>);</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=-九请求流完整执行过程>⚡ 九、请求流完整执行过程</h2><p>假设客户端请求：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>GET /api/orders?page=1&amp;size=10
+</span></span><span class=line><span class=cl>Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+</span></span><span class=line><span class=cl>Content-Type: application/json
+</span></span></code></pre></td></tr></table></div></div><p>执行流程如下：</p><h3 id=阶段1请求到达-gateway>阶段1：请求到达 Gateway</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>1. 网关接收请求
+</span></span><span class=line><span class=cl>   ↓
+</span></span><span class=line><span class=cl>2. 创建 ServerWebExchange 对象
+</span></span><span class=line><span class=cl>   ServerWebExchange {
+</span></span><span class=line><span class=cl>       request: ServerHttpRequest {
+</span></span><span class=line><span class=cl>           path: /api/orders
+</span></span><span class=line><span class=cl>           method: GET
+</span></span><span class=line><span class=cl>           headers: {Authorization: Bearer ..., Content-Type: ...}
+</span></span><span class=line><span class=cl>           body: ...
+</span></span><span class=line><span class=cl>       },
+</span></span><span class=line><span class=cl>       response: ServerHttpResponse {...},
+</span></span><span class=line><span class=cl>       attributes: {}
+</span></span><span class=line><span class=cl>   }
+</span></span></code></pre></td></tr></table></div></div><h3 id=阶段2进入-globalfilter>阶段2：进入 GlobalFilter</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=n>3</span><span class=p>.</span><span class=w> </span><span class=n>进入自定义</span><span class=w> </span><span class=n>GlobalFilter</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>   </span><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>AuthGlobalFilter</span><span class=w> </span><span class=kd>implements</span><span class=w> </span><span class=n>GlobalFilter</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>       </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>       </span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>filter</span><span class=p>(</span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>exchange</span><span class=p>,</span><span class=w> </span><span class=p>...)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=c1>// 读取请求</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>request</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=c1>// 获取Token</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=n>String</span><span class=w> </span><span class=n>token</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getHeaders</span><span class=p>().</span><span class=na>getFirst</span><span class=p>(</span><span class=s>&#34;Authorization&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                                </span><span class=p>.</span><span class=na>replace</span><span class=p>(</span><span class=s>&#34;Bearer &#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=c1>// 解析Token（这里简化）</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>jwtTool</span><span class=p>.</span><span class=na>parseToken</span><span class=p>(</span><span class=n>token</span><span class=p>);</span><span class=w>  </span><span class=c1>// 假设返回 10086</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=c1>// 记录开始时间</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>().</span><span class=na>put</span><span class=p>(</span><span class=s>&#34;startTime&#34;</span><span class=p>,</span><span class=w> </span><span class=n>System</span><span class=p>.</span><span class=na>currentTimeMillis</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=c1>// 创建新请求</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>newRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                   </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>String</span><span class=p>.</span><span class=na>valueOf</span><span class=p>(</span><span class=n>userId</span><span class=p>))</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                   </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=c1>// 创建新Exchange</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>newExchange</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                   </span><span class=p>.</span><span class=na>request</span><span class=p>(</span><span class=n>newRequest</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                   </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>           
+</span></span></span><span class=line><span class=cl><span class=w>           </span><span class=k>return</span><span class=w> </span><span class=n>chain</span><span class=p>.</span><span class=na>filter</span><span class=p>(</span><span class=n>newExchange</span><span class=p>);</span><span class=w>  </span><span class=c1>// 继续传递</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>       </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>   </span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=阶段3路由转发>阶段3：路由转发</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>4. 路由匹配
+</span></span><span class=line><span class=cl>   Router 根据 path /api/orders 匹配到 Order Service
+</span></span><span class=line><span class=cl>   
+</span></span><span class=line><span class=cl>5. LoadBalancer 选择实例
+</span></span><span class=line><span class=cl>   从多个 Order Service 实例中选择一个（如：192.168.1.10:8080）
+</span></span><span class=line><span class=cl>   
+</span></span><span class=line><span class=cl>6. 转发请求
+</span></span><span class=line><span class=cl>   HTTP Forward: GET http://192.168.1.10:8080/api/orders
+</span></span><span class=line><span class=cl>   Headers: {
+</span></span><span class=line><span class=cl>       Authorization: Bearer ...
+</span></span><span class=line><span class=cl>       Content-Type: application/json
+</span></span><span class=line><span class=cl>       userId: 10086          ← 新添加的
+</span></span><span class=line><span class=cl>   }
+</span></span></code></pre></td></tr></table></div></div><h3 id=阶段4下游服务处理>阶段4：下游服务处理</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@RestController</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@RequestMapping</span><span class=p>(</span><span class=s>&#34;/api&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>OrderController</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@GetMapping</span><span class=p>(</span><span class=s>&#34;/orders&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>List</span><span class=o>&lt;</span><span class=n>Order</span><span class=o>&gt;&gt;</span><span class=w> </span><span class=nf>getOrders</span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=n>HttpServletRequest</span><span class=w> </span><span class=n>request</span><span class=p>,</span><span class=w>  </span><span class=c1>// 传统方式</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nd>@RequestHeader</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>)</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>  </span><span class=c1>// 从Header获取</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=c1>// 可以直接使用 userId，无需再次解析Token</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>List</span><span class=o>&lt;</span><span class=n>Order</span><span class=o>&gt;</span><span class=w> </span><span class=n>orders</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>orderService</span><span class=p>.</span><span class=na>getOrdersByUserId</span><span class=p>(</span><span class=n>userId</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>ResponseEntity</span><span class=p>.</span><span class=na>ok</span><span class=p>(</span><span class=n>orders</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=阶段5响应返回>阶段5：响应返回</h3><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>7. Order Service 返回响应
+</span></span><span class=line><span class=cl>   200 OK
+</span></span><span class=line><span class=cl>   Content-Type: application/json
+</span></span><span class=line><span class=cl>   Body: [{&#34;id&#34;: 1, &#34;total&#34;: 99.9}, ...]
+</span></span><span class=line><span class=cl>   
+</span></span><span class=line><span class=cl>8. Gateway 接收响应
+</span></span><span class=line><span class=cl>   计算耗时：endTime - startTime
+</span></span><span class=line><span class=cl>   记录日志
+</span></span><span class=line><span class=cl>   
+</span></span><span class=line><span class=cl>9. 返回给客户端
+</span></span><span class=line><span class=cl>   最终响应到达客户端
+</span></span></code></pre></td></tr></table></div></div><p>整个链条<strong>完全非阻塞、线程安全</strong>。</p><hr><h2 id=-十生产实践经验总结>💡 十、生产实践经验总结</h2><h3 id=1-不要修改原始对象>1. 不要修改原始对象</h3><p><strong>❌ 错误做法</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 尝试通过反射修改</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>Field</span><span class=w> </span><span class=n>field</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>getClass</span><span class=p>().</span><span class=na>getDeclaredField</span><span class=p>(</span><span class=s>&#34;headers&#34;</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>field</span><span class=p>.</span><span class=na>setAccessible</span><span class=p>(</span><span class=kc>true</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>HttpHeaders</span><span class=w> </span><span class=n>headers</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=p>(</span><span class=n>HttpHeaders</span><span class=p>)</span><span class=w> </span><span class=n>field</span><span class=p>.</span><span class=na>get</span><span class=p>(</span><span class=n>request</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>headers</span><span class=p>.</span><span class=na>add</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;10086&#34;</span><span class=p>);</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><p><strong>✅ 正确做法</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 始终使用 mutate()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>newRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;10086&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=2-使用-header-传递轻量级信息>2. 使用 Header 传递轻量级信息</h3><p><strong>传递的原则</strong>：</p><ul><li>✅ 只传必要身份字段（userId, role, tenant）</li><li>✅ 避免传递大对象（性能考虑）</li><li>✅ 避免传递敏感信息（安全考虑）</li></ul><p><strong>示例</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span><span class=lnt>8
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// 推荐：轻量级字段</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>userId</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;userRole&#34;</span><span class=p>,</span><span class=w> </span><span class=n>role</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;tenantId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>tenantId</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 不推荐：大数据或敏感信息</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// .header(&#34;userInfo&#34;, largeJsonString)  ← 影响性能</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// .header(&#34;privateKey&#34;, secretKey)      ← 安全风险</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=3-网关是请求入口--安全边界>3. 网关是"请求入口 + 安全边界"</h3><p><strong>职责分工</strong>：</p><ul><li><strong>Gateway</strong>：认证、鉴权、限流、审计、安全防护</li><li><strong>Service</strong>：业务逻辑、数据处理</li></ul><p><strong>不要在业务服务中重复做认证</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span><span class=lnt>7
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// Order Service - 不需要再次验证Token</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@GetMapping</span><span class=p>(</span><span class=s>&#34;/orders&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=n>ResponseEntity</span><span class=o>&lt;</span><span class=n>List</span><span class=o>&lt;</span><span class=n>Order</span><span class=o>&gt;&gt;</span><span class=w> </span><span class=nf>getOrders</span><span class=p>(</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=nd>@RequestHeader</span><span class=p>(</span><span class=s>&#34;userId&#34;</span><span class=p>)</span><span class=w> </span><span class=n>Long</span><span class=w> </span><span class=n>userId</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>  </span><span class=c1>// 直接使用，网关已验证</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=k>return</span><span class=w> </span><span class=n>ResponseEntity</span><span class=p>.</span><span class=na>ok</span><span class=p>(</span><span class=n>orderService</span><span class=p>.</span><span class=na>getOrders</span><span class=p>(</span><span class=n>userId</span><span class=p>));</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=4-响应式链中的对象均为一次性使用>4. 响应式链中的对象均为一次性使用</h3><p><strong>不要缓存或共享对象</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// ❌ 错误：缓存 request</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>private</span><span class=w> </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>cachedRequest</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>filter</span><span class=p>(...)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>cachedRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>  </span><span class=c1>// 危险！</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// ✅ 正确：每次获取</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>filter</span><span class=p>(</span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>exchange</span><span class=p>,</span><span class=w> </span><span class=p>...)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>request</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>  </span><span class=c1>// 每次都获取新引用</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=5-推荐搭配-mdc-或-threadlocal-上下文跟踪>5. 推荐搭配 MDC 或 ThreadLocal 上下文跟踪</h3><p><strong>MDC（Mapped Diagnostic Context）用于日志追踪</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>TracingGlobalFilter</span><span class=w> </span><span class=kd>implements</span><span class=w> </span><span class=n>GlobalFilter</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>filter</span><span class=p>(</span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>exchange</span><span class=p>,</span><span class=w> </span><span class=n>GatewayFilterChain</span><span class=w> </span><span class=n>chain</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>String</span><span class=w> </span><span class=n>requestId</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>UUID</span><span class=p>.</span><span class=na>randomUUID</span><span class=p>().</span><span class=na>toString</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>exchange</span><span class=p>.</span><span class=na>getAttributes</span><span class=p>().</span><span class=na>put</span><span class=p>(</span><span class=s>&#34;requestId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>requestId</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>chain</span><span class=p>.</span><span class=na>filter</span><span class=p>(</span><span class=n>exchange</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>doFinally</span><span class=p>(</span><span class=n>signalType</span><span class=w> </span><span class=o>-&gt;</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=c1>// 日志记录</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>MDC</span><span class=p>.</span><span class=na>put</span><span class=p>(</span><span class=s>&#34;requestId&#34;</span><span class=p>,</span><span class=w> </span><span class=n>requestId</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;Request completed: {}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>requestId</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>MDC</span><span class=p>.</span><span class=na>clear</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>});</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=6-性能优化技巧>6. 性能优化技巧</h3><p><strong>避免频繁的 mutate() 调用</strong>：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=c1>// ❌ 不好：多次 mutate</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>r1</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>mutate</span><span class=p>().</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;h1&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;v1&#34;</span><span class=p>).</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>r2</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>r1</span><span class=p>.</span><span class=na>mutate</span><span class=p>().</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;h2&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;v2&#34;</span><span class=p>).</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>r3</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>r2</span><span class=p>.</span><span class=na>mutate</span><span class=p>().</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;h3&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;v3&#34;</span><span class=p>).</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// ✅ 更好：一次 mutate</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>newRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>request</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;h1&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;v1&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;h2&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;v2&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>header</span><span class=p>(</span><span class=s>&#34;h3&#34;</span><span class=p>,</span><span class=w> </span><span class=s>&#34;v3&#34;</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>.</span><span class=na>build</span><span class=p>();</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=-十一示意图请求流转全过程>🧱 十一、示意图：请求流转全过程</h2><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span><span class=lnt>67
+</span><span class=lnt>68
+</span><span class=lnt>69
+</span><span class=lnt>70
+</span><span class=lnt>71
+</span><span class=lnt>72
+</span><span class=lnt>73
+</span><span class=lnt>74
+</span><span class=lnt>75
+</span><span class=lnt>76
+</span><span class=lnt>77
+</span><span class=lnt>78
+</span><span class=lnt>79
+</span><span class=lnt>80
+</span><span class=lnt>81
+</span><span class=lnt>82
+</span><span class=lnt>83
+</span><span class=lnt>84
+</span><span class=lnt>85
+</span><span class=lnt>86
+</span><span class=lnt>87
+</span><span class=lnt>88
+</span><span class=lnt>89
+</span><span class=lnt>90
+</span><span class=lnt>91
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>┌─────────────────────────────────────────────────────────────┐
+</span></span><span class=line><span class=cl>│                    Client Application                        │
+</span></span><span class=line><span class=cl>│                                                             │
+</span></span><span class=line><span class=cl>│  GET /api/orders?page=1&amp;size=10                             │
+</span></span><span class=line><span class=cl>│  Authorization: Bearer eyJ...                               │
+</span></span><span class=line><span class=cl>│  Content-Type: application/json                             │
+</span></span><span class=line><span class=cl>└───────────────────────┬─────────────────────────────────────┘
+</span></span><span class=line><span class=cl>                       │
+</span></span><span class=line><span class=cl>                       │ HTTP Request
+</span></span><span class=line><span class=cl>                       ↓
+</span></span><span class=line><span class=cl>┌─────────────────────────────────────────────────────────────┐
+</span></span><span class=line><span class=cl>│              Spring Cloud Gateway                            │
+</span></span><span class=line><span class=cl>│                                                             │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │ 1. Receive Request                                    │  │
+</span></span><span class=line><span class=cl>│  │    ServerWebExchange created                          │  │
+</span></span><span class=line><span class=cl>│  │    {request, response, attributes}                    │  │
+</span></span><span class=line><span class=cl>│  └───────────────────┬──────────────────────────────────┘  │
+</span></span><span class=line><span class=cl>│                      ↓                                       │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │ 2. GlobalFilter: AuthGlobalFilter                    │  │
+</span></span><span class=line><span class=cl>│  │    - Read Authorization header                        │  │
+</span></span><span class=line><span class=cl>│  │    - Parse JWT token → userId: 10086                  │  │
+</span></span><span class=line><span class=cl>│  │    - Add userId to request header                     │  │
+</span></span><span class=line><span class=cl>│  │    request.mutate().header(&#34;userId&#34;, &#34;10086&#34;).build()│  │
+</span></span><span class=line><span class=cl>│  └───────────────────┬──────────────────────────────────┘  │
+</span></span><span class=line><span class=cl>│                      ↓                                       │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │ 3. RouteLocator                                       │  │
+</span></span><span class=line><span class=cl>│  │    - Match path: /api/orders                         │  │
+</span></span><span class=line><span class=cl>│  │    - Route to: Order Service                         │  │
+</span></span><span class=line><span class=cl>│  │    - LoadBalance: 192.168.1.10:8080                  │  │
+</span></span><span class=line><span class=cl>│  └───────────────────┬──────────────────────────────────┘  │
+</span></span><span class=line><span class=cl>└────────────────────────┼─────────────────────────────────────┘
+</span></span><span class=line><span class=cl>                        │
+</span></span><span class=line><span class=cl>                        │ Forward Request
+</span></span><span class=line><span class=cl>                        │ GET http://192.168.1.10:8080/api/orders
+</span></span><span class=line><span class=cl>                        │ Headers: {
+</span></span><span class=line><span class=cl>                        │     Authorization: Bearer eyJ...
+</span></span><span class=line><span class=cl>                        │     userId: 10086
+</span></span><span class=line><span class=cl>                        │ }
+</span></span><span class=line><span class=cl>                        ↓
+</span></span><span class=line><span class=cl>┌─────────────────────────────────────────────────────────────┐
+</span></span><span class=line><span class=cl>│                   Order Service                             │
+</span></span><span class=line><span class=cl>│                                                             │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │ OrderController                                       │  │
+</span></span><span class=line><span class=cl>│  │                                                       │  │
+</span></span><span class=line><span class=cl>│  │  @GetMapping(&#34;/orders&#34;)                              │  │
+</span></span><span class=line><span class=cl>│  │  public List&lt;Order&gt; getOrders(                        │  │
+</span></span><span class=line><span class=cl>│  │      @RequestHeader(&#34;userId&#34;) Long userId) {          │  │
+</span></span><span class=line><span class=cl>│  │      // 直接使用 userId，无需解析Token               │  │
+</span></span><span class=line><span class=cl>│  │      return orderService.getOrders(userId);           │  │
+</span></span><span class=line><span class=cl>│  │  }                                                    │  │
+</span></span><span class=line><span class=cl>│  └───────────────────┬──────────────────────────────────┘  │
+</span></span><span class=line><span class=cl>│                      │                                       │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │ OrderService                                          │  │
+</span></span><span class=line><span class=cl>│  │    - Query database                                   │  │
+</span></span><span class=line><span class=cl>│  │    - Return orders                                    │  │
+</span></span><span class=line><span class=cl>│  └───────────────────┬──────────────────────────────────┘  │
+</span></span><span class=line><span class=cl>└────────────────────────┼─────────────────────────────────────┘
+</span></span><span class=line><span class=cl>                        │
+</span></span><span class=line><span class=cl>                        │ HTTP Response
+</span></span><span class=line><span class=cl>                        │ 200 OK
+</span></span><span class=line><span class=cl>                        │ [{&#34;id&#34;: 1, &#34;total&#34;: 99.9}, ...]
+</span></span><span class=line><span class=cl>                        ↓
+</span></span><span class=line><span class=cl>┌─────────────────────────────────────────────────────────────┐
+</span></span><span class=line><span class=cl>│              Spring Cloud Gateway (Continue)                │
+</span></span><span class=line><span class=cl>│                                                             │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │ 4. Calculate Duration                                 │  │
+</span></span><span class=line><span class=cl>│  │    startTime - endTime                                │  │
+</span></span><span class=line><span class=cl>│  └───────────────────┬──────────────────────────────────┘  │
+</span></span><span class=line><span class=cl>│                      ↓                                       │
+</span></span><span class=line><span class=cl>│  ┌──────────────────────────────────────────────────────┐  │
+</span></span><span class=line><span class=cl>│  │ 5. Log Request                                        │  │
+</span></span><span class=line><span class=cl>│  │    - Method, Path                                     │  │
+</span></span><span class=line><span class=cl>│  │    - Duration                                         │  │
+</span></span><span class=line><span class=cl>│  │    - Response status                                  │  │
+</span></span><span class=line><span class=cl>│  └───────────────────┬──────────────────────────────────┘  │
+</span></span><span class=line><span class=cl>└────────────────────────┼─────────────────────────────────────┘
+</span></span><span class=line><span class=cl>                        │
+</span></span><span class=line><span class=cl>                        │ Response
+</span></span><span class=line><span class=cl>                        ↓
+</span></span><span class=line><span class=cl>┌─────────────────────────────────────────────────────────────┐
+</span></span><span class=line><span class=cl>│                    Client Application                        │
+</span></span><span class=line><span class=cl>│                                                             │
+</span></span><span class=line><span class=cl>│  200 OK                                                     │
+</span></span><span class=line><span class=cl>│  [{&#34;id&#34;: 1, &#34;total&#34;: 99.9}, {&#34;id&#34;: 2, &#34;total&#34;: 150.5}]    │
+</span></span><span class=line><span class=cl>└─────────────────────────────────────────────────────────────┘
+</span></span></code></pre></td></tr></table></div></div><hr><h2 id=-十二常见问题与解决方案>🎯 十二、常见问题与解决方案</h2><h3 id=q1如何在-filter-中获取或修改请求体>Q1：如何在 Filter 中获取或修改请求体？</h3><p><strong>A：</strong> 需要包装请求体，使用装饰器模式：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>ModifyRequestBodyFilter</span><span class=w> </span><span class=kd>implements</span><span class=w> </span><span class=n>GlobalFilter</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>filter</span><span class=p>(</span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>exchange</span><span class=p>,</span><span class=w> </span><span class=n>GatewayFilterChain</span><span class=w> </span><span class=n>chain</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>ServerHttpRequest</span><span class=w> </span><span class=n>request</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getRequest</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>ServerHttpRequestDecorator</span><span class=w> </span><span class=n>decoratedRequest</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>ServerHttpRequestDecorator</span><span class=p>(</span><span class=n>request</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=kd>public</span><span class=w> </span><span class=n>Flux</span><span class=o>&lt;</span><span class=n>DataBuffer</span><span class=o>&gt;</span><span class=w> </span><span class=nf>getBody</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>return</span><span class=w> </span><span class=kd>super</span><span class=p>.</span><span class=na>getBody</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>.</span><span class=na>map</span><span class=p>(</span><span class=n>dataBuffer</span><span class=w> </span><span class=o>-&gt;</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=c1>// 修改 body 内容</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=n>String</span><span class=w> </span><span class=n>content</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>decode</span><span class=p>(</span><span class=n>dataBuffer</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=n>String</span><span class=w> </span><span class=n>modified</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>modify</span><span class=p>(</span><span class=n>content</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                        </span><span class=k>return</span><span class=w> </span><span class=n>encode</span><span class=p>(</span><span class=n>modified</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>});</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>};</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>chain</span><span class=p>.</span><span class=na>filter</span><span class=p>(</span><span class=n>exchange</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>request</span><span class=p>(</span><span class=n>decoratedRequest</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>build</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=q2如何在-filter-中获取响应体>Q2：如何在 Filter 中获取响应体？</h3><p><strong>A：</strong> 类似地，需要包装响应：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>LogResponseFilter</span><span class=w> </span><span class=kd>implements</span><span class=w> </span><span class=n>GlobalFilter</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>filter</span><span class=p>(</span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>exchange</span><span class=p>,</span><span class=w> </span><span class=n>GatewayFilterChain</span><span class=w> </span><span class=n>chain</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=n>ServerHttpResponseDecorator</span><span class=w> </span><span class=n>decoratedResponse</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=k>new</span><span class=w> </span><span class=n>ServerHttpResponseDecorator</span><span class=p>(</span><span class=n>exchange</span><span class=p>.</span><span class=na>getResponse</span><span class=p>())</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>writeWith</span><span class=p>(</span><span class=n>Publisher</span><span class=o>&lt;?</span><span class=w> </span><span class=kd>extends</span><span class=w> </span><span class=n>DataBuffer</span><span class=o>&gt;</span><span class=w> </span><span class=n>body</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>return</span><span class=w> </span><span class=kd>super</span><span class=p>.</span><span class=na>writeWith</span><span class=p>(</span><span class=n>body</span><span class=p>.</span><span class=na>doOnNext</span><span class=p>(</span><span class=n>dataBuffer</span><span class=w> </span><span class=o>-&gt;</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=c1>// 记录响应内容</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=n>log</span><span class=p>.</span><span class=na>info</span><span class=p>(</span><span class=s>&#34;Response: {}&#34;</span><span class=p>,</span><span class=w> </span><span class=n>decode</span><span class=p>(</span><span class=n>dataBuffer</span><span class=p>));</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>}));</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=p>};</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>chain</span><span class=p>.</span><span class=na>filter</span><span class=p>(</span><span class=n>exchange</span><span class=p>.</span><span class=na>mutate</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>response</span><span class=p>(</span><span class=n>decoratedResponse</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=p>.</span><span class=na>build</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=q3filter-的执行顺序如何控制>Q3：Filter 的执行顺序如何控制？</h3><p><strong>A：</strong> 使用 <code>@Order</code> 注解或实现 <code>Ordered</code> 接口：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=nd>@Component</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@Order</span><span class=p>(</span><span class=n>Ordered</span><span class=p>.</span><span class=na>HIGHEST_PRECEDENCE</span><span class=p>)</span><span class=w>  </span><span class=c1>// 数字越小，优先级越高</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>AuthGlobalFilter</span><span class=w> </span><span class=kd>implements</span><span class=w> </span><span class=n>GlobalFilter</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=c1>// ...</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=c1>// 或者</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=nd>@Component</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>AuthGlobalFilter</span><span class=w> </span><span class=kd>implements</span><span class=w> </span><span class=n>GlobalFilter</span><span class=p>,</span><span class=w> </span><span class=n>Ordered</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=kt>int</span><span class=w> </span><span class=nf>getOrder</span><span class=p>()</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=o>-</span><span class=n>100</span><span class=p>;</span><span class=w>  </span><span class=c1>// 优先级最高</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><h3 id=q4如何实现熔断降级>Q4：如何实现熔断降级？</h3><p><strong>A：</strong> 使用 Resilience4j 或自定义异常处理：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-java data-lang=java><span class=line><span class=cl><span class=kd>public</span><span class=w> </span><span class=kd>class</span> <span class=nc>FallbackGlobalFilter</span><span class=w> </span><span class=kd>implements</span><span class=w> </span><span class=n>GlobalFilter</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=nd>@Override</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=kd>public</span><span class=w> </span><span class=n>Mono</span><span class=o>&lt;</span><span class=n>Void</span><span class=o>&gt;</span><span class=w> </span><span class=nf>filter</span><span class=p>(</span><span class=n>ServerWebExchange</span><span class=w> </span><span class=n>exchange</span><span class=p>,</span><span class=w> </span><span class=n>GatewayFilterChain</span><span class=w> </span><span class=n>chain</span><span class=p>)</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>        </span><span class=k>return</span><span class=w> </span><span class=n>chain</span><span class=p>.</span><span class=na>filter</span><span class=p>(</span><span class=n>exchange</span><span class=p>)</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>.</span><span class=na>onErrorResume</span><span class=p>(</span><span class=n>ex</span><span class=w> </span><span class=o>-&gt;</span><span class=w> </span><span class=p>{</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=c1>// 熔断降级</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>ServerHttpResponse</span><span class=w> </span><span class=n>response</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>exchange</span><span class=p>.</span><span class=na>getResponse</span><span class=p>();</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>response</span><span class=p>.</span><span class=na>setStatusCode</span><span class=p>(</span><span class=n>HttpStatus</span><span class=p>.</span><span class=na>SERVICE_UNAVAILABLE</span><span class=p>);</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=c1>// 返回友好的错误信息</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>String</span><span class=w> </span><span class=n>errorMsg</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=s>&#34;Service temporarily unavailable, please try again later&#34;</span><span class=p>;</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=n>DataBuffer</span><span class=w> </span><span class=n>buffer</span><span class=w> </span><span class=o>=</span><span class=w> </span><span class=n>response</span><span class=p>.</span><span class=na>bufferFactory</span><span class=p>()</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                    </span><span class=p>.</span><span class=na>wrap</span><span class=p>(</span><span class=n>errorMsg</span><span class=p>.</span><span class=na>getBytes</span><span class=p>());</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>                </span><span class=k>return</span><span class=w> </span><span class=n>response</span><span class=p>.</span><span class=na>writeWith</span><span class=p>(</span><span class=n>Mono</span><span class=p>.</span><span class=na>just</span><span class=p>(</span><span class=n>buffer</span><span class=p>));</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>            </span><span class=p>});</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w>    </span><span class=p>}</span><span class=w>
+</span></span></span><span class=line><span class=cl><span class=w></span><span class=p>}</span><span class=w>
+</span></span></span></code></pre></td></tr></table></div></div><hr><h2 id=-十三结语>🏁 十三、结语</h2><p>Spring Cloud Gateway 的设计非常"优雅"——
+它以 <strong>响应式流式模型</strong> 为核心，彻底摒弃传统 Servlet 模式下的可变对象，
+让整个请求处理过程更加安全、高效、可预测。</p><p>理解 <code>ServerWebExchange</code>、<code>ServerHttpRequest</code>、<code>mutate()</code> 的工作原理，
+正是掌握这一套机制的关键。</p><blockquote><p><strong>&ldquo;Immutable 对象 + Reactive 数据流 = 高并发微服务的基础&rdquo;</strong></p></blockquote><h3 id=核心要点回顾>核心要点回顾</h3><ol><li>✅ <code>ServerWebExchange</code> 是请求的上下文容器</li><li>✅ <code>ServerHttpRequest</code> 和 <code>ServerHttpResponse</code> 都是不可变的</li><li>✅ 使用 <code>mutate()</code> 创建新对象，而非修改原对象</li><li>✅ 通过 Header 传递用户信息给下游服务</li><li>✅ 响应式编程让系统更加高并发、可扩展</li></ol><h3 id=下一步学习>下一步学习</h3><p>掌握了基础原理后，可以进一步深入学习：</p><ul><li><strong>Reactor 响应式编程</strong>：Mono、Flux 的高级操作</li><li><strong>WebFlux 的异步处理</strong>：如何避免阻塞操作</li><li><strong>网关性能优化</strong>：限流、熔断、缓存策略</li><li><strong>分布式追踪</strong>：Sleuth、Zipkin 集成</li></ul><hr><h2 id=-延伸阅读>📚 延伸阅读</h2><h3 id=官方文档>官方文档</h3><ul><li><a class=link href=https://spring.io/projects/spring-cloud-gateway target=_blank rel=noopener>Spring Cloud Gateway 官方文档</a></li><li><a class=link href=https://docs.spring.io/spring-framework/docs/current/reference/html/web-reactive.html target=_blank rel=noopener>Spring WebFlux 官方文档</a></li></ul><h3 id=技术规范>技术规范</h3><ul><li><a class=link href=https://www.reactive-streams.org/ target=_blank rel=noopener>Reactive Streams 规范</a></li><li><a class=link href=https://datatracker.ietf.org/doc/html/rfc7519 target=_blank rel=noopener>JWT 规范 (RFC 7519)</a></li></ul><h3 id=推荐书籍>推荐书籍</h3><ul><li>《Spring WebFlux In Depth》</li><li>《响应式架构设计思想与实战》</li><li>《Spring Cloud 微服务实战》</li></ul><h3 id=相关文章>相关文章</h3><ul><li>《Reactor 响应式编程完全指南》</li><li>《JWT Token 在微服务中的最佳实践》</li><li>《网关限流熔断实战总结》</li></ul><hr><div style="text-align:center;margin-top:40px;padding:20px;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border-radius:10px"><p><strong>🎉 感谢阅读！</strong> 如果本文对你有帮助，请点赞和分享。</p><p><strong>📝 如有问题或建议，欢迎留言讨论！</strong></p></div><hr><p><em>最后更新：2025-01-20</em>
+<em>作者：george</em>
+<em>许可：本文采用 <a class=link href=https://creativecommons.org/licenses/by-sa/4.0/ target=_blank rel=noopener>CC BY-SA 4.0</a> 许可协议</em></p></section><footer class=article-footer><section class=article-tags><a href=/tags/spring-cloud-gateway/>Spring Cloud Gateway</a>
+<a href=/tags/webflux/>WebFlux</a>
+<a href=/tags/jwt/>JWT</a>
+<a href=/tags/filter/>Filter</a>
+<a href=/tags/reactive-programming/>Reactive Programming</a>
+<a href=/tags/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E7%BD%91%E5%85%B3/>微服务网关</a></section><section class=article-copyright><svg class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z"/><circle cx="12" cy="12" r="9"/><path d="M14.5 9a3.5 4 0 100 6"/></svg>
+<span>Licensed under CC BY-NC-SA 4.0</span></section></footer></article><div class=disqus-container><div id=disqus_thread></div><script>window.disqus_config=function(){},function(){if(["localhost","127.0.0.1"].indexOf(window.location.hostname)!=-1){document.getElementById("disqus_thread").innerHTML="Disqus comments not available by default when the website is previewed locally.";return}var t=document,e=t.createElement("script");e.async=!0,e.src="//hugo-theme-stack.disqus.com/embed.js",e.setAttribute("data-timestamp",+new Date),(t.head||t.body).appendChild(e)}()</script><noscript>Please enable JavaScript to view the <a href=https://disqus.com/?ref_noscript>comments powered by Disqus.</a></noscript><a href=https://disqus.com class=dsq-brlink>comments powered by <span class=logo-disqus>Disqus</span></a></div><style>.disqus-container{background-color:var(--card-background);border-radius:var(--card-border-radius);box-shadow:var(--shadow-l1);padding:var(--card-padding)}</style><script>window.addEventListener("onColorSchemeChange",e=>{typeof DISQUS=="object"&&DISQUS.reset({reload:!0})})</script><footer class=site-footer><section class=copyright>&copy;
+2025 Cecilia-塞西莉娅</section><section class=powerby>Never give up<br>Built with <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a><br>Theme <b><a href=https://github.com/CaiJimmy/hugo-theme-stack target=_blank rel=noopener data-version=3.30.0>Stack</a></b> designed by <a href=https://jimmycai.com target=_blank rel=noopener>Jimmy</a></section></footer><div class=pswp tabindex=-1 role=dialog aria-hidden=true><div class=pswp__bg></div><div class=pswp__scroll-wrap><div class=pswp__container><div class=pswp__item></div><div class=pswp__item></div><div class=pswp__item></div></div><div class="pswp__ui pswp__ui--hidden"><div class=pswp__top-bar><div class=pswp__counter></div><button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+<button class="pswp__button pswp__button--share" title=Share></button>
+<button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+<button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button><div class=pswp__preloader><div class=pswp__preloader__icn><div class=pswp__preloader__cut><div class=pswp__preloader__donut></div></div></div></div></div><div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap"><div class=pswp__share-tooltip></div></div><button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+</button>
+<button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button><div class=pswp__caption><div class=pswp__caption__center></div></div></div></div></div><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo=" crossorigin=anonymous defer></script><script src=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU=" crossorigin=anonymous defer></script><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css crossorigin=anonymous><link rel=stylesheet href=https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css crossorigin=anonymous></main></div><script src=https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z+KMkF24hUW8WePSA9HM=" crossorigin=anonymous></script><script type=text/javascript src=/ts/main.1e9a3bafd846ced4c345d084b355fb8c7bae75701c338f8a1f8a82c780137826.js defer></script><script>(function(){const e=document.createElement("link");e.href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap",e.type="text/css",e.rel="stylesheet",document.head.appendChild(e)})()</script></body></html>
